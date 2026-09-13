@@ -6,6 +6,18 @@ const INTRO = {
   type: "intro",
 };
 
+const JOURNAL = {
+  id: "journal",
+  label: "Journal",
+  type: "journal",
+};
+
+const PROGRESSION = {
+  id: "progression",
+  label: "Progression",
+  type: "progression",
+};
+
 const GLOSSAIRE = {
   id: "lexique",
   label: "Lexique",
@@ -14,6 +26,7 @@ const GLOSSAIRE = {
 
 const DAYS = [
   INTRO,
+  JOURNAL,
   {
     id: "lundi",
     label: "Lundi",
@@ -322,8 +335,26 @@ const DAYS = [
     description: "Repos complet, ou une activité très légère comme la marche ou des étirements doux.",
     why: "C'est pendant le repos que tes muscles se réparent et deviennent plus forts — sauter cette journée régulièrement freine tes progrès autant qu'un entraînement raté."
   },
+  PROGRESSION,
   GLOSSAIRE
 ];
+
+// ---------- Index de tous les éléments loggables (exercices + séances cardio) ----------
+
+const EXERCISE_INDEX = {};
+DAYS.forEach(day => {
+  if (day.type === "muscu") {
+    EXERCISE_INDEX[day.id] = {};
+    const all = day.finisher ? [...day.exercises, day.finisher] : day.exercises;
+    all.forEach(ex => {
+      EXERCISE_INDEX[day.id][ex.name] = { name: ex.name, kind: "muscu", dayLabel: day.label };
+    });
+  } else if (day.type === "cardio") {
+    EXERCISE_INDEX[day.id] = {
+      session: { name: day.title, kind: "cardio", dayLabel: day.label }
+    };
+  }
+});
 
 // ---------- Contenu de l'onglet "Avant de commencer" ----------
 
@@ -432,29 +463,126 @@ function renderGlossary() {
   `;
 }
 
+// ---------- Stockage du journal (localStorage) ----------
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function formatDateFR(iso) {
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function escapeAttr(str) {
+  return String(str).replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+}
+
+function logKey(dayId, itemId) {
+  return `log:${dayId}:${itemId}`;
+}
+
+function getLogEntries(dayId, itemId) {
+  const raw = localStorage.getItem(logKey(dayId, itemId));
+  return raw ? JSON.parse(raw) : [];
+}
+
+function saveLogEntries(dayId, itemId, entries) {
+  localStorage.setItem(logKey(dayId, itemId), JSON.stringify(entries));
+}
+
+function addLogEntry(dayId, itemId, entry) {
+  const entries = getLogEntries(dayId, itemId);
+  entries.push({ ...entry, ts: Date.now() });
+  saveLogEntries(dayId, itemId, entries);
+}
+
+function deleteLogEntry(dayId, itemId, ts) {
+  const entries = getLogEntries(dayId, itemId).filter(e => e.ts !== ts);
+  saveLogEntries(dayId, itemId, entries);
+}
+
+// ---------- Composants réutilisables : formulaire de log, historique, graphique ----------
+
+function renderLogSection(dayId, itemId, kind) {
+  const entries = getLogEntries(dayId, itemId).slice().sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts);
+  const valueLabel = kind === "muscu" ? "Poids utilisé (kg)" : "Durée réalisée (min)";
+  return `
+    <div class="log-section">
+      <h4>📝 Ton journal pour cet exercice</h4>
+      <form class="log-form" data-day="${dayId}" data-item="${escapeAttr(itemId)}">
+        <div class="log-row">
+          <label>Date<input type="date" name="date" value="${todayStr()}" required></label>
+          <label>${valueLabel}<input type="number" step="0.5" min="0" name="value" required></label>
+          ${kind === "muscu" ? `<label>Répétitions<input type="text" name="reps" placeholder="ex: 12,11,10,9"></label>` : ""}
+        </div>
+        <label class="log-note">Note (optionnel)<input type="text" name="note" placeholder="ressenti, douleur, énergie..."></label>
+        <button type="submit" class="log-submit">Ajouter au journal</button>
+      </form>
+      ${entries.length ? renderHistoryTable(dayId, itemId, entries, kind) : `<p class="log-empty">Pas encore d'entrée — enregistre ta première séance ci-dessus.</p>`}
+      ${entries.length >= 2 ? renderChart(entries, kind, 280, 70) : ""}
+    </div>
+  `;
+}
+
+function renderHistoryTable(dayId, itemId, entries, kind) {
+  const rows = entries.map(e => `
+    <tr>
+      <td>${formatDateFR(e.date)}</td>
+      <td>${e.value}${kind === "muscu" ? " kg" : " min"}</td>
+      ${kind === "muscu" ? `<td>${e.reps ? escapeHtml(e.reps) : "—"}</td>` : ""}
+      <td>${e.note ? escapeHtml(e.note) : "—"}</td>
+      <td><button type="button" class="del-log" data-day="${dayId}" data-item="${escapeAttr(itemId)}" data-ts="${e.ts}" title="Supprimer cette entrée">✕</button></td>
+    </tr>
+  `).join("");
+  return `
+    <table class="log-table">
+      <tr><th>Date</th><th>${kind === "muscu" ? "Poids" : "Durée"}</th>${kind === "muscu" ? "<th>Reps</th>" : ""}<th>Note</th><th></th></tr>
+      ${rows}
+    </table>
+  `;
+}
+
+function renderChart(entries, kind, w, h) {
+  const asc = entries.slice().sort((a, b) => a.date.localeCompare(b.date));
+  const values = asc.map(e => e.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const pad = 10;
+  const stepX = asc.length > 1 ? (w - pad * 2) / (asc.length - 1) : 0;
+  const coords = asc.map((e, i) => ({
+    x: pad + i * stepX,
+    y: h - pad - ((e.value - min) / range) * (h - pad * 2)
+  }));
+  const points = coords.map(c => `${c.x},${c.y}`).join(" ");
+  const unit = kind === "muscu" ? "kg" : "min";
+  return `
+    <div class="chart-wrap">
+      <p class="chart-label">Évolution du ${kind === "muscu" ? "poids" : "temps"} (${formatDateFR(asc[0].date)} → ${formatDateFR(asc[asc.length - 1].date)})</p>
+      <svg viewBox="0 0 ${w} ${h}" class="chart-svg" preserveAspectRatio="none">
+        <polyline points="${points}" style="fill:none;stroke:var(--accent);stroke-width:2"></polyline>
+        ${coords.map(c => `<circle cx="${c.x}" cy="${c.y}" r="3" style="fill:var(--accent)"></circle>`).join("")}
+      </svg>
+      <p class="chart-range">min ${min}${unit} · max ${max}${unit}</p>
+    </div>
+  `;
+}
+
 // ---------- Rendu des jours muscu / cardio / repos ----------
 
-function exerciseKey(dayId, name) {
-  return `done:${dayId}:${name}`;
-}
-
-function isDone(dayId, name) {
-  return localStorage.getItem(exerciseKey(dayId, name)) === "1";
-}
-
-function setDone(dayId, name, done) {
-  if (done) localStorage.setItem(exerciseKey(dayId, name), "1");
-  else localStorage.removeItem(exerciseKey(dayId, name));
-}
-
 function renderExerciseCard(day, ex, idx) {
-  const done = isDone(day.id, ex.name);
+  const today = todayStr();
+  const doneToday = getLogEntries(day.id, ex.name).some(e => e.date === today);
   return `
-    <div class="exercise-card ${done ? "done" : ""}" data-name="${ex.name}">
+    <div class="exercise-card ${doneToday ? "done-today" : ""}">
       <div class="exercise-head" data-toggle="${idx}">
-        <input type="checkbox" class="exercise-check" data-check="${idx}" ${done ? "checked" : ""} onclick="event.stopPropagation()">
         <div class="exercise-title-wrap">
-          <p class="exercise-title ${done ? "done-text" : ""}">${ex.name}</p>
+          <p class="exercise-title">${ex.name} ${doneToday ? '<span class="done-badge">✅ fait aujourd\'hui</span>' : ""}</p>
           <p class="exercise-meta">${ex.sets}${ex.weight ? " · " + ex.weight : ""}</p>
           <span class="badge badge-blue">${ex.muscle}</span>
         </div>
@@ -465,6 +593,7 @@ function renderExerciseCard(day, ex, idx) {
         <ol>${ex.steps.map(s => `<li>${s}</li>`).join("")}</ol>
         ${ex.tip ? `<div class="tip-box">💡 <strong>Astuce :</strong> ${ex.tip}</div>` : ""}
         ${ex.mistake ? `<div class="mistake-box">⚠️ <strong>Erreur à éviter :</strong> ${ex.mistake}</div>` : ""}
+        ${renderLogSection(day.id, ex.name, "muscu")}
       </div>
     </div>
   `;
@@ -477,7 +606,7 @@ function renderMuscuDay(day) {
   return `
     <div class="day-header">
       <h2>${day.label} — ${day.title}</h2>
-      <p>Clique sur un exercice pour voir les explications détaillées. Coche-le une fois terminé.</p>
+      <p>Clique sur un exercice pour voir les explications et enregistrer ta séance dans le journal.</p>
     </div>
     ${cards}
     ${finisherCard}
@@ -492,6 +621,7 @@ function renderCardioDay(day) {
     <div class="cardio-card">
       <p>${day.description}</p>
       <div class="tip-box">🎯 <strong>Pourquoi cette séance :</strong> ${day.why}</div>
+      ${renderLogSection(day.id, "session", "cardio")}
     </div>
   `;
 }
@@ -508,10 +638,99 @@ function renderRestDay(day) {
   `;
 }
 
+// ---------- Onglet Journal (historique chronologique global) ----------
+
+function renderJournal() {
+  const allEntries = [];
+  Object.keys(localStorage)
+    .filter(k => k.startsWith("log:"))
+    .forEach(key => {
+      const parts = key.split(":");
+      const dayId = parts[1];
+      const itemId = parts.slice(2).join(":");
+      const meta = (EXERCISE_INDEX[dayId] && EXERCISE_INDEX[dayId][itemId]) || { name: itemId, kind: "muscu", dayLabel: dayId };
+      getLogEntries(dayId, itemId).forEach(e => allEntries.push({ ...e, dayId, itemId, meta }));
+    });
+
+  if (!allEntries.length) {
+    return `
+      <div class="day-header"><h2>📔 Journal de bord</h2></div>
+      <div class="intro-block"><p>Ton journal est vide pour l'instant. Enregistre tes séances depuis les onglets des jours pour les voir apparaître ici, classées par date.</p></div>
+    `;
+  }
+
+  allEntries.sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts);
+  const byDate = {};
+  allEntries.forEach(e => { (byDate[e.date] = byDate[e.date] || []).push(e); });
+  const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+
+  return `
+    <div class="day-header">
+      <h2>📔 Journal de bord</h2>
+      <p>L'historique complet de toutes tes séances enregistrées, de la plus récente à la plus ancienne.</p>
+    </div>
+    ${dates.map(date => `
+      <div class="journal-date-block">
+        <h3>${formatDateFR(date)}</h3>
+        ${byDate[date].map(e => `
+          <div class="journal-entry">
+            <div class="journal-entry-head">
+              <span class="badge badge-grey">${e.meta.dayLabel}</span>
+              <strong>${e.meta.name}</strong>
+              <span class="journal-value">${e.value}${e.meta.kind === "muscu" ? "kg" : "min"}${e.reps ? " · " + escapeHtml(e.reps) + " reps" : ""}</span>
+            </div>
+            ${e.note ? `<p class="journal-note">${escapeHtml(e.note)}</p>` : ""}
+          </div>
+        `).join("")}
+      </div>
+    `).join("")}
+  `;
+}
+
+// ---------- Onglet Progression (courbe par exercice, au choix) ----------
+
+let currentProgressionKey = null;
+
+function progressionOptions() {
+  const options = [];
+  DAYS.forEach(day => {
+    if (day.type === "muscu") {
+      const all = day.finisher ? [...day.exercises, day.finisher] : day.exercises;
+      all.forEach(ex => options.push({ dayId: day.id, itemId: ex.name, label: `${day.label} — ${ex.name}` }));
+    } else if (day.type === "cardio") {
+      options.push({ dayId: day.id, itemId: "session", label: `${day.label} — ${day.title}` });
+    }
+  });
+  return options;
+}
+
+function renderProgressionTab() {
+  const options = progressionOptions();
+  const key = currentProgressionKey || `${options[0].dayId}::${options[0].itemId}`;
+  const [curDay, curItem] = key.split("::");
+  const kind = EXERCISE_INDEX[curDay][curItem].kind;
+  const entries = getLogEntries(curDay, curItem).slice().sort((a, b) => a.date.localeCompare(b.date));
+
+  return `
+    <div class="day-header">
+      <h2>📈 Progression</h2>
+      <p>Choisis un exercice pour voir son évolution dans le temps.</p>
+    </div>
+    <select id="progression-select" class="progression-select">
+      ${options.map(o => `<option value="${o.dayId}::${o.itemId}" ${`${o.dayId}::${o.itemId}` === key ? "selected" : ""}>${o.label}</option>`).join("")}
+    </select>
+    ${entries.length >= 2
+      ? renderChart(entries, kind, 600, 180)
+      : `<div class="intro-block"><p>Pas encore assez de données pour cet exercice (il faut au moins 2 séances enregistrées). ${entries.length === 1 ? "Tu en as 1 pour l'instant." : "Enregistre tes séances depuis l'onglet du jour correspondant."}</p></div>`
+    }
+    ${entries.length ? renderHistoryTable(curDay, curItem, entries.slice().reverse(), kind) : ""}
+  `;
+}
+
 // ---------- Navigation par onglets ----------
 
 let currentDayId = INTRO.id;
-let currentExercises = [];
+const openExercises = new Set();
 
 function renderTabs() {
   const tabsEl = document.getElementById("tabs");
@@ -540,8 +759,21 @@ function renderContent() {
     contentEl.innerHTML = renderGlossary();
     return;
   }
+  if (day.type === "journal") {
+    contentEl.innerHTML = renderJournal();
+    return;
+  }
+  if (day.type === "progression") {
+    contentEl.innerHTML = renderProgressionTab();
+    document.getElementById("progression-select").addEventListener("change", (e) => {
+      currentProgressionKey = e.target.value;
+      renderContent();
+    });
+    return;
+  }
   if (day.type === "cardio") {
     contentEl.innerHTML = renderCardioDay(day);
+    attachLogHandlers(contentEl, day);
     return;
   }
   if (day.type === "repos") {
@@ -549,34 +781,57 @@ function renderContent() {
     return;
   }
 
-  // Jour muscu : construit la liste combinée (exercices + finisher) pour le toggle/check
-  currentExercises = day.finisher ? [...day.exercises, day.finisher] : day.exercises;
   contentEl.innerHTML = renderMuscuDay(day);
 
   contentEl.querySelectorAll("[data-toggle]").forEach(head => {
+    const idx = head.dataset.toggle;
+    const key = `${day.id}:${idx}`;
+    const body = contentEl.querySelector(`[data-body="${idx}"]`);
+    const chevron = contentEl.querySelector(`[data-chevron="${idx}"]`);
+    if (openExercises.has(key)) {
+      body.classList.add("open");
+      chevron.classList.add("open");
+    }
     head.addEventListener("click", () => {
-      const idx = head.dataset.toggle;
-      const body = contentEl.querySelector(`[data-body="${idx}"]`);
-      const chevron = contentEl.querySelector(`[data-chevron="${idx}"]`);
       body.classList.toggle("open");
       chevron.classList.toggle("open");
+      if (body.classList.contains("open")) openExercises.add(key);
+      else openExercises.delete(key);
     });
   });
 
-  contentEl.querySelectorAll("[data-check]").forEach(chk => {
-    chk.addEventListener("change", () => {
-      const idx = chk.dataset.check;
-      const ex = currentExercises[idx];
-      setDone(day.id, ex.name, chk.checked);
+  attachLogHandlers(contentEl, day);
+}
+
+function attachLogHandlers(contentEl, day) {
+  contentEl.querySelectorAll(".log-form").forEach(form => {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const dayId = form.dataset.day;
+      const itemId = form.dataset.item;
+      const data = new FormData(form);
+      addLogEntry(dayId, itemId, {
+        date: data.get("date"),
+        value: parseFloat(data.get("value")),
+        reps: data.get("reps") || "",
+        note: data.get("note") || ""
+      });
+      renderContent();
+    });
+  });
+
+  contentEl.querySelectorAll(".del-log").forEach(btn => {
+    btn.addEventListener("click", () => {
+      deleteLogEntry(btn.dataset.day, btn.dataset.item, Number(btn.dataset.ts));
       renderContent();
     });
   });
 }
 
 document.getElementById("reset-btn").addEventListener("click", () => {
-  if (!confirm("Réinitialiser toutes les cases cochées de tous les jours ?")) return;
+  if (!confirm("Réinitialiser tout ton journal (toutes les séances enregistrées, sur tous les jours) ? Cette action est irréversible.")) return;
   Object.keys(localStorage)
-    .filter(k => k.startsWith("done:"))
+    .filter(k => k.startsWith("log:"))
     .forEach(k => localStorage.removeItem(k));
   renderContent();
 });
