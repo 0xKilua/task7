@@ -47,7 +47,8 @@ const DAYS = [
           "Répète pour le nombre de répétitions demandé."
         ],
         tip: "Souffle en poussant les haltères vers le haut, inspire en descendant. Serre légèrement les omoplates contre le sol pour stabiliser les épaules.",
-        mistake: "Erreur fréquente de débutant : vouloir aller trop vite. Fais des mouvements lents et contrôlés, surtout en descente — c'est là que tu progresses le plus."
+        mistake: "Erreur fréquente de débutant : vouloir aller trop vite. Fais des mouvements lents et contrôlés, surtout en descente — c'est là que tu progresses le plus.",
+        video: { id: "uUGDRwge4F8", title: "How To: Dumbbell Floor Press", channel: "ScottHermanFitness" }
       },
       {
         name: "Écartés au sol avec haltères",
@@ -61,7 +62,8 @@ const DAYS = [
           "Ramène les haltères au-dessus de la poitrine en \"refermant\" les bras, comme si tu enlaçais un gros ballon."
         ],
         tip: "L'angle du coude ne doit presque pas bouger du début à la fin — seule l'épaule travaille. Si tu sens que ça tire sur les triceps, c'est que tu plies trop les coudes.",
-        mistake: "Ne prends pas trop lourd sur cet exercice : c'est un mouvement d'isolation, la technique compte plus que le poids."
+        mistake: "Ne prends pas trop lourd sur cet exercice : c'est un mouvement d'isolation, la technique compte plus que le poids.",
+        video: { id: "LPxiXYW7kmo", title: "How To: Dumbbell Fly On Floor", channel: "ScottHermanFitness" }
       },
       {
         name: "Développé militaire haltères",
@@ -74,7 +76,8 @@ const DAYS = [
           "Redescends contrôlé jusqu'à revenir à la position de départ."
         ],
         tip: "Contracte les abdos (comme si on allait te donner un petit coup dans le ventre) pour éviter de trop cambrer le bas du dos.",
-        mistake: "Ne cambre pas exagérément pour \"aider\" à pousser plus lourd — c'est mauvais pour le dos. Si tu dois beaucoup cambrer, prends plus léger."
+        mistake: "Ne cambre pas exagérément pour \"aider\" à pousser plus lourd — c'est mauvais pour le dos. Si tu dois beaucoup cambrer, prends plus léger.",
+        video: { id: "qEwKCR5JCog", title: "How To: Dumbbell Shoulder Press", channel: "ScottHermanFitness" }
       },
       {
         name: "Élévations latérales",
@@ -87,7 +90,8 @@ const DAYS = [
           "Redescends lentement, sans lâcher le contrôle du mouvement."
         ],
         tip: "Ne monte jamais plus haut que les épaules. La descente lente est ce qui fait travailler le muscle le plus efficacement.",
-        mistake: "Erreur très fréquente : balancer le buste ou utiliser l'élan pour monter les bras. Si tu dois te balancer, c'est trop lourd — prends plus léger."
+        mistake: "Erreur très fréquente : balancer le buste ou utiliser l'élan pour monter les bras. Si tu dois te balancer, c'est trop lourd — prends plus léger.",
+        video: { id: "3VcKaXpzqRo", title: "How To: Dumbbell Side Lateral Raise", channel: "ScottHermanFitness" }
       },
       {
         name: "Barre EZ front (extension triceps)",
@@ -101,7 +105,8 @@ const DAYS = [
           "Remonte en tendant les bras jusqu'à la position de départ."
         ],
         tip: "Seuls les avant-bras bougent. Imagine que tes coudes sont \"collés\" en l'air et ne doivent jamais s'écarter ni descendre.",
-        mistake: "Si tes coudes partent vers l'extérieur ou descendent pendant le mouvement, c'est que la charge est trop lourde pour l'instant."
+        mistake: "Si tes coudes partent vers l'extérieur ou descendent pendant le mouvement, c'est que la charge est trop lourde pour l'instant.",
+        video: { id: "el4bWdCJ-QA", title: "Build Massive Triceps | EZ Bar Skull Crushers (Lying Triceps Extension)", channel: null }
       }
     ],
     finisher: {
@@ -114,7 +119,8 @@ const DAYS = [
         "Regarde le sol pour garder la nuque dans le prolongement du dos.",
         "Tiens la position 1 minute (ou le temps que tu peux, en progressant petit à petit)."
       ],
-      tip: "Si 1 minute est trop dur au début, fais 3 séries de 20-30 secondes et augmente petit à petit chaque semaine."
+      tip: "Si 1 minute est trop dur au début, fais 3 séries de 20-30 secondes et augmente petit à petit chaque semaine.",
+      video: { id: "pSHjTRCQxIw", title: "How To: Plank", channel: "ScottHermanFitness" }
     }
   },
   {
@@ -144,7 +150,8 @@ const DAYS = [
           "Redescends lentement jusqu'à bras tendu, puis recommence."
         ],
         tip: "Le mouvement part du dos, pas du bras. Imagine que tu essaies de rapprocher ton omoplate de ta colonne vertébrale.",
-        mistake: "Ne tourne pas le buste pour t'aider à tirer plus lourd — garde les épaules parallèles au sol tout du long."
+        mistake: "Ne tourne pas le buste pour t'aider à tirer plus lourd — garde les épaules parallèles au sol tout du long.",
+        video: { id: "pYcpY20QaE8", title: "How To: Dumbbell Bent-Over Row (Single-Arm)", channel: "ScottHermanFitness" }
       },
       {
         name: "Rowing barre EZ",
@@ -158,7 +165,8 @@ const DAYS = [
           "Redescends contrôlé jusqu'à bras tendus."
         ],
         tip: "Garde le dos gainé (comme si tu allais encaisser un coup) pour protéger le bas du dos pendant tout le mouvement.",
-        mistake: "Ne redresse pas le buste à chaque répétition pour \"aider\" — le buste reste fixe, seuls les bras et le dos bougent."
+        mistake: "Ne redresse pas le buste à chaque répétition pour \"aider\" — le buste reste fixe, seuls les bras et le dos bougent.",
+        video: { id: "rQdudkp4ek4", title: "EZ-Bar Bent Over Barbell Row", channel: null }
       },
       {
         name: "Oiseau haltères",
@@ -171,7 +179,8 @@ const DAYS = [
           "Redescends lentement."
         ],
         tip: "Mouvement lent et contrôlé, avec un poids léger — la qualité d'exécution compte bien plus que la charge ici.",
-        mistake: "Ne prends pas lourd sur cet exercice, même si tu en as l'impression de capacité : ça devient vite un mauvais mouvement de dos si c'est trop lourd."
+        mistake: "Ne prends pas lourd sur cet exercice, même si tu en as l'impression de capacité : ça devient vite un mauvais mouvement de dos si c'est trop lourd.",
+        video: { id: "zqWVolge-Tk", title: "How To Rear Delt Fly | Reverse DB Fly", channel: "HASfit" }
       },
       {
         name: "🔸 Échauffement biceps (haltères 5 kg)",
@@ -184,7 +193,8 @@ const DAYS = [
           "Fais 2 séries légères, sans te fatiguer — le but est de faire circuler le sang dans le muscle et de roder le mouvement avant les séries lourdes."
         ],
         tip: "Tu dois terminer ces 2 séries en te disant \"je pourrais en faire beaucoup plus\" — c'est normal, ce n'est pas un exercice pour se fatiguer.",
-        mistake: "Ne saute pas cet échauffement : il prépare tes articulations (coudes, poignets) et réduit le risque de te blesser sur les séries lourdes qui suivent."
+        mistake: "Ne saute pas cet échauffement : il prépare tes articulations (coudes, poignets) et réduit le risque de te blesser sur les séries lourdes qui suivent.",
+        video: { id: "d_TfENBv38s", title: "How To: Standing Dumbbell Bicep Curl", channel: "ScottHermanFitness" }
       },
       {
         name: "Curl barre EZ",
@@ -197,7 +207,8 @@ const DAYS = [
           "Redescends lentement jusqu'à bras tendus."
         ],
         tip: "Garde les coudes fixes, collés le long du corps, du début à la fin du mouvement.",
-        mistake: "Si tu dois te balancer avec le dos ou pousser avec les jambes pour faire monter la barre, c'est trop lourd pour l'instant : réduis les répétitions plutôt que de tricher avec le corps."
+        mistake: "Si tu dois te balancer avec le dos ou pousser avec les jambes pour faire monter la barre, c'est trop lourd pour l'instant : réduis les répétitions plutôt que de tricher avec le corps.",
+        video: { id: "aEscWJ3dS3w", title: "How To: Outside-Grip EZ-Bar Curl", channel: "ScottHermanFitness" }
       },
       {
         name: "Curl marteau",
@@ -210,7 +221,8 @@ const DAYS = [
           "Redescends lentement jusqu'à bras tendus."
         ],
         tip: "Si 10 kg est trop lourd pour tenir 12 répétitions propres, fais 8-10 répétitions bien exécutées plutôt que de te déformer pour finir la série.",
-        mistake: "Ne tourne pas le poignet en cours de mouvement — la prise \"paumes face à face\" reste fixe du début à la fin."
+        mistake: "Ne tourne pas le poignet en cours de mouvement — la prise \"paumes face à face\" reste fixe du début à la fin.",
+        video: { id: "zC3nLlEvin4", title: "How To: Dumbbell Hammer Curl", channel: "ScottHermanFitness" }
       }
     ],
     finisher: {
@@ -222,7 +234,8 @@ const DAYS = [
         "Lève les jambes tendues (ou légèrement pliées si c'est trop dur) jusqu'à la verticale.",
         "Redescends sans laisser les pieds toucher le sol, puis remonte."
       ],
-      tip: "Garde le bas du dos bien plaqué au sol pendant tout le mouvement — s'il se cambre, c'est que tu vas trop bas ou trop vite."
+      tip: "Garde le bas du dos bien plaqué au sol pendant tout le mouvement — s'il se cambre, c'est que tu vas trop bas ou trop vite.",
+      video: { id: "0tzBVqiDwSs", title: "Lying Leg Raises [Correct Form & Tutorial]", channel: "Fit Father Project" }
     }
   },
   {
@@ -252,7 +265,8 @@ const DAYS = [
           "Repousse le sol avec tes talons pour remonter."
         ],
         tip: "Garde tes talons bien au sol pendant toute la descente et la remontée, et regarde devant toi, pas vers le bas.",
-        mistake: "Erreur classique : les genoux qui partent vers l'intérieur en remontant. Pense à \"pousser les genoux vers l'extérieur\" activement."
+        mistake: "Erreur classique : les genoux qui partent vers l'intérieur en remontant. Pense à \"pousser les genoux vers l'extérieur\" activement.",
+        video: { id: "MeIiIdhvXT4", title: "How To: Goblet Squat", channel: "ScottHermanFitness" }
       },
       {
         name: "Squat avec barre EZ",
@@ -265,7 +279,8 @@ const DAYS = [
           "Remonte en poussant sur les talons."
         ],
         tip: "Contracte les abdos avant de commencer à descendre, comme un ceinturon naturel qui protège ta colonne.",
-        mistake: "À 20 kg le mouvement restera assez léger : concentre-toi sur la technique (descente lente sur 3 secondes) plutôt que de chercher à \"sentir\" une charge lourde."
+        mistake: "À 20 kg le mouvement restera assez léger : concentre-toi sur la technique (descente lente sur 3 secondes) plutôt que de chercher à \"sentir\" une charge lourde.",
+        video: { id: "1oed-UmAxFs", title: "How To: Barbell Squat | 3 Golden Rules", channel: "ScottHermanFitness" }
       },
       {
         name: "Fentes marchées",
@@ -278,7 +293,8 @@ const DAYS = [
           "Repousse avec la jambe avant pour avancer et enchaîner le pas suivant avec l'autre jambe."
         ],
         tip: "Garde le buste bien droit tout du long — pas besoin de te pencher en avant.",
-        mistake: "Le genou avant ne doit jamais dépasser la pointe du pied : si c'est le cas, fais un pas plus grand."
+        mistake: "Le genou avant ne doit jamais dépasser la pointe du pied : si c'est le cas, fais un pas plus grand.",
+        video: { id: "D7KaRcUTQeE", title: "How To: Dumbbell Stepping Lunge", channel: "ScottHermanFitness" }
       },
       {
         name: "Soulevé de terre roumain",
@@ -292,7 +308,8 @@ const DAYS = [
           "Descends jusqu'à sentir un étirement à l'arrière des cuisses, puis remonte en poussant les hanches vers l'avant."
         ],
         tip: "Garde les haltères proches des jambes pendant tout le mouvement, comme s'ils glissaient le long de tes cuisses.",
-        mistake: "Ne rondis jamais le dos pour descendre plus bas : arrête-toi où ton dos peut rester droit, même si ça semble \"peu profond\" au début."
+        mistake: "Ne rondis jamais le dos pour descendre plus bas : arrête-toi où ton dos peut rester droit, même si ça semble \"peu profond\" au début.",
+        video: { id: "FQKfr1YDhEk", title: "How To: Dumbbell Romanian Deadlift", channel: "ScottHermanFitness" }
       },
       {
         name: "Mollets debout",
@@ -304,7 +321,8 @@ const DAYS = [
           "Marque une pause d'une seconde en haut.",
           "Redescends lentement, si possible un peu plus bas que ta position de départ pour bien étirer le mollet."
         ],
-        tip: "La pause en haut du mouvement est ce qui rend cet exercice efficace — ne la saute pas."
+        tip: "La pause en haut du mouvement est ce qui rend cet exercice efficace — ne la saute pas.",
+        video: { id: "wxwY7GXxL4k", title: "Standing Dumbbell Calf Raises", channel: "Bodybuilding.com" }
       }
     ],
     finisher: {
@@ -316,7 +334,8 @@ const DAYS = [
         "Le mouvement est court, pas besoin de se relever complètement — c'est la contraction qui compte.",
         "Termine par le gainage (planche), comme décrit le lundi."
       ],
-      tip: "Si tu tires avec les mains sur ta tête, tu risques de te faire mal au cou — les mains soutiennent juste légèrement la tête, elles ne tirent pas."
+      tip: "Si tu tires avec les mains sur ta tête, tu risques de te faire mal au cou — les mains soutiennent juste légèrement la tête, elles ne tirent pas.",
+      video: { id: "mQXtBG4RfJk", title: "How To Crunch Properly", channel: "HASfit" }
     }
   },
   {
@@ -575,6 +594,17 @@ function renderChart(entries, kind, w, h) {
 
 // ---------- Rendu des jours muscu / cardio / repos ----------
 
+function renderVideoDemo(video) {
+  if (!video || !video.id) return "";
+  return `
+    <div class="video-demo" data-video-id="${video.id}">
+      <img src="https://i.ytimg.com/vi/${video.id}/hqdefault.jpg" alt="Démonstration vidéo" class="video-thumb" loading="lazy">
+      <button type="button" class="video-play-btn" aria-label="Lire la vidéo de démonstration">▶</button>
+    </div>
+    <p class="video-credit">🎥 Vidéo : <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener">${escapeHtml(video.title)}</a>${video.channel ? " — " + escapeHtml(video.channel) : ""}. <span class="video-note">Vérifie que la vidéo se charge bien et correspond à l'exercice ; si ce n'est pas le cas, préviens-moi pour que je la remplace.</span></p>
+  `;
+}
+
 function renderExerciseCard(day, ex, idx) {
   const today = todayStr();
   const doneToday = getLogEntries(day.id, ex.name).some(e => e.date === today);
@@ -589,6 +619,7 @@ function renderExerciseCard(day, ex, idx) {
         <span class="chevron" data-chevron="${idx}">▶</span>
       </div>
       <div class="exercise-body" data-body="${idx}">
+        ${renderVideoDemo(ex.video)}
         <h4>Comment faire</h4>
         <ol>${ex.steps.map(s => `<li>${s}</li>`).join("")}</ol>
         ${ex.tip ? `<div class="tip-box">💡 <strong>Astuce :</strong> ${ex.tip}</div>` : ""}
@@ -804,6 +835,14 @@ function renderContent() {
 }
 
 function attachLogHandlers(contentEl, day) {
+  contentEl.querySelectorAll(".video-play-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const wrap = btn.closest(".video-demo");
+      const id = wrap.dataset.videoId;
+      wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" title="Démonstration vidéo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+    });
+  });
+
   contentEl.querySelectorAll(".log-form").forEach(form => {
     form.addEventListener("submit", (e) => {
       e.preventDefault();
