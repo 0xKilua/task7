@@ -1,26 +1,1163 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mon programme muscu — Guide débutant</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <header class="topbar">
-    <h1>🏋️ Mon programme — Guide débutant</h1>
-    <p class="subtitle">Explications simples pour quelqu'un qui n'a jamais fait de muscu</p>
-  </header>
+<title>Carnet de Fer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root {
+    --paper: #EDEFF1;
+    --surface: #FFFFFF;
+    --ink: #1C2024;
+    --ink-muted: #5B6168;
+    --line: #DBDFE2;
+    --amber: #B96A22;
+    --amber-soft: #F3E4D2;
+    --teal: #2C6E6B;
+    --teal-soft: #DCEBEA;
+    --olive: #4F7942;
+    --olive-soft: #E4EEDF;
+    --warn: #9C5A16;
+    --warn-soft: #F5E7D4;
+    --shadow: 0 1px 2px rgba(28,32,36,0.06), 0 1px 8px rgba(28,32,36,0.05);
+    --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    --font-body: 'Public Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #15171A;
+      --surface: #1D2024;
+      --ink: #ECEDEE;
+      --ink-muted: #9BA1A8;
+      --line: #2B2F34;
+      --amber: #E2954F;
+      --amber-soft: #3A2A18;
+      --teal: #6FC2BE;
+      --teal-soft: #163332;
+      --olive: #8FC279;
+      --olive-soft: #223421;
+      --warn: #D98A4A;
+      --warn-soft: #3A2811;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 1px 10px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #15171A;
+    --surface: #1D2024;
+    --ink: #ECEDEE;
+    --ink-muted: #9BA1A8;
+    --line: #2B2F34;
+    --amber: #E2954F;
+    --amber-soft: #3A2A18;
+    --teal: #6FC2BE;
+    --teal-soft: #163332;
+    --olive: #8FC279;
+    --olive-soft: #223421;
+    --warn: #D98A4A;
+    --warn-soft: #3A2811;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 1px 10px rgba(0,0,0,0.35);
+  }
 
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.55;
+  }
+  h1, h2, h3, .display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-wrap: balance;
+    letter-spacing: 0.01em;
+  }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    padding: 18px 16px 0;
+  }
+  .topbar-head { max-width: 720px; margin: 0 auto; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .topbar h1 { font-size: 1.7rem; margin: 0; line-height: 1; }
+  .topbar .tagline { color: var(--ink-muted); font-size: 0.85rem; margin: 4px 0 12px; max-width: 720px; margin-left: auto; margin-right: auto; }
+
+  .tabs {
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab-btn {
+    flex: 0 0 auto;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .tab-btn.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  :root[data-theme="dark"] .tab-btn.active,
+  @media (prefers-color-scheme: dark) { }
+
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .panel h2 { font-size: 1.15rem; margin: 0 0 8px; }
+  .panel h3 { font-size: 1.02rem; margin: 0 0 6px; }
+  .panel ul { margin: 6px 0; padding-left: 20px; }
+  .panel li { margin-bottom: 4px; }
+  .panel p { margin: 0 0 8px; }
+  .panel p:last-child { margin-bottom: 0; }
+
+  .day-head { margin-bottom: 14px; }
+  .day-head .eyebrow {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+  .day-head h2 { font-size: 1.5rem; margin: 2px 0 4px; }
+  .day-head .sub { color: var(--ink-muted); font-size: 0.88rem; margin: 0; }
+  .eyebrow.strength { color: var(--amber); }
+  .eyebrow.cardio { color: var(--teal); }
+  .eyebrow.rest { color: var(--ink-muted); }
+
+  .chip {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .chip-muscle { background: var(--amber-soft); color: var(--amber); }
+  .chip-done { background: var(--olive-soft); color: var(--olive); margin-left: 8px; }
+
+  .exercise {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .exercise.done { border-color: var(--olive); }
+  .ex-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+  }
+  .ex-title-wrap { flex: 1; min-width: 0; }
+  .ex-name { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; margin: 0 0 3px; }
+  .ex-spec { font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-muted); margin: 0 0 6px; }
+  .chevron { color: var(--ink-muted); transition: transform 0.15s; margin-top: 5px; flex: 0 0 auto; }
+  .chevron.open { transform: rotate(90deg); }
+
+  .ex-body { display: none; padding: 0 16px 18px; border-top: 1px solid var(--line); }
+  .ex-body.open { display: block; padding-top: 14px; }
+  .ex-body h4 {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.07em;
+    color: var(--ink-muted);
+    margin: 14px 0 6px;
+  }
+  .ex-body h4:first-child { margin-top: 0; }
+  .ex-body ol { margin: 4px 0; padding-left: 20px; }
+  .ex-body li { margin-bottom: 5px; }
+
+  .video-demo {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #000;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .video-thumb { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.85; }
+  .video-play-btn {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 54px; height: 54px; border-radius: 50%;
+    background: rgba(0,0,0,0.65); color: #fff; border: 2px solid #fff;
+    font-size: 1.25rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; padding-left: 4px;
+  }
+  .video-demo iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .video-credit { font-size: 0.76rem; color: var(--ink-muted); margin: 6px 0 0; }
+  .video-credit a { color: var(--teal); }
+
+  .tip-box, .mistake-box {
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+  }
+  .tip-box { background: var(--teal-soft); color: var(--teal); }
+  .mistake-box { background: var(--warn-soft); color: var(--warn); }
+
+  .log-section { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); }
+  .log-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .log-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .log-form label { display: flex; flex-direction: column; gap: 3px; font-size: 0.76rem; color: var(--ink-muted); flex: 1 1 100px; }
+  .log-form input {
+    font-family: var(--font-mono);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 9px;
+    font-size: 0.9rem;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .log-form input[name="note"] { font-family: var(--font-body); }
+  .log-note { flex: 1 1 100%; }
+  .log-submit {
+    align-self: flex-start;
+    border: none;
+    border-radius: 999px;
+    background: var(--amber);
+    color: var(--surface);
+    padding: 8px 18px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.92rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+  }
+  .log-submit:disabled { opacity: 0.5; cursor: default; }
+  .log-empty { font-size: 0.85rem; color: var(--ink-muted); font-style: italic; }
+
+  table.log-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 0.82rem; }
+  table.log-table th, table.log-table td { border-bottom: 1px solid var(--line); padding: 6px; text-align: left; }
+  table.log-table th { color: var(--ink-muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  table.log-table td.num { font-family: var(--font-mono); }
+  .del-btn { border: none; background: none; color: var(--ink-muted); cursor: pointer; font-size: 0.95rem; padding: 2px 6px; }
+  .del-btn:hover { color: var(--warn); }
+
+  .chart-wrap { margin-top: 10px; }
+  .chart-caption { font-size: 0.78rem; color: var(--ink-muted); margin: 6px 0 0; }
+  .chart-svg { width: 100%; height: auto; display: block; background: var(--paper); border-radius: 10px; }
+  .chart-svg text { fill: var(--ink-muted); font-family: var(--font-mono); font-size: 9px; }
+
+  .journal-date { margin-bottom: 20px; }
+  .journal-date h3 { font-family: var(--font-mono); font-size: 0.95rem; color: var(--ink-muted); margin: 0 0 8px; font-weight: 600; }
+  .journal-entry { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; box-shadow: var(--shadow); }
+  .journal-entry-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.92rem; }
+  .journal-entry-head .day-tag { font-family: var(--font-display); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; color: var(--ink-muted); }
+  .journal-value { font-family: var(--font-mono); color: var(--ink-muted); font-size: 0.85rem; }
+  .journal-note { margin: 6px 0 0; font-size: 0.85rem; color: var(--ink-muted); font-style: italic; }
+
+  select.progression-select {
+    width: 100%;
+    font-family: var(--font-display);
+    font-weight: 600;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 1rem;
+    margin-bottom: 16px;
+  }
+
+  table.week-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.88rem; }
+  table.week-table td, table.week-table th { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
+  table.week-table th { background: var(--amber-soft); color: var(--amber); }
+  table.week-table td:first-child { font-family: var(--font-mono); white-space: nowrap; }
+
+  dl.glossary { margin: 0; }
+  .glossary-item { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: var(--shadow); }
+  .glossary-item dt { font-family: var(--font-display); font-weight: 700; font-size: 1.02rem; margin-bottom: 3px; }
+  .glossary-item dd { margin: 0; color: var(--ink-muted); }
+
+  .status-banner {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+  }
+
+  .footer-note {
+    max-width: 720px;
+    margin: 10px auto 0;
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: 0.8rem;
+    padding: 0 16px;
+  }
+  .danger-btn {
+    margin-top: 10px;
+    padding: 7px 15px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-muted);
+    cursor: pointer;
+    font-size: 0.78rem;
+  }
+  .danger-btn:hover { border-color: var(--warn); color: var(--warn); }
+
+  @media (max-width: 460px) {
+    .ex-name { font-size: 1.05rem; }
+    .topbar h1 { font-size: 1.4rem; }
+  }
+</style>
+
+<div class="topbar">
+  <div class="topbar-head">
+    <h1>🏋️ Carnet de Fer</h1>
+  </div>
+  <p class="tagline">Programme débutant — haltères 5/10 kg &amp; barre EZ 20 kg — avec journal de séances synchronisé</p>
   <nav id="tabs" class="tabs"></nav>
+</div>
 
-  <main id="content" class="content"></main>
+<main id="content"></main>
 
-  <footer class="footer">
-    <p>Enregistre tes séances au fur et à mesure — ton journal est sauvegardé automatiquement dans ce navigateur (onglets « Journal » et « Progression »).</p>
-    <button id="reset-btn" class="reset-btn">Réinitialiser tout le journal</button>
-  </footer>
+<p class="footer-note" id="footer-note"></p>
 
-  <script src="script.js"></script>
-</body>
-</html>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Données du programme ----------
+
+  const INTRO = { id: "intro", label: "Avant de commencer", type: "intro" };
+  const JOURNAL_TAB = { id: "journal", label: "Journal", type: "journal" };
+  const PROGRESSION_TAB = { id: "progression", label: "Progression", type: "progression" };
+  const GLOSSAIRE = { id: "lexique", label: "Lexique", type: "glossaire" };
+
+  const DAYS = [
+    INTRO,
+    JOURNAL_TAB,
+    {
+      id: "lundi", label: "Lundi", type: "muscu", title: "Pectoraux / Épaules / Triceps",
+      exercises: [
+        {
+          name: "Développé couché au sol avec haltères",
+          sets: "4 × 8–12", weight: "haltères adaptées",
+          muscle: "Pectoraux (triceps, épaules)",
+          steps: [
+            "Allonge-toi au sol, genoux pliés, pieds à plat.",
+            "Un haltère dans chaque main, monte-les au niveau de la poitrine, coudes pliés.",
+            "Pousse les deux haltères vers le plafond jusqu'à avoir les bras presque tendus (pas bloqués).",
+            "Redescends lentement jusqu'à ce que tes coudes touchent le sol — c'est le sol qui t'arrête.",
+            "Répète pour le nombre de répétitions demandé."
+          ],
+          tip: "Souffle en poussant, inspire en descendant. Serre légèrement les omoplates contre le sol.",
+          mistake: "Erreur fréquente : aller trop vite. Fais des mouvements lents et contrôlés, surtout en descente.",
+          video: { id: "uUGDRwge4F8", title: "How To: Dumbbell Floor Press", channel: "ScottHermanFitness" }
+        },
+        {
+          name: "Écartés au sol avec haltères",
+          sets: "3 × 12–15", weight: "haltères plus légères",
+          muscle: "Pectoraux (isolation)",
+          steps: [
+            "Même position allongée que l'exercice précédent.",
+            "Garde les bras légèrement pliés (angle fixe au coude) pendant tout le mouvement.",
+            "Ouvre les bras sur les côtés en arc de cercle jusqu'à ce que les coudes touchent le sol.",
+            "Ramène les haltères au-dessus de la poitrine en \"refermant\" les bras."
+          ],
+          tip: "L'angle du coude ne bouge presque pas — seule l'épaule travaille.",
+          mistake: "Ne prends pas trop lourd : c'est un mouvement d'isolation, la technique prime.",
+          video: { id: "LPxiXYW7kmo", title: "How To: Dumbbell Fly On Floor", channel: "ScottHermanFitness" }
+        },
+        {
+          name: "Développé militaire haltères",
+          sets: "4 × 8–12", weight: "haltères modérées",
+          muscle: "Épaules, triceps",
+          steps: [
+            "Debout ou assis, un haltère dans chaque main au niveau des épaules, paumes vers l'avant.",
+            "Pousse les deux haltères au-dessus de la tête jusqu'à bras tendus.",
+            "Redescends contrôlé jusqu'à la position de départ."
+          ],
+          tip: "Contracte les abdos pour éviter de trop cambrer le bas du dos.",
+          mistake: "Ne cambre pas exagérément pour \"aider\" à pousser plus lourd.",
+          video: { id: "qEwKCR5JCog", title: "How To: Dumbbell Shoulder Press", channel: "ScottHermanFitness" }
+        },
+        {
+          name: "Élévations latérales",
+          sets: "4 × 12–15", weight: "haltères légères",
+          muscle: "Épaules (largeur)",
+          steps: [
+            "Debout, un haltère dans chaque main, bras le long du corps, coudes légèrement pliés.",
+            "Lève les deux bras sur les côtés jusqu'à hauteur des épaules.",
+            "Redescends lentement, sans lâcher le contrôle."
+          ],
+          tip: "Ne monte jamais plus haut que les épaules. La descente lente fait le travail.",
+          mistake: "Erreur très fréquente : balancer le buste. Si tu dois te balancer, prends plus léger.",
+          video: { id: "3VcKaXpzqRo", title: "How To: Dumbbell Side Lateral Raise", channel: "ScottHermanFitness" }
+        },
+        {
+          name: "Barre EZ front (extension triceps)",
+          sets: "3 × 10–12", weight: "barre EZ, 20 kg",
+          muscle: "Triceps",
+          steps: [
+            "Allongé ou debout, tiens la barre EZ à bout de bras au-dessus de la tête (ou de la poitrine si allongé).",
+            "Garde les coudes fixes, pointés vers le plafond, sans bouger.",
+            "Plie uniquement les coudes pour descendre la barre derrière la tête.",
+            "Remonte en tendant les bras jusqu'à la position de départ."
+          ],
+          tip: "Seuls les avant-bras bougent. Coudes \"collés\" en l'air, immobiles.",
+          mistake: "Si les coudes partent vers l'extérieur ou descendent, la charge est trop lourde.",
+          video: { id: "el4bWdCJ-QA", title: "EZ Bar Skull Crushers (Lying Triceps Extension)", channel: null }
+        }
+      ],
+      finisher: {
+        name: "Gainage (planche)",
+        sets: "3 × 1 min", weight: "poids du corps",
+        muscle: "Sangle abdominale, tronc",
+        steps: [
+          "Appui sur les avant-bras et les pointes de pieds, corps aligné tête-bassin-talons.",
+          "Serre les abdos et les fessiers pour ne pas laisser le bassin tomber ni monter.",
+          "Regarde le sol pour garder la nuque neutre.",
+          "Tiens la position, en progressant petit à petit."
+        ],
+        tip: "Si 1 minute est trop dur, fais 3 × 20-30 s et augmente chaque semaine.",
+        video: { id: "pSHjTRCQxIw", title: "How To: Plank", channel: "ScottHermanFitness" }
+      }
+    },
+    {
+      id: "mardi", label: "Mardi", type: "cardio", title: "Running tranquille",
+      spec: "30 à 40 minutes",
+      description: "Cours à une allure où tu pourrais tenir une conversation sans être essoufflé. Si tu n'y arrives pas, ralentis.",
+      why: "Ce jour développe ton endurance de base et aide ton corps à récupérer de la séance de musculation du lundi."
+    },
+    {
+      id: "mercredi", label: "Mercredi", type: "muscu", title: "Dos / Biceps",
+      exercises: [
+        {
+          name: "Rowing haltère un bras",
+          sets: "4 × 10–12 / bras", weight: "haltère modérée à lourde",
+          muscle: "Grand dorsal",
+          steps: [
+            "Un genou et une main en appui sur un banc, dos plat et parallèle au sol.",
+            "Haltère dans l'autre main, bras tendu vers le sol.",
+            "Tire l'haltère vers ta hanche en amenant le coude vers l'arrière.",
+            "Redescends lentement jusqu'à bras tendu, puis recommence."
+          ],
+          tip: "Le mouvement part du dos, pas du bras.",
+          mistake: "Ne tourne pas le buste pour tirer plus lourd — épaules parallèles au sol.",
+          video: { id: "pYcpY20QaE8", title: "How To: Dumbbell Bent-Over Row (Single-Arm)", channel: "ScottHermanFitness" }
+        },
+        {
+          name: "Rowing barre EZ",
+          sets: "4 × 10", weight: "barre EZ, 20 kg",
+          muscle: "Ensemble du dos",
+          steps: [
+            "Buste penché à 45°, dos droit, genoux légèrement pliés.",
+            "Barre EZ à deux mains, bras tendus vers le sol.",
+            "Tire la barre vers le bas du ventre en serrant les omoplates.",
+            "Redescends contrôlé jusqu'à bras tendus."
+          ],
+          tip: "Garde le dos gainé pour protéger le bas du dos.",
+          mistake: "Ne redresse pas le buste à chaque répétition — il reste fixe.",
+          video: { id: "rQdudkp4ek4", title: "EZ-Bar Bent Over Barbell Row", channel: null }
+        },
+        {
+          name: "Oiseau haltères",
+          sets: "3 × 15", weight: "haltères très légères",
+          muscle: "Arrière d'épaule, haut du dos",
+          steps: [
+            "Buste penché en avant, bras tendus vers le sol, légère flexion des coudes.",
+            "Lève les deux bras sur les côtés jusqu'à hauteur du dos, en serrant les omoplates.",
+            "Redescends lentement."
+          ],
+          tip: "Mouvement lent, poids léger — la qualité d'exécution compte plus que la charge.",
+          mistake: "Ne prends pas lourd : ça devient vite un mauvais mouvement de dos.",
+          video: { id: "zqWVolge-Tk", title: "How To Rear Delt Fly / Reverse DB Fly", channel: "HASfit" }
+        },
+        {
+          name: "🔸 Échauffement biceps (haltères 5 kg)",
+          sets: "2 × 15–20", weight: "haltères 5 kg",
+          muscle: "Biceps (échauffement)",
+          steps: [
+            "Debout, un haltère de 5 kg dans chaque main, paumes vers le haut.",
+            "Plie les coudes pour monter les haltères vers les épaules, lentement (2 s montée, 2 s descente).",
+            "2 séries légères, sans te fatiguer — le but est de faire circuler le sang et roder le mouvement."
+          ],
+          tip: "Tu dois finir en te disant \"j'aurais pu en faire beaucoup plus\" — c'est normal.",
+          mistake: "Ne saute pas cet échauffement : il protège tes articulations avant les séries lourdes.",
+          video: { id: "d_TfENBv38s", title: "How To: Standing Dumbbell Bicep Curl", channel: "ScottHermanFitness" }
+        },
+        {
+          name: "Curl barre EZ",
+          sets: "4 × 10–12", weight: "barre EZ, 20 kg",
+          muscle: "Biceps",
+          steps: [
+            "Debout, barre EZ en prise supination sur la partie coudée (plus confortable pour les poignets).",
+            "Plie les coudes pour monter la barre vers les épaules, sans bouger le buste.",
+            "Redescends lentement jusqu'à bras tendus."
+          ],
+          tip: "Coudes fixes, collés le long du corps, du début à la fin.",
+          mistake: "Si tu dois te balancer ou pousser avec les jambes, réduis les répétitions plutôt que tricher.",
+          video: { id: "aEscWJ3dS3w", title: "How To: Outside-Grip EZ-Bar Curl", channel: "ScottHermanFitness" }
+        },
+        {
+          name: "Curl marteau",
+          sets: "3 × 12", weight: "haltères 10 kg",
+          muscle: "Biceps, brachial",
+          steps: [
+            "Debout, un haltère de 10 kg dans chaque main, paumes face à face (\"prise marteau\").",
+            "Plie les coudes pour monter les haltères vers les épaules en gardant cette prise.",
+            "Redescends lentement jusqu'à bras tendus."
+          ],
+          tip: "Si 10 kg est trop lourd pour 12 reps propres, fais 8-10 reps bien exécutées.",
+          mistake: "Ne tourne pas le poignet — la prise neutre reste fixe du début à la fin.",
+          video: { id: "zC3nLlEvin4", title: "How To: Dumbbell Hammer Curl", channel: "ScottHermanFitness" }
+        }
+      ],
+      finisher: {
+        name: "Relevés de jambes",
+        sets: "3 × 15", weight: "poids du corps",
+        muscle: "Abdominaux (bas du ventre)",
+        steps: [
+          "Allongé au sol, jambes tendues, mains sous les fessiers ou le long du corps.",
+          "Lève les jambes tendues (ou légèrement pliées) jusqu'à la verticale.",
+          "Redescends sans toucher le sol, puis remonte."
+        ],
+        tip: "Garde le bas du dos plaqué au sol — s'il se cambre, vas moins bas ou moins vite.",
+        video: { id: "0tzBVqiDwSs", title: "Lying Leg Raises — Correct Form & Tutorial", channel: "Fit Father Project" }
+      }
+    },
+    {
+      id: "jeudi", label: "Jeudi", type: "cardio", title: "Running fractionné",
+      spec: "10' échauffement + 8×(1' rapide / 1' lent) + 10' retour au calme",
+      description: "10 minutes de trot léger, puis 8 fois (1 minute rapide + 1 minute lente), puis 10 minutes de retour au calme en jogging très léger puis marche.",
+      why: "Améliore ta capacité cardio plus efficacement qu'une course tranquille : les phases rapides te sortent de ta zone de confort, les phases lentes te font récupérer."
+    },
+    {
+      id: "vendredi", label: "Vendredi", type: "muscu", title: "Jambes / Abdos",
+      exercises: [
+        {
+          name: "Squat gobelet avec haltère",
+          sets: "4 × 12", weight: "un haltère à deux mains",
+          muscle: "Quadriceps, fessiers",
+          steps: [
+            "Debout, un haltère tenu à deux mains contre la poitrine, comme une coupe.",
+            "Descends en pliant genoux et hanches, dos droit, genoux dans l'axe des pieds.",
+            "Descends jusqu'à cuisses parallèles au sol (ou moins bas selon ta souplesse).",
+            "Repousse le sol avec tes talons pour remonter."
+          ],
+          tip: "Talons au sol pendant toute la descente/remontée, regard devant toi.",
+          mistake: "Erreur classique : les genoux qui rentrent vers l'intérieur en remontant.",
+          video: { id: "MeIiIdhvXT4", title: "How To: Goblet Squat", channel: "ScottHermanFitness" }
+        },
+        {
+          name: "Squat avec barre EZ",
+          sets: "4 × 10", weight: "barre EZ, 20 kg",
+          muscle: "Quadriceps, fessiers, gainage",
+          steps: [
+            "Barre EZ sur le haut du dos (trapèzes), mains en prise large pour stabiliser.",
+            "Même mouvement que le squat gobelet : dos droit, genoux dans l'axe des pieds.",
+            "Remonte en poussant sur les talons."
+          ],
+          tip: "Contracte les abdos avant de descendre, comme un ceinturon naturel.",
+          mistake: "À 20 kg le mouvement reste léger : priorise la technique (descente lente sur 3 s).",
+          video: { id: "1oed-UmAxFs", title: "How To: Barbell Squat — 3 Golden Rules", channel: "ScottHermanFitness" }
+        },
+        {
+          name: "Fentes marchées",
+          sets: "3 × 12 / jambe", weight: "poids du corps ou haltères légères",
+          muscle: "Quadriceps, fessiers, équilibre",
+          steps: [
+            "Debout, fais un grand pas en avant.",
+            "Descends jusqu'à ce que le genou arrière frôle le sol, sans cogner.",
+            "Repousse avec la jambe avant pour avancer et enchaîner avec l'autre jambe."
+          ],
+          tip: "Buste bien droit tout du long, pas besoin de te pencher en avant.",
+          mistake: "Le genou avant ne doit jamais dépasser la pointe du pied.",
+          video: { id: "D7KaRcUTQeE", title: "How To: Dumbbell Stepping Lunge", channel: "ScottHermanFitness" }
+        },
+        {
+          name: "Soulevé de terre roumain",
+          sets: "4 × 10", weight: "haltères modérées",
+          muscle: "Ischio-jambiers, fessiers",
+          steps: [
+            "Debout, un haltère dans chaque main devant les cuisses, dos droit.",
+            "Pousse les hanches vers l'arrière en laissant les haltères descendre le long des jambes, genoux fixes et légèrement fléchis.",
+            "Descends jusqu'à sentir l'étirement à l'arrière des cuisses, puis remonte en poussant les hanches vers l'avant."
+          ],
+          tip: "Garde les haltères proches des jambes tout du long.",
+          mistake: "Ne rondis jamais le dos pour descendre plus bas — arrête-toi où le dos reste droit.",
+          video: { id: "FQKfr1YDhEk", title: "How To: Dumbbell Romanian Deadlift", channel: "ScottHermanFitness" }
+        },
+        {
+          name: "Mollets debout",
+          sets: "4 × 20", weight: "haltères en main",
+          muscle: "Mollets",
+          steps: [
+            "Debout, un haltère dans chaque main, monte sur la pointe des pieds en contractant les mollets.",
+            "Marque une pause d'une seconde en haut.",
+            "Redescends lentement, un peu plus bas que la position de départ si possible."
+          ],
+          tip: "La pause en haut est ce qui rend l'exercice efficace — ne la saute pas.",
+          video: { id: "wxwY7GXxL4k", title: "Standing Dumbbell Calf Raises", channel: "Bodybuilding.com" }
+        }
+      ],
+      finisher: {
+        name: "Crunch + Gainage",
+        sets: "Crunch 4×20 + Gainage 3×1 min", weight: "poids du corps",
+        muscle: "Abdominaux",
+        steps: [
+          "Crunch : allongé, genoux pliés, mains derrière la tête ou croisées sur la poitrine.",
+          "Enroule le buste vers les genoux en contractant les abdos, sans tirer sur la nuque.",
+          "Mouvement court — pas besoin de te relever complètement.",
+          "Termine par le gainage (planche), comme le lundi."
+        ],
+        tip: "Les mains soutiennent juste légèrement la tête, elles ne tirent pas dessus.",
+        video: { id: "mQXtBG4RfJk", title: "How To Crunch Properly", channel: "HASfit" }
+      }
+    },
+    {
+      id: "samedi", label: "Samedi", type: "cardio", title: "Running tranquille",
+      spec: "45 minutes",
+      description: "Même principe que le mardi : allure facile, où tu peux discuter, mais un peu plus longtemps.",
+      why: "Développe ton endurance de fond et ta capacité de récupération générale, en complément du travail plus intense du jeudi."
+    },
+    {
+      id: "dimanche", label: "Dimanche", type: "repos", title: "Repos",
+      description: "Repos complet, ou une activité très légère comme la marche ou des étirements doux.",
+      why: "C'est pendant le repos que tes muscles se réparent et deviennent plus forts."
+    },
+    PROGRESSION_TAB,
+    GLOSSAIRE
+  ];
+
+  const EXERCISE_INDEX = {};
+  DAYS.forEach(day => {
+    if (day.type === "muscu") {
+      EXERCISE_INDEX[day.id] = {};
+      const all = day.finisher ? [...day.exercises, day.finisher] : day.exercises;
+      all.forEach(ex => { EXERCISE_INDEX[day.id][ex.name] = { name: ex.name, kind: "muscu", dayLabel: day.label }; });
+    } else if (day.type === "cardio") {
+      EXERCISE_INDEX[day.id] = { session: { name: day.title, kind: "cardio", dayLabel: day.label } };
+    }
+  });
+
+  const GLOSSARY_TERMS = [
+    ["Série", "Un bloc de répétitions fait sans s'arrêter. \"4 séries de 10\" = tu fais le mouvement 10 fois, tu te reposes, tu recommences, 4 fois au total."],
+    ["Répétition (rep)", "Un aller-retour complet du mouvement."],
+    ["Charge", "Le poids utilisé pour un exercice (haltère, barre...)."],
+    ["RIR (Répétitions En Réserve)", "\"RIR 2\" veut dire que tu arrêtes la série alors que tu aurais pu faire 2 répétitions de plus."],
+    ["Tempo", "La vitesse d'exécution. Ralentir la descente (3-4 s) rend l'exercice plus dur sans changer le poids."],
+    ["Échauffement", "Mouvements légers avant l'effort principal, pour préparer muscles et articulations."],
+    ["Isolation", "Exercice qui ne fait travailler qu'un seul muscle/une seule articulation (ex : élévations latérales)."],
+    ["Polyarticulaire", "Exercice qui fait travailler plusieurs muscles/articulations (ex : squat). Généralement les plus efficaces."],
+    ["Gainage", "Contracter abdos et tronc pour stabiliser la colonne pendant un effort."],
+    ["Courbatures (DOMS)", "Douleurs musculaires 1-2 jours après une séance inhabituelle. Normal, ça passe en quelques jours."],
+    ["Prise supination", "Tenir une barre/un haltère paumes vers le haut."],
+    ["Prise neutre", "Tenir un haltère paumes qui se font face (comme un marteau)."],
+    ["Fourchette de répétitions", "L'intervalle donné (ex : \"8-12\") ; tu restes dans cette zone à chaque série."]
+  ];
+
+  // ---------- Stockage : db capability avec repli localStorage ----------
+
+  let logsCol = null;
+  let usingLocal = false;
+  let allEntries = [];
+
+  function slug(s) {
+    return String(s).normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase();
+  }
+
+  function loadLocal() {
+    try { return JSON.parse(localStorage.getItem("carnet_de_fer_logs") || "[]"); }
+    catch (e) { return []; }
+  }
+  function saveLocal() {
+    try { localStorage.setItem("carnet_de_fer_logs", JSON.stringify(allEntries)); } catch (e) {}
+  }
+
+  async function initStore() {
+    let db = null;
+    try { db = await window.claude.use("db"); } catch (e) { db = null; }
+    if (db) {
+      logsCol = db.collection("logs");
+      logsCol.onSnapshot(
+        snap => {
+          allEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderContent();
+        },
+        () => {
+          usingLocal = true;
+          allEntries = loadLocal();
+          renderContent();
+        }
+      );
+    } else {
+      usingLocal = true;
+      allEntries = loadLocal();
+      renderContent();
+    }
+    renderFooterNote();
+  }
+
+  async function addEntry(entry) {
+    if (logsCol && !usingLocal) {
+      try { await logsCol.add(entry); return; } catch (e) { /* fall through to local */ }
+    }
+    allEntries.push({ id: "local-" + Date.now() + "-" + Math.random().toString(36).slice(2), ...entry });
+    saveLocal();
+    renderContent();
+  }
+
+  async function removeEntry(id) {
+    if (logsCol && !usingLocal) {
+      try { await logsCol.doc(id).delete(); return; } catch (e) { /* fall through */ }
+    }
+    allEntries = allEntries.filter(e => e.id !== id);
+    saveLocal();
+    renderContent();
+  }
+
+  function entriesFor(dayId, itemId) {
+    return allEntries.filter(e => e.dayId === dayId && e.itemId === itemId);
+  }
+
+  function renderFooterNote() {
+    const el = document.getElementById("footer-note");
+    el.textContent = usingLocal
+      ? "Journal enregistré uniquement sur cet appareil (stockage synchronisé indisponible dans cette vue)."
+      : "Ton journal est synchronisé automatiquement sur ton compte — accessible depuis n'importe quel appareil connecté.";
+  }
+
+  // ---------- Utilitaires ----------
+
+  function todayStr() { return new Date().toISOString().slice(0, 10); }
+  function formatDateFR(iso) { const [y, m, d] = iso.split("-"); return `${d}/${m}/${y}`; }
+  function escapeHtml(str) { return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  // ---------- Intro ----------
+
+  function renderIntro() {
+    return `
+      <div class="panel">
+        <h2>👋 Bienvenue, débutant·e</h2>
+        <p>Ce programme est prévu pour progresser en toute sécurité même sans expérience de musculation. Voici les règles à connaître avant ta première séance.</p>
+      </div>
+      <div class="panel">
+        <h3>📖 Comment lire une fiche d'exercice</h3>
+        <p>Quand tu vois <span class="mono">4 × 8–12</span>, ça veut dire :</p>
+        <ul>
+          <li>Tu fais le mouvement <strong>8 à 12 fois de suite</strong> → c'est <strong>une série</strong>.</li>
+          <li>Tu te reposes environ <strong>60 à 90 secondes</strong>.</li>
+          <li>Tu recommences jusqu'à avoir fait <strong>4 séries</strong> au total.</li>
+        </ul>
+        <p>Vise le haut de la fourchette en gardant une bonne technique. Si tu n'atteins même pas le bas de la fourchette, la charge est trop lourde.</p>
+      </div>
+      <div class="panel">
+        <h3>⚖️ Choisir le bon poids</h3>
+        <ul>
+          <li>Tu dois finir toutes tes répétitions avec une <strong>bonne technique</strong>, sans te tordre ni te balancer.</li>
+          <li>Les 2 dernières répétitions de chaque série doivent être <strong>difficiles mais faisables</strong>.</li>
+          <li>Tu termines en te disant "j'aurais pu en faire 10 de plus" → trop léger. Tu ne finis pas la série → trop lourd.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>🛡️ Sécurité pour débuter</h3>
+        <ul>
+          <li><strong>La technique avant le poids.</strong> Un mouvement bien fait à 5 kg vaut mieux qu'un mouvement bâclé à 15 kg.</li>
+          <li><strong>Respire</strong> : souffle à l'effort, inspire au retour. Ne bloque jamais ta respiration.</li>
+          <li><strong>Échauffe-toi</strong> avant les séries lourdes (articulations + 5 minutes de cardio léger suffisent).</li>
+          <li><strong>Repose-toi 60-90 s entre les séries</strong>, et un jour complet avant de refaire le même groupe musculaire.</li>
+          <li>Une petite courbature 1-2 jours après est normale (DOMS, voir le lexique). Une <strong>douleur vive dans une articulation</strong> ne l'est pas : arrête et laisse reposer.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>📈 Progresser sans se blesser</h3>
+        <ul>
+          <li>Quand tu atteins facilement le haut de la fourchette sur <strong>toutes tes séries</strong>, augmente légèrement la charge la fois suivante.</li>
+          <li><strong>Curl marteau (10 kg)</strong> et <strong>échauffement biceps (5 kg)</strong> : haltères à poids fixe. Progresse par les répétitions, le tempo, ou une pause en haut du mouvement.</li>
+          <li><strong>Barre EZ</strong> : ajoute un disque quand 20 kg devient facile sur toute la série.</li>
+          <li>Vise 7 à 8 h de sommeil par nuit — c'est pendant le sommeil que le muscle se répare.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>🗓️ Progression sur 8 semaines</h3>
+        <table class="week-table">
+          <tr><th>Semaines</th><th>Objectif</th></tr>
+          <tr><td>1–2</td><td>Apprendre les mouvements, charges légères à modérées</td></tr>
+          <tr><td>3–4</td><td>Augmenter progressivement (+1-2 kg quand possible, sinon reps/tempo)</td></tr>
+          <tr><td>5–6</td><td>Consolider, viser le haut de fourchette sur la majorité des séries</td></tr>
+          <tr><td>7–8</td><td>Pic de forme, semaine plus légère en 8 si fatigue</td></tr>
+        </table>
+      </div>
+      <div class="panel">
+        <h3>🎒 Ton matériel</h3>
+        <ul>
+          <li><strong>2 haltères de 10 kg</strong> → travail principal des biceps (curl marteau)</li>
+          <li><strong>2 haltères de 5 kg</strong> → échauffement des biceps</li>
+          <li><strong>Barre EZ chargée à 20 kg</strong> → curl, rowing, extension triceps, squat</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  function renderGlossary() {
+    return `
+      <div class="day-head">
+        <span class="eyebrow rest">Référence</span>
+        <h2>Lexique débutant</h2>
+        <p class="sub">Tous les mots techniques du programme, expliqués simplement.</p>
+      </div>
+      <dl class="glossary">
+        ${GLOSSARY_TERMS.map(([term, def]) => `
+          <div class="glossary-item"><dt>${term}</dt><dd>${def}</dd></div>
+        `).join("")}
+      </dl>
+    `;
+  }
+
+  // ---------- Composants exercice : vidéo, log, historique, graphique ----------
+
+  function renderVideoLink(video) {
+    if (!video || !video.id) return "";
+    return `
+      <div class="video-demo" data-video-id="${video.id}">
+        <img src="https://i.ytimg.com/vi/${video.id}/hqdefault.jpg" alt="Démonstration vidéo" class="video-thumb" loading="lazy">
+        <button type="button" class="video-play-btn" aria-label="Lire la vidéo de démonstration">▶</button>
+      </div>
+      <p class="video-credit">🎥 <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener">${escapeHtml(video.title)}</a>${video.channel ? " — " + escapeHtml(video.channel) : ""}</p>
+    `;
+  }
+
+  function renderChart(entries, kind, w, h) {
+    const asc = entries.slice().sort((a, b) => a.date.localeCompare(b.date));
+    const values = asc.map(e => e.value);
+    const min = Math.min(...values), max = Math.max(...values);
+    const range = max - min || 1;
+    const padL = 34, padR = 10, padT = 12, padB = 10;
+    const stepX = asc.length > 1 ? (w - padL - padR) / (asc.length - 1) : 0;
+    const coords = asc.map((e, i) => ({
+      x: padL + i * stepX,
+      y: h - padB - ((e.value - min) / range) * (h - padT - padB)
+    }));
+    const points = coords.map(c => `${c.x},${c.y}`).join(" ");
+    const areaPts = `${padL},${h - padB} ${points} ${coords[coords.length - 1].x},${h - padB}`;
+    const unit = kind === "muscu" ? "kg" : "min";
+    return `
+      <div class="chart-wrap">
+        <svg viewBox="0 0 ${w} ${h}" class="chart-svg" preserveAspectRatio="none">
+          <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h - padB}" style="stroke:var(--line);stroke-width:1"></line>
+          <line x1="${padL}" y1="${h - padB}" x2="${w - padR}" y2="${h - padB}" style="stroke:var(--line);stroke-width:1"></line>
+          <text x="4" y="${padT + 4}">${max}${unit}</text>
+          <text x="4" y="${h - padB}">${min}${unit}</text>
+          <polygon points="${areaPts}" style="fill:var(--amber);opacity:0.12"></polygon>
+          <polyline points="${points}" style="fill:none;stroke:var(--amber);stroke-width:2.5"></polyline>
+          ${coords.map(c => `<circle cx="${c.x}" cy="${c.y}" r="3.5" style="fill:var(--amber)"></circle>`).join("")}
+        </svg>
+        <p class="chart-caption">Évolution du ${kind === "muscu" ? "poids" : "temps"} — ${formatDateFR(asc[0].date)} → ${formatDateFR(asc[asc.length - 1].date)}</p>
+      </div>
+    `;
+  }
+
+  function renderHistoryTable(entries, kind) {
+    const sorted = entries.slice().sort((a, b) => b.date.localeCompare(a.date));
+    const rows = sorted.map(e => `
+      <tr>
+        <td class="num">${formatDateFR(e.date)}</td>
+        <td class="num">${e.value}${kind === "muscu" ? " kg" : " min"}</td>
+        ${kind === "muscu" ? `<td class="num">${e.reps ? escapeHtml(e.reps) : "—"}</td>` : ""}
+        <td>${e.note ? escapeHtml(e.note) : "—"}</td>
+        <td><button type="button" class="del-btn" data-del-id="${e.id}" title="Supprimer">✕</button></td>
+      </tr>
+    `).join("");
+    return `
+      <table class="log-table">
+        <tr><th>Date</th><th>${kind === "muscu" ? "Poids" : "Durée"}</th>${kind === "muscu" ? "<th>Reps</th>" : ""}<th>Note</th><th></th></tr>
+        ${rows}
+      </table>
+    `;
+  }
+
+  function renderLogSection(dayId, itemId, kind) {
+    const entries = entriesFor(dayId, itemId);
+    const base = slug(dayId + "-" + itemId);
+    const valueLabel = kind === "muscu" ? "Poids (kg)" : "Durée (min)";
+    return `
+      <div class="log-section">
+        <h4>Ton journal</h4>
+        <form class="log-form" data-day="${dayId}" data-item="${itemId.replace(/"/g, "&quot;")}">
+          <div class="log-row">
+            <label for="${base}-date">Date<input id="${base}-date" type="date" name="date" value="${todayStr()}" required></label>
+            <label for="${base}-value">${valueLabel}<input id="${base}-value" type="number" step="0.5" min="0" name="value" required></label>
+            ${kind === "muscu" ? `<label for="${base}-reps">Reps<input id="${base}-reps" type="text" name="reps" placeholder="12,11,10,9"></label>` : ""}
+          </div>
+          <label class="log-note" for="${base}-note">Note (optionnel)<input id="${base}-note" type="text" name="note" placeholder="ressenti, douleur, énergie..."></label>
+          <button type="submit" class="log-submit">Ajouter au journal</button>
+        </form>
+        ${entries.length ? renderHistoryTable(entries, kind) : `<p class="log-empty">Pas encore d'entrée — enregistre ta première séance ci-dessus.</p>`}
+        ${entries.length >= 2 ? renderChart(entries, kind, 320, 90) : ""}
+      </div>
+    `;
+  }
+
+  // ---------- Jours muscu / cardio / repos ----------
+
+  function renderExerciseCard(day, ex, idx) {
+    const today = todayStr();
+    const doneToday = entriesFor(day.id, ex.name).some(e => e.date === today);
+    return `
+      <div class="exercise ${doneToday ? "done" : ""}">
+        <div class="ex-head" data-toggle="${idx}">
+          <div class="ex-title-wrap">
+            <p class="ex-name">${ex.name}${doneToday ? '<span class="chip chip-done">✓ fait</span>' : ""}</p>
+            <p class="ex-spec">${ex.sets} · ${ex.weight}</p>
+            <span class="chip chip-muscle">${ex.muscle}</span>
+          </div>
+          <span class="chevron" data-chevron="${idx}">▶</span>
+        </div>
+        <div class="ex-body" data-body="${idx}">
+          <h4>Comment faire</h4>
+          <ol>${ex.steps.map(s => `<li>${s}</li>`).join("")}</ol>
+          ${renderVideoLink(ex.video)}
+          ${ex.tip ? `<div class="tip-box">💡 <strong>Astuce :</strong> ${ex.tip}</div>` : ""}
+          ${ex.mistake ? `<div class="mistake-box">⚠️ <strong>Erreur à éviter :</strong> ${ex.mistake}</div>` : ""}
+          ${renderLogSection(day.id, ex.name, "muscu")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderMuscuDay(day) {
+    const cards = day.exercises.map((ex, i) => renderExerciseCard(day, ex, i)).join("");
+    const finisherCard = day.finisher ? renderExerciseCard(day, day.finisher, day.exercises.length) : "";
+    return `
+      <div class="day-head">
+        <span class="eyebrow strength">Musculation</span>
+        <h2>${day.label} — ${day.title}</h2>
+        <p class="sub">Touche un exercice pour voir la démo et enregistrer ta séance.</p>
+      </div>
+      ${cards}${finisherCard}
+    `;
+  }
+
+  function renderCardioDay(day) {
+    return `
+      <div class="day-head">
+        <span class="eyebrow cardio">Cardio</span>
+        <h2>${day.label} — ${day.title}</h2>
+        <p class="sub mono">${day.spec}</p>
+      </div>
+      <div class="panel">
+        <p>${day.description}</p>
+        <div class="tip-box">🎯 <strong>Pourquoi cette séance :</strong> ${day.why}</div>
+      </div>
+      <div class="panel">${renderLogSection(day.id, "session", "cardio")}</div>
+    `;
+  }
+
+  function renderRestDay(day) {
+    return `
+      <div class="day-head">
+        <span class="eyebrow rest">Repos</span>
+        <h2>${day.label}</h2>
+      </div>
+      <div class="panel">
+        <p>${day.description}</p>
+        <div class="tip-box">🎯 <strong>Pourquoi ce jour compte :</strong> ${day.why}</div>
+      </div>
+    `;
+  }
+
+  // ---------- Journal ----------
+
+  function renderJournal() {
+    if (!allEntries.length) {
+      return `
+        <div class="day-head"><span class="eyebrow rest">Historique</span><h2>Journal de bord</h2></div>
+        <div class="panel"><p>Ton journal est vide pour l'instant. Enregistre tes séances depuis les onglets des jours pour les voir apparaître ici, classées par date.</p></div>
+      `;
+    }
+    const withMeta = allEntries.map(e => ({
+      ...e,
+      meta: (EXERCISE_INDEX[e.dayId] && EXERCISE_INDEX[e.dayId][e.itemId]) || { name: e.itemId, kind: "muscu", dayLabel: e.dayId }
+    }));
+    withMeta.sort((a, b) => b.date.localeCompare(a.date) || (b.ts || 0) - (a.ts || 0));
+    const byDate = {};
+    withMeta.forEach(e => { (byDate[e.date] = byDate[e.date] || []).push(e); });
+    const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+    return `
+      <div class="day-head">
+        <span class="eyebrow rest">Historique</span>
+        <h2>Journal de bord</h2>
+        <p class="sub">Toutes tes séances enregistrées, de la plus récente à la plus ancienne.</p>
+      </div>
+      ${dates.map(date => `
+        <div class="journal-date">
+          <h3>${formatDateFR(date)}</h3>
+          ${byDate[date].map(e => `
+            <div class="journal-entry">
+              <div class="journal-entry-head">
+                <span class="day-tag">${e.meta.dayLabel}</span>
+                <strong>${e.meta.name}</strong>
+                <span class="journal-value">${e.value}${e.meta.kind === "muscu" ? "kg" : "min"}${e.reps ? " · " + escapeHtml(e.reps) + " reps" : ""}</span>
+              </div>
+              ${e.note ? `<p class="journal-note">${escapeHtml(e.note)}</p>` : ""}
+            </div>
+          `).join("")}
+        </div>
+      `).join("")}
+    `;
+  }
+
+  // ---------- Progression ----------
+
+  let currentProgressionKey = null;
+
+  function progressionOptions() {
+    const options = [];
+    DAYS.forEach(day => {
+      if (day.type === "muscu") {
+        const all = day.finisher ? [...day.exercises, day.finisher] : day.exercises;
+        all.forEach(ex => options.push({ dayId: day.id, itemId: ex.name, label: `${day.label} — ${ex.name}` }));
+      } else if (day.type === "cardio") {
+        options.push({ dayId: day.id, itemId: "session", label: `${day.label} — ${day.title}` });
+      }
+    });
+    return options;
+  }
+
+  function renderProgressionTab() {
+    const options = progressionOptions();
+    const key = currentProgressionKey || `${options[0].dayId}::${options[0].itemId}`;
+    const [curDay, curItem] = key.split("::");
+    const kind = EXERCISE_INDEX[curDay][curItem].kind;
+    const entries = entriesFor(curDay, curItem);
+    return `
+      <div class="day-head">
+        <span class="eyebrow rest">Analyse</span>
+        <h2>Progression</h2>
+        <p class="sub">Choisis un exercice pour voir son évolution dans le temps.</p>
+      </div>
+      <select id="progression-select" class="progression-select">
+        ${options.map(o => `<option value="${o.dayId}::${o.itemId}" ${`${o.dayId}::${o.itemId}` === key ? "selected" : ""}>${o.label}</option>`).join("")}
+      </select>
+      ${entries.length >= 2
+        ? `<div class="panel">${renderChart(entries, kind, 600, 200)}</div>`
+        : `<div class="panel"><p>Pas encore assez de données (il faut au moins 2 séances enregistrées). ${entries.length === 1 ? "Tu en as 1 pour l'instant." : "Enregistre tes séances depuis l'onglet du jour correspondant."}</p></div>`
+      }
+      ${entries.length ? `<div class="panel">${renderHistoryTable(entries, kind)}</div>` : ""}
+    `;
+  }
+
+  // ---------- Navigation ----------
+
+  let currentDayId = INTRO.id;
+  const openExercises = new Set();
+
+  function renderTabs() {
+    const tabsEl = document.getElementById("tabs");
+    tabsEl.innerHTML = DAYS.map(d => `<button type="button" class="tab-btn ${d.id === currentDayId ? "active" : ""}" data-day="${d.id}">${d.label}</button>`).join("");
+    tabsEl.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentDayId = btn.dataset.day;
+        renderTabs();
+        renderContent();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    });
+  }
+
+  function attachInteractions(contentEl, day) {
+    contentEl.querySelectorAll(".video-play-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const wrap = btn.closest(".video-demo");
+        const id = wrap.dataset.videoId;
+        wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" title="Démonstration vidéo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+      });
+    });
+    contentEl.querySelectorAll(".log-form").forEach(form => {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const data = new FormData(form);
+        addEntry({
+          dayId: form.dataset.day,
+          itemId: form.dataset.item,
+          date: data.get("date"),
+          value: parseFloat(data.get("value")),
+          reps: data.get("reps") || "",
+          note: data.get("note") || "",
+          ts: Date.now()
+        });
+      });
+    });
+    contentEl.querySelectorAll("[data-del-id]").forEach(btn => {
+      btn.addEventListener("click", () => removeEntry(btn.dataset.delId));
+    });
+  }
+
+  function renderContent() {
+    const day = DAYS.find(d => d.id === currentDayId);
+    const contentEl = document.getElementById("content");
+
+    if (day.type === "intro") { contentEl.innerHTML = renderIntro(); return; }
+    if (day.type === "glossaire") { contentEl.innerHTML = renderGlossary(); return; }
+    if (day.type === "journal") { contentEl.innerHTML = renderJournal(); attachInteractions(contentEl, day); return; }
+    if (day.type === "progression") {
+      contentEl.innerHTML = renderProgressionTab();
+      const sel = document.getElementById("progression-select");
+      if (sel) sel.addEventListener("change", (e) => { currentProgressionKey = e.target.value; renderContent(); });
+      return;
+    }
+    if (day.type === "cardio") { contentEl.innerHTML = renderCardioDay(day); attachInteractions(contentEl, day); return; }
+    if (day.type === "repos") { contentEl.innerHTML = renderRestDay(day); return; }
+
+    contentEl.innerHTML = renderMuscuDay(day);
+    contentEl.querySelectorAll("[data-toggle]").forEach(head => {
+      const idx = head.dataset.toggle;
+      const key = `${day.id}:${idx}`;
+      const body = contentEl.querySelector(`[data-body="${idx}"]`);
+      const chevron = contentEl.querySelector(`[data-chevron="${idx}"]`);
+      if (openExercises.has(key)) { body.classList.add("open"); chevron.classList.add("open"); }
+      head.addEventListener("click", () => {
+        body.classList.toggle("open");
+        chevron.classList.toggle("open");
+        if (body.classList.contains("open")) openExercises.add(key); else openExercises.delete(key);
+      });
+    });
+    attachInteractions(contentEl, day);
+  }
+
+  function start() {
+    renderTabs();
+    renderContent();
+    initStore();
+  }
+
+  if (window.claude && window.claude.hot && window.claude.hot.ready) {
+    window.claude.hot.ready(start);
+  } else {
+    start();
+  }
+})();
+</script>
