@@ -1,40 +1,25 @@
 :root {
-  --paper: #EDEFF1;
-  --surface: #FFFFFF;
-  --ink: #1C2024;
-  --ink-muted: #5B6168;
-  --line: #DBDFE2;
-  --amber: #B96A22;
-  --amber-soft: #F3E4D2;
-  --teal: #2C6E6B;
-  --teal-soft: #DCEBEA;
-  --olive: #4F7942;
-  --olive-soft: #E4EEDF;
-  --warn: #9C5A16;
-  --warn-soft: #F5E7D4;
-  --shadow: 0 1px 2px rgba(28, 32, 36, 0.06), 0 1px 8px rgba(28, 32, 36, 0.05);
+  --paper: #15171A;
+  --surface: #1D2024;
+  --ink: #ECEDEE;
+  --ink-muted: #9BA1A8;
+  --line: #2B2F34;
+  --amber: #E2954F;
+  --amber-soft: #3A2A18;
+  --teal: #6FC2BE;
+  --teal-soft: #163332;
+  --olive: #8FC279;
+  --olive-soft: #223421;
+  --warn: #D98A4A;
+  --warn-soft: #3A2811;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 10px rgba(0, 0, 0, 0.35);
   --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
   --font-body: "Public Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #15171A;
-    --surface: #1D2024;
-    --ink: #ECEDEE;
-    --ink-muted: #9BA1A8;
-    --line: #2B2F34;
-    --amber: #E2954F;
-    --amber-soft: #3A2A18;
-    --teal: #6FC2BE;
-    --teal-soft: #163332;
-    --olive: #8FC279;
-    --olive-soft: #223421;
-    --warn: #D98A4A;
-    --warn-soft: #3A2811;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 10px rgba(0, 0, 0, 0.35);
-  }
+html {
+  color-scheme: dark;
 }
 
 * {
