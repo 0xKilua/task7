@@ -5,6 +5,13 @@ de séances et courbes de progression, en Next.js.
 
 ## Lancer en local
 
+**Windows** : double-clique sur `lancer-le-site.bat`. Il récupère la dernière
+version, installe ce qu'il faut la première fois, démarre le serveur et ouvre
+le navigateur. Garde la fenêtre noire ouverte pendant l'utilisation ; la fermer
+arrête le site.
+
+**En ligne de commande** (tous systèmes) :
+
 ```bash
 cd carnet-de-fer
 npm install
