@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { DAYS } from "@/data/program";
+import { DAY_TABS } from "@/data/dayList";
 
 const TABS: { href: string; label: string }[] = [
   { href: "/", label: "Avant de commencer" },
   { href: "/journal", label: "Journal" },
-  ...DAYS.map((d) => ({ href: `/jour/${d.id}`, label: d.label })),
+  ...DAY_TABS.map((d) => ({ href: `/jour/${d.id}`, label: d.label })),
   { href: "/progression", label: "Progression" },
   { href: "/lexique", label: "Lexique" },
 ];

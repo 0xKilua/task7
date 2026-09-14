@@ -1,7 +1,16 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { subscribe, getSnapshot, getServerSnapshot, addEntry, removeEntry } from "./journalStore";
+import {
+  subscribe,
+  getSnapshot,
+  getServerSnapshot,
+  addEntry,
+  updateEntry,
+  removeEntry,
+  exportEntries,
+  importEntries,
+} from "./journalStore";
 
 export type { LogEntry } from "./journalStore";
 
@@ -12,5 +21,5 @@ export function useJournal() {
     return entries.filter((e) => e.dayId === dayId && e.itemId === itemId);
   }
 
-  return { entries, addEntry, removeEntry, entriesFor };
+  return { entries, addEntry, updateEntry, removeEntry, entriesFor, exportEntries, importEntries };
 }

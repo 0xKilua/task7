@@ -1,6 +1,9 @@
+import TodayPanel from "@/components/TodayPanel";
+
 export default function IntroPage() {
   return (
     <>
+      <TodayPanel />
       <div className="panel">
         <h2>👋 Bienvenue, débutant·e</h2>
         <p>Ce programme est prévu pour progresser en toute sécurité même sans expérience de musculation. Voici les règles à connaître avant ta première séance.</p>

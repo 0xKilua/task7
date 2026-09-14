@@ -3,6 +3,7 @@
 import { EXERCISE_INDEX } from "@/data/program";
 import { useJournal, type LogEntry } from "@/lib/journal";
 import { formatDateFR } from "@/lib/utils";
+import JournalBackup from "@/components/JournalBackup";
 
 export default function JournalPage() {
   const { entries } = useJournal();
@@ -17,6 +18,7 @@ export default function JournalPage() {
         <div className="panel">
           <p>Ton journal est vide pour l&apos;instant. Enregistre tes séances depuis les onglets des jours pour les voir apparaître ici, classées par date.</p>
         </div>
+        <JournalBackup />
       </>
     );
   }
@@ -50,6 +52,7 @@ export default function JournalPage() {
           ))}
         </div>
       ))}
+      <JournalBackup />
     </>
   );
 }

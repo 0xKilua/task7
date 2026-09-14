@@ -1,3 +1,5 @@
+import type { DayId } from "./dayList";
+
 export type Video = { id: string; title: string; channel: string | null };
 
 export type Exercise = {
@@ -12,7 +14,7 @@ export type Exercise = {
 };
 
 export type MuscuDay = {
-  id: string;
+  id: DayId;
   label: string;
   type: "muscu";
   title: string;
@@ -21,7 +23,7 @@ export type MuscuDay = {
 };
 
 export type CardioDay = {
-  id: string;
+  id: DayId;
   label: string;
   type: "cardio";
   title: string;
@@ -31,7 +33,7 @@ export type CardioDay = {
 };
 
 export type RestDay = {
-  id: string;
+  id: DayId;
   label: string;
   type: "repos";
   title: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { Exercise } from "@/data/program";
 import { useJournal } from "@/lib/journal";
 import { todayStr } from "@/lib/utils";
@@ -9,24 +9,31 @@ import JournalSection from "./JournalSection";
 
 export default function ExerciseCard({ dayId, exercise }: { dayId: string; exercise: Exercise }) {
   const [open, setOpen] = useState(false);
+  const bodyId = useId();
   const { entriesFor } = useJournal();
   const doneToday = entriesFor(dayId, exercise.name).some((e) => e.date === todayStr());
 
   return (
     <div className={`exercise ${doneToday ? "done" : ""}`}>
-      <div className="ex-head" onClick={() => setOpen((v) => !v)}>
-        <div className="ex-title-wrap">
-          <p className="ex-name">
+      <button
+        type="button"
+        className="ex-head"
+        aria-expanded={open}
+        aria-controls={bodyId}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="ex-title-wrap">
+          <span className="ex-name">
             {exercise.name}
             {doneToday && <span className="chip chip-done">✓ fait</span>}
-          </p>
-          <p className="ex-spec">{exercise.sets} · {exercise.weight}</p>
+          </span>
+          <span className="ex-spec">{exercise.sets} · {exercise.weight}</span>
           <span className="chip chip-muscle">{exercise.muscle}</span>
-        </div>
-        <span className={`chevron ${open ? "open" : ""}`}>▶</span>
-      </div>
+        </span>
+        <span className={`chevron ${open ? "open" : ""}`} aria-hidden="true">▶</span>
+      </button>
       {open && (
-        <div className="ex-body open">
+        <div className="ex-body open" id={bodyId}>
           <h4>Comment faire</h4>
           <ol>
             {exercise.steps.map((s, i) => (
