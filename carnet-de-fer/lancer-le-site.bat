@@ -35,13 +35,16 @@ echo.
 
 echo [3/3] Demarrage du site...
 echo.
-echo   Le site va s'ouvrir tout seul dans ton navigateur.
+echo   Le navigateur s'ouvrira des que le site sera pret.
 echo   GARDE CETTE FENETRE OUVERTE pendant que tu l'utilises.
 echo   Pour arreter : ferme cette fenetre.
 echo.
 
-REM Ouvre le navigateur une fois le serveur pret, sans bloquer le demarrage.
-start "" cmd /c "timeout /t 6 /nobreak >nul && start http://localhost:3000"
+REM Attend que le serveur reponde vraiment avant d'ouvrir le navigateur :
+REM un delai fixe ouvrait parfois la page avant que Next.js soit pret, d'ou
+REM un ERR_CONNECTION_REFUSED. PowerShell -Command n'est pas soumis a la
+REM politique d'execution, qui ne bloque que les fichiers .ps1.
+start "" powershell -NoProfile -WindowStyle Hidden -Command "for($i=0; $i -lt 120; $i++){ try { $null = Invoke-WebRequest -Uri 'http://localhost:3000' -UseBasicParsing -TimeoutSec 2; Start-Process 'http://localhost:3000'; break } catch { Start-Sleep -Seconds 1 } }"
 
 call npm.cmd run dev
 
