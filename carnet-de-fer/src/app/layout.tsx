@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Anton, Oswald, Barlow } from "next/font/google";
 import "./globals.css";
 import TopBar from "@/components/TopBar";
@@ -27,6 +27,25 @@ const barlow = Barlow({
 export const metadata: Metadata = {
   title: "Carnet de Fer",
   description: "Programme de musculation débutant avec journal de séances et courbes de progression.",
+  applicationName: "Carnet de Fer",
+  appleWebApp: {
+    capable: true,
+    title: "Carnet de Fer",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/apple-icon.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0D0E10",
+  width: "device-width",
+  initialScale: 1,
+  // Le zoom reste autorisé : le bloquer gênerait la lecture des consignes
+  // pour qui a besoin d'agrandir.
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
