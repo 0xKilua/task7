@@ -14,10 +14,10 @@ export default function Chart({ entries, kind, width = 320, height = 90 }: Props
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
-  const padL = 34;
-  const padR = 10;
-  const padT = 12;
-  const padB = 10;
+  const padL = 46;
+  const padR = 12;
+  const padT = 16;
+  const padB = 14;
   const stepX = asc.length > 1 ? (width - padL - padR) / (asc.length - 1) : 0;
   const coords = asc.map((e, i) => ({
     x: padL + i * stepX,
@@ -29,15 +29,17 @@ export default function Chart({ entries, kind, width = 320, height = 90 }: Props
 
   return (
     <div className="chart-wrap">
-      <svg viewBox={`0 0 ${width} ${height}`} className="chart-svg" preserveAspectRatio="none">
+      {/* Pas de preserveAspectRatio="none" : l'étirement déformerait les
+          libellés d'axe, illisibles une fois écrasés. */}
+      <svg viewBox={`0 0 ${width} ${height}`} className="chart-svg">
         <line x1={padL} y1={padT} x2={padL} y2={height - padB} style={{ stroke: "var(--line)", strokeWidth: 1 }} />
         <line x1={padL} y1={height - padB} x2={width - padR} y2={height - padB} style={{ stroke: "var(--line)", strokeWidth: 1 }} />
-        <text x={4} y={padT + 4}>{max}{unit}</text>
-        <text x={4} y={height - padB}>{min}{unit}</text>
-        <polygon points={areaPts} style={{ fill: "var(--amber)", opacity: 0.12 }} />
-        <polyline points={points} style={{ fill: "none", stroke: "var(--amber)", strokeWidth: 2.5 }} />
+        <text x={6} y={padT + 4}>{max}{unit}</text>
+        <text x={6} y={height - padB}>{min}{unit}</text>
+        <polygon points={areaPts} style={{ fill: "var(--accent)", opacity: 0.12 }} />
+        <polyline points={points} style={{ fill: "none", stroke: "var(--accent)", strokeWidth: 2.5 }} />
         {coords.map((c, i) => (
-          <circle key={i} cx={c.x} cy={c.y} r={3.5} style={{ fill: "var(--amber)" }} />
+          <circle key={i} cx={c.x} cy={c.y} r={3.5} style={{ fill: "var(--accent)" }} />
         ))}
       </svg>
       <p className="chart-caption">
