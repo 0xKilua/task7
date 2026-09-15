@@ -15,6 +15,7 @@ import {
   enregistrerBilan,
   enregistrerDiagnostic,
   enregistrerPlan,
+  exigerDossier,
   obtenirPlan,
   supprimerDossier,
 } from '@/lib/dossiers';
@@ -188,10 +189,12 @@ export async function enregistrerPlanAction(formData: FormData) {
 }
 
 export async function genererEntretienAction(formData: FormData) {
-  exigerSession();
+  const utilisateur = exigerSession();
   const type = texte(formData, 'type') || 'premiere_demande';
   const contexte = texte(formData, 'contexte');
   const dossierId = texte(formData, 'dossierId');
+  // Un entretien rattaché à un dossier ne doit pouvoir l'être qu'au sien.
+  if (dossierId) exigerDossier(dossierId, utilisateur.id);
   const trame = genererTrame(type, contexte);
   enregistrerEntretien(type, trame, dossierId || null);
   revalidatePath('/entretien');

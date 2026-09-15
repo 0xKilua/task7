@@ -22,7 +22,7 @@ export default function TableauDeBord() {
   const stats = statistiques(utilisateur.id);
   const dossiers = listerDossiers(utilisateur.id, 6);
   const documents = listerDocuments();
-  const recherches = recherchesRecentes(5);
+  const recherches = recherchesRecentes(utilisateur.id, 5);
   const bilans = bilansEnCours(utilisateur.id);
   const dispositifs = compterDispositifs();
 

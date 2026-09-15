@@ -8,13 +8,15 @@ import {
   TitrePage,
 } from '@/components/ui';
 import { baseDocumentaireVide, enregistrerRecherche, rechercherPassages } from '@/lib/search';
+import { exigerSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export default function PageRecherche({ searchParams }: { searchParams: { q?: string } }) {
+  const utilisateur = exigerSession();
   const requete = (searchParams.q ?? '').trim();
   const resultats = requete.length > 0 ? rechercherPassages(requete, 20) : [];
-  if (requete.length > 0) enregistrerRecherche(requete, resultats.length);
+  if (requete.length > 0) enregistrerRecherche(utilisateur.id, requete, resultats.length);
   const vide = baseDocumentaireVide();
 
   return (

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Bouton, Carte, EtiquetteIA, EtiquetteOfficielle, TitrePage } from '@/components/ui';
 import { listerCategories, listerDispositifs } from '@/lib/dispositifs';
+import { exigerSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,7 @@ export default function PageDispositifs({
 }: {
   searchParams: { categorie?: string; q?: string };
 }) {
+  exigerSession();
   const categories = listerCategories();
   const categorie = searchParams.categorie ?? '';
   const recherche = searchParams.q ?? '';

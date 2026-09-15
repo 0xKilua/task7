@@ -175,7 +175,9 @@ export function connecter(identifiant: string, motDePasse: string): ResultatConn
 
   if (!ligne || !valide || ligne.actif !== 1) {
     enregistrerTentative(saisi);
-    journaliser('connexion.echec', undefined, saisi);
+    // L'identifiant n'est pas journalisé : un mot de passe saisi par erreur dans ce
+    // champ se retrouverait en clair dans un écran que l'administrateur consulte.
+    journaliser('connexion.echec');
     return { ok: false, message: 'Identifiant ou mot de passe incorrect.' };
   }
 
@@ -237,6 +239,13 @@ export function exigerAdministrateur(): Utilisateur {
   const utilisateur = exigerSession();
   if (utilisateur.role !== 'administrateur') notFound();
   return utilisateur;
+}
+
+export function motDePasseValide(utilisateurId: string, motDePasse: string): boolean {
+  const ligne = getDb()
+    .prepare('SELECT mot_de_passe FROM utilisateurs WHERE id = ?')
+    .get(utilisateurId) as { mot_de_passe: string } | undefined;
+  return ligne ? verifierMotDePasse(motDePasse, ligne.mot_de_passe) : false;
 }
 
 export function changerMotDePasse(utilisateurId: string, nouveau: string) {

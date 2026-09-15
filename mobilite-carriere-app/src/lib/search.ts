@@ -106,10 +106,10 @@ function dedoublonner() {
   };
 }
 
-export function enregistrerRecherche(requete: string, nbResultats: number) {
+export function enregistrerRecherche(conseillerId: string, requete: string, nbResultats: number) {
   getDb()
-    .prepare('INSERT INTO recherches (ts, requete, nb_resultats) VALUES (?, ?, ?)')
-    .run(new Date().toISOString(), requete, nbResultats);
+    .prepare('INSERT INTO recherches (conseiller_id, ts, requete, nb_resultats) VALUES (?, ?, ?, ?)')
+    .run(conseillerId, new Date().toISOString(), requete, nbResultats);
 }
 
 export function listerDocuments(): DocumentSource[] {
@@ -135,9 +135,12 @@ export function baseDocumentaireVide(): boolean {
   return row.n === 0;
 }
 
-export function recherchesRecentes(limite = 5): { requete: string; ts: string; nbResultats: number }[] {
+export function recherchesRecentes(
+  conseillerId: string,
+  limite = 5,
+): { requete: string; ts: string; nbResultats: number }[] {
   const lignes = getDb()
-    .prepare('SELECT requete, ts, nb_resultats FROM recherches ORDER BY id DESC LIMIT ?')
-    .all(limite) as { requete: string; ts: string; nb_resultats: number }[];
+    .prepare('SELECT requete, ts, nb_resultats FROM recherches WHERE conseiller_id = ? ORDER BY id DESC LIMIT ?')
+    .all(conseillerId, limite) as { requete: string; ts: string; nb_resultats: number }[];
   return lignes.map((l) => ({ requete: l.requete, ts: l.ts, nbResultats: l.nb_resultats }));
 }

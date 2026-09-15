@@ -49,6 +49,21 @@ export default function PageMonCompte({
 
         <Carte titre="Changer mon mot de passe">
           <form action={changerMotDePasseAction} className="space-y-3">
+            {!utilisateur.doitChangerMotDePasse && (
+              <div>
+                <label htmlFor="motDePasseActuel" className="block text-xs font-medium text-slate-600">
+                  Mot de passe actuel
+                </label>
+                <input
+                  id="motDePasseActuel"
+                  name="motDePasseActuel"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  className="mt-1 w-full rounded border border-slate-300 p-2 text-sm"
+                />
+              </div>
+            )}
             <div>
               <label htmlFor="motDePasse" className="block text-xs font-medium text-slate-600">
                 Nouveau mot de passe (12 caractères minimum)

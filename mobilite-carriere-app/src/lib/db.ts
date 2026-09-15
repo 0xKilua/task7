@@ -142,10 +142,13 @@ CREATE TABLE IF NOT EXISTS plans (
 
 CREATE TABLE IF NOT EXISTS recherches (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  conseiller_id TEXT REFERENCES utilisateurs(id) ON DELETE CASCADE,
   ts TEXT NOT NULL,
   requete TEXT NOT NULL,
   nb_resultats INTEGER NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS idx_recherches_conseiller ON recherches(conseiller_id, id);
 
 CREATE TABLE IF NOT EXISTS journal (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -163,6 +166,7 @@ export function getDb(): Database.Database {
   const db = new Database(DB_PATH);
   db.exec(SCHEMA);
   migrerDossiers(db);
+  migrerRecherches(db);
   seedDispositifs(db);
   instance = db;
   return db;
@@ -199,6 +203,14 @@ function migrerDossiers(db: Database.Database) {
   } finally {
     db.pragma('foreign_keys = ON');
   }
+}
+
+// Une requête de recherche est saisie en traitant le dossier d'un agent : elle relève du
+// conseiller qui l'a tapée, pas du service.
+function migrerRecherches(db: Database.Database) {
+  const colonnes = db.prepare('PRAGMA table_info(recherches)').all() as { name: string }[];
+  if (colonnes.length === 0 || colonnes.some((c) => c.name === 'conseiller_id')) return;
+  db.exec('ALTER TABLE recherches ADD COLUMN conseiller_id TEXT REFERENCES utilisateurs(id) ON DELETE CASCADE');
 }
 
 function seedDispositifs(db: Database.Database) {

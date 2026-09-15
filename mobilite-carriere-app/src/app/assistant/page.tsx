@@ -9,6 +9,7 @@ import {
   EtiquetteIA,
   TitrePage,
 } from '@/components/ui';
+import { exigerSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,8 +26,9 @@ export default function PageAssistant({
 }: {
   searchParams: { q?: string };
 }) {
+  const utilisateur = exigerSession();
   const requete = (searchParams.q ?? '').trim();
-  const reponse = requete.length > 0 ? repondre(requete) : null;
+  const reponse = requete.length > 0 ? repondre(utilisateur.id, requete) : null;
 
   return (
     <>

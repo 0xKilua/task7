@@ -28,9 +28,9 @@ function selectionnerQuestions(requete: string, limite = 4): string[] {
   return manquantes.slice(0, limite).map((q) => q.question);
 }
 
-export function repondre(requete: string): ReponseAssistant {
+export function repondre(conseillerId: string, requete: string): ReponseAssistant {
   const citations = rechercherPassages(requete, 6);
-  enregistrerRecherche(requete, citations.length);
+  enregistrerRecherche(conseillerId, requete, citations.length);
 
   const pistes = dispositifsPertinents(requete);
   const questionsClarification = selectionnerQuestions(requete);

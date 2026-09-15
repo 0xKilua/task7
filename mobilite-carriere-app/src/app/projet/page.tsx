@@ -3,6 +3,7 @@ import path from 'node:path';
 import Link from 'next/link';
 import { marked } from 'marked';
 import { Carte, EtatVide, TitrePage } from '@/components/ui';
+import { exigerSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,7 @@ const DOCUMENTS = [
 const RACINE_DOCS = path.join(process.cwd(), '..', 'docs', 'conseiller-mobilite-carriere');
 
 export default function PageProjet({ searchParams }: { searchParams: { doc?: string } }) {
+  exigerSession();
   const selection = DOCUMENTS.find((d) => d.cle === searchParams.doc) ?? DOCUMENTS[0];
   const chemin = path.join(RACINE_DOCS, selection.fichier);
   const existe = fs.existsSync(chemin);

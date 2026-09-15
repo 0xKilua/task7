@@ -36,9 +36,42 @@ async function connecter(identifiant, motDePasse) {
   await page.waitForLoadState('networkidle');
 }
 
+const ROUTES_PROTEGEES = [
+  '/',
+  '/dossiers',
+  '/assistant?q=detachement',
+  '/recherche?q=detachement',
+  '/entretien',
+  '/dispositifs',
+  '/base-documentaire',
+  '/projet',
+  '/mon-compte',
+  '/administration',
+];
+
 // --- Accès sans session ---------------------------------------------------
 await page.goto(`${BASE}/dossiers`, { waitUntil: 'networkidle' });
 verifier('Sans session, toute page renvoie vers la connexion', /\/(connexion|installation)/.test(page.url()));
+
+// Le middleware ne voit que la présence du cookie : sans revalidation en page, un cookie
+// inventé suffirait à lire la base documentaire et le catalogue.
+const contexteForge = await navigateur.newContext();
+await contexteForge.addCookies([
+  { name: 'mcc_session', value: 'jeton-invente-par-un-attaquant', domain: 'localhost', path: '/' },
+]);
+const pageForgee = await contexteForge.newPage();
+const fuites = [];
+for (const route of ROUTES_PROTEGEES) {
+  await pageForgee.goto(`${BASE}${route}`, { waitUntil: 'networkidle' });
+  if (!pageForgee.url().includes('/connexion') && !pageForgee.url().includes('/installation')) {
+    fuites.push(`${route} → ${pageForgee.url()}`);
+  }
+}
+verifier(
+  `Un cookie de session inventé n'ouvre aucune page${fuites.length ? ' — fuites : ' + fuites.join(', ') : ''}`,
+  fuites.length === 0,
+);
+await contexteForge.close();
 
 // --- Installation ou connexion administrateur -----------------------------
 if (page.url().includes('/installation')) {
@@ -56,8 +89,25 @@ if (page.url().includes('/installation')) {
 verifier('Tableau de bord accessible une fois connecté', await page.getByText('Tableau de bord').first().isVisible());
 await page.screenshot({ path: `${SORTIE}/01-tableau-de-bord.png`, fullPage: true });
 
+// --- Mot de passe actuel exigé pour tout changement volontaire -----------
+await page.goto(`${BASE}/mon-compte`, { waitUntil: 'networkidle' });
+verifier(
+  'Le formulaire exige le mot de passe actuel',
+  await page.locator('#motDePasseActuel').isVisible(),
+);
+await page.fill('#motDePasseActuel', 'un-mot-de-passe-incorrect');
+await page.fill('#motDePasse', ADMIN.motDePasse + '-nouveau');
+await page.fill('#confirmation', ADMIN.motDePasse + '-nouveau');
+await page.click('button:has-text("Changer le mot de passe")');
+await page.waitForURL(/erreur=/, { timeout: 15000 });
+verifier(
+  'Mot de passe actuel incorrect refusé',
+  (await page.locator('main').innerText()).includes('mot de passe actuel est incorrect'),
+);
+
 // --- Mot de passe trop court refusé ---------------------------------------
 await page.goto(`${BASE}/mon-compte`, { waitUntil: 'networkidle' });
+await page.fill('#motDePasseActuel', ADMIN.motDePasse);
 await page.fill('#motDePasse', 'court');
 await page.fill('#confirmation', 'court');
 await page.click('button:has-text("Changer le mot de passe")');

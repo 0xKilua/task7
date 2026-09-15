@@ -13,6 +13,7 @@ import {
 import { obtenirDispositif } from '@/lib/dispositifs';
 import { rechercherPassages } from '@/lib/search';
 import { BlocCitation } from '@/components/ui';
+import { exigerSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,7 @@ const CHAMPS_EDITABLES = [
 ] as const;
 
 export default function PageDispositif({ params }: { params: { id: string } }) {
+  exigerSession();
   const dispositif = obtenirDispositif(params.id);
   if (!dispositif) notFound();
 

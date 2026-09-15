@@ -14,6 +14,7 @@ import {
   exigerAdministrateur,
   exigerSession,
   hacherMotDePasse,
+  motDePasseValide,
   validerMotDePasse,
 } from '@/lib/auth';
 import { getDb, journaliser } from '@/lib/db';
@@ -93,8 +94,18 @@ export async function deconnexionAction() {
 
 export async function changerMotDePasseAction(formData: FormData) {
   const utilisateur = exigerSession();
+  const actuel = texte(formData, 'motDePasseActuel');
   const nouveau = texte(formData, 'motDePasse');
   const confirmation = texte(formData, 'confirmation');
+
+  // Sans cette vérification, quiconque récupère une session ouverte — poste non
+  // verrouillé, cookie recopié — s'approprie définitivement le compte, d'autant que le
+  // changement ferme ensuite les sessions du titulaire légitime.
+  // Seul le changement imposé à la première connexion en est dispensé : le mot de passe
+  // provisoire est de toute façon connu de l'administrateur qui vient de le fixer.
+  if (!utilisateur.doitChangerMotDePasse && !motDePasseValide(utilisateur.id, actuel)) {
+    redirect('/mon-compte?erreur=' + encodeURIComponent('Le mot de passe actuel est incorrect.'));
+  }
 
   const erreur = nouveau !== confirmation ? 'Les deux mots de passe ne correspondent pas.' : validerMotDePasse(nouveau);
   if (erreur) redirect('/mon-compte?erreur=' + encodeURIComponent(erreur));

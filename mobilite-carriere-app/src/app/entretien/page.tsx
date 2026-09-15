@@ -1,6 +1,7 @@
 import { genererEntretienAction } from '@/app/actions';
 import { Bouton, Carte, EtatVide, EtiquetteIA, TitrePage } from '@/components/ui';
 import { TYPES_ENTRETIEN, genererTrame } from '@/lib/entretien';
+import { exigerSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,7 @@ export default function PageEntretien({
 }: {
   searchParams: { type?: string; contexte?: string; dossierId?: string };
 }) {
+  exigerSession();
   const type = searchParams.type ?? '';
   const contexte = searchParams.contexte ?? '';
   const dossierId = searchParams.dossierId ?? '';
