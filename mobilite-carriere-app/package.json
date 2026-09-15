@@ -10,7 +10,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "ingest": "tsx scripts/ingest-cli.ts",
-    "dispositifs:importer": "tsx scripts/importer-dispositifs.ts"
+    "dispositifs:importer": "tsx scripts/importer-dispositifs.ts",
+    "sauvegarder": "tsx scripts/sauvegarder.ts"
   },
   "engines": {
     "node": ">=20.9 <23"

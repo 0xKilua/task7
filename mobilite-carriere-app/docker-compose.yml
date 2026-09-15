@@ -1,0 +1,37 @@
+# Exemple de déploiement : l'application derrière un reverse proxy HTTPS (Caddy,
+# certificat Let's Encrypt automatique). Si l'hébergement dispose déjà d'un reverse
+# proxy ou d'un load balancer avec ses propres certificats, ne lancer que le
+# service « app » et le publier en interne sur le port 3000 : voir DEPLOIEMENT.md.
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - donnees:/app/data
+    expose:
+      - "3000"
+    # Décommenter pour accéder directement à l'application sans passer par Caddy
+    # (utile en interne, ou le temps de vérifier le déploiement) :
+    # ports:
+    #   - "3000:3000"
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - certificats:/data
+      - config_caddy:/config
+
+volumes:
+  donnees:
+  certificats:
+  config_caddy:

@@ -1,0 +1,12 @@
+node_modules
+.next
+data/app.db
+data/app.db-journal
+data/app.db-wal
+data/app.db-shm
+data/documents/*
+!data/documents/.gitkeep
+!data/documents/README.md
+.git
+*.log
+scripts/e2e.mjs

@@ -145,6 +145,13 @@ La taille maximale d'un document déposé par l'interface est fixée par
 
 Si `playwright` est installé localement, `PLAYWRIGHT_MODULE` peut être omis.
 
+## Déploiement
+
+Guide complet : [DEPLOIEMENT.md](./DEPLOIEMENT.md) (Docker, reverse proxy HTTPS, sauvegardes,
+mise à jour). **Le `docker build` n'a pas pu être testé dans l'environnement de développement**
+(Docker Hub y était bloqué par la politique réseau) — à construire et vérifier avant tout usage
+réel, voir le tableau en tête de ce guide.
+
 ## Limites connues / suite
 
 - Recherche **lexicale** (FTS5) uniquement : la recherche sémantique (embeddings) reste à ajouter.

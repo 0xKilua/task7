@@ -1,0 +1,9 @@
+# Copier ce fichier en Caddyfile et remplacer le nom de domaine.
+# Caddy obtient et renouvelle automatiquement le certificat Let's Encrypt :
+# le domaine doit pointer vers ce serveur et le port 443 doit être joignable
+# depuis Internet pour que la validation ACME aboutisse.
+
+mobilite-carriere.exemple-administration.fr {
+    reverse_proxy app:3000
+    encode gzip
+}
