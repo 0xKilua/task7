@@ -1,0 +1,15 @@
+node_modules
+.next
+next-env.d.ts
+*.tsbuildinfo
+
+# Base locale : contient des donnees d'accompagnement potentiellement sensibles
+data/app.db
+data/app.db-journal
+data/app.db-wal
+data/app.db-shm
+
+# Documents sources deposes localement (guides DGAFP, PDF officiels)
+data/documents/*
+!data/documents/.gitkeep
+!data/documents/README.md

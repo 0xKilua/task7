@@ -1,0 +1,20 @@
+[
+  { "id": "disp_mutation", "nom": "Mutation", "categorie": "Mobilité" },
+  { "id": "disp_detachement", "nom": "Détachement", "categorie": "Mobilité" },
+  { "id": "disp_mise_a_disposition", "nom": "Mise à disposition", "categorie": "Mobilité" },
+  { "id": "disp_disponibilite", "nom": "Disponibilité", "categorie": "Mobilité" },
+  { "id": "disp_integration_directe", "nom": "Intégration directe", "categorie": "Mobilité" },
+  { "id": "disp_pna", "nom": "Position normale d'activité", "categorie": "Mobilité" },
+  { "id": "disp_mobilite_inter_fp", "nom": "Mobilité entre versants de la fonction publique", "categorie": "Mobilité" },
+  { "id": "disp_mobilite_geographique", "nom": "Mobilité géographique", "categorie": "Mobilité" },
+  { "id": "disp_cpf", "nom": "Compte personnel de formation (CPF)", "categorie": "Formation professionnelle tout au long de la vie" },
+  { "id": "disp_vae", "nom": "Validation des acquis de l'expérience (VAE)", "categorie": "Formation professionnelle tout au long de la vie" },
+  { "id": "disp_cfp", "nom": "Congé de formation professionnelle", "categorie": "Formation professionnelle tout au long de la vie" },
+  { "id": "disp_bilan_competences", "nom": "Bilan de compétences", "categorie": "Développement des compétences" },
+  { "id": "disp_periode_professionnalisation", "nom": "Période de professionnalisation", "categorie": "Développement des compétences" },
+  { "id": "disp_formation_statutaire", "nom": "Formation statutaire et continue", "categorie": "Développement des compétences" },
+  { "id": "disp_cep", "nom": "Conseil en évolution professionnelle", "categorie": "Accompagnement des parcours" },
+  { "id": "disp_entretien_carriere", "nom": "Entretien de carrière", "categorie": "Accompagnement des parcours" },
+  { "id": "disp_bilan_parcours", "nom": "Bilan de parcours professionnel", "categorie": "Accompagnement des parcours" },
+  { "id": "disp_accompagnement_reconversion", "nom": "Accompagnement à la reconversion professionnelle", "categorie": "Accompagnement des parcours" }
+]
