@@ -19,8 +19,15 @@ répondent systématiquement par le message institutionnel prévu, sans produire
    ```
 3. L'ingestion extrait le texte, le découpe en passages, les indexe et enregistre les métadonnées
    (source, date de publication, date d'ingestion) utilisées pour citer les sources.
+4. Vérifier : la page « Base documentaire » doit afficher le document et son nombre de passages,
+   et une recherche sur un terme du guide doit renvoyer des passages cités avec leur section et
+   leur page.
 
 Formats acceptés : `.pdf`, `.md`, `.txt`.
+
+Pour un PDF, les titres de section sont détectés à partir de la taille de police (une ligne
+composée plus grand que le corps de texte est traitée comme un titre) et le numéro de page est
+conservé pour la citation.
 
 ## Mise à jour d'un document
 
