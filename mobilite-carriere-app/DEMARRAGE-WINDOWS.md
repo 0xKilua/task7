@@ -34,13 +34,17 @@ cd task7\mobilite-carriere-app
 
 ## 3. Lancer l'application
 
-**Le plus simple** — le script fait tout (vérification de Node, installation, démarrage) :
+**Le plus simple** — **double-cliquer sur `demarrer.bat`** dans l'explorateur de fichiers. Il
+vérifie Node, installe les dépendances si besoin et démarre le serveur. Un `.bat` n'est pas soumis
+à la politique d'exécution de PowerShell : ce chemin passe toujours.
+
+**Depuis PowerShell** :
 ```powershell
 .\demarrer.ps1
 ```
 
-Si Windows bloque l'exécution du script (« l'exécution de scripts est désactivée »), autoriser les
-scripts locaux pour cette session uniquement :
+Si Windows bloque (« l'exécution de scripts est désactivée sur ce système »), autoriser les scripts
+pour cette fenêtre uniquement — rien n'est modifié durablement sur le poste :
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\demarrer.ps1
@@ -85,7 +89,8 @@ npm run ingest -- --fichier data\documents\GuideMobPro_2026.pdf --titre "Guide d
 | Symptôme | Cause | Solution |
 |---|---|---|
 | `npm install` échoue sur `better-sqlite3` / `node-gyp` | Outils de compilation C++ absents | Relancer l'installateur Node.js en cochant « Tools for Native Modules », ou installer Visual Studio Build Tools (charge de travail « Desktop development with C++ »), puis `npm install` à nouveau |
-| « l'exécution de scripts est désactivée sur ce système » | Politique d'exécution PowerShell | `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` avant de relancer le script |
+| « l'exécution de scripts est désactivée sur ce système » | Politique d'exécution PowerShell | Double-cliquer sur `demarrer.bat`, ou lancer `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` dans la **même** fenêtre avant de relancer le script |
+| Le même message apparaît sur `npm` (`npm.ps1`) | Même cause : PowerShell retient le script `.ps1` de npm | Utiliser l'Invite de commandes (`cmd`) plutôt que PowerShell, ou appliquer la commande ci-dessus |
 | `Port 3000 is already in use` | Un autre programme occupe le port | `npm run dev -- -p 3001` puis ouvrir <http://localhost:3001> |
 | `node : terme non reconnu` | Node absent du PATH | Fermer et rouvrir PowerShell après l'installation de Node |
 | Le PDF est ingéré mais aucune recherche ne renvoie de résultat | PDF scanné, sans couche texte | Le fichier ne contient que des images : il faut d'abord le passer à l'OCR |
