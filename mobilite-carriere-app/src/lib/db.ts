@@ -105,8 +105,9 @@ CREATE TABLE IF NOT EXISTS dossiers (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_dossiers_reference ON dossiers(conseiller_id, reference);
+-- L'index sur conseiller_id est créé après migrerDossiers(), pas ici : sur une base
+-- antérieure à l'authentification, CREATE TABLE IF NOT EXISTS ne fait rien (la table
+-- existe déjà sans cette colonne), et l'index échouerait avant que la migration ne l'ajoute.
 
 CREATE TABLE IF NOT EXISTS diagnostics (
   id TEXT PRIMARY KEY,
@@ -147,8 +148,7 @@ CREATE TABLE IF NOT EXISTS recherches (
   requete TEXT NOT NULL,
   nb_resultats INTEGER NOT NULL
 );
-
-CREATE INDEX IF NOT EXISTS idx_recherches_conseiller ON recherches(conseiller_id, id);
+-- Même raison que pour dossiers : l'index est créé après migrerRecherches().
 
 CREATE TABLE IF NOT EXISTS journal (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -167,6 +167,9 @@ export function getDb(): Database.Database {
   db.exec(SCHEMA);
   migrerDossiers(db);
   migrerRecherches(db);
+  // Après migration : la colonne conseiller_id existe forcément, base neuve ou migrée.
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_dossiers_reference ON dossiers(conseiller_id, reference)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_recherches_conseiller ON recherches(conseiller_id, id)');
   seedDispositifs(db);
   instance = db;
   return db;
@@ -195,7 +198,6 @@ function migrerDossiers(db: Database.Database) {
           SELECT id, NULL, reference, intitule, created_at, updated_at FROM dossiers;
         DROP TABLE dossiers;
         ALTER TABLE dossiers_migres RENAME TO dossiers;
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_dossiers_reference ON dossiers(conseiller_id, reference);
       `);
       const anomalies = db.pragma('foreign_key_check') as unknown[];
       if (anomalies.length > 0) throw new Error('Migration des dossiers interrompue : intégrité rompue.');
