@@ -8,6 +8,7 @@ import {
   supprimerDossierAction,
 } from '@/app/actions';
 import { AlerteAVerifier, Bouton, Carte, EtatVide, EtiquetteIA, TitrePage } from '@/components/ui';
+import { exigerSession } from '@/lib/auth';
 import {
   CHAMPS_DIAGNOSTIC,
   ETAPES_BILAN,
@@ -32,12 +33,13 @@ const SECTIONS_PLAN = [
 ] as const;
 
 export default function PageDossier({ params }: { params: { id: string } }) {
-  const dossier = obtenirDossier(params.id);
+  const utilisateur = exigerSession();
+  const dossier = obtenirDossier(params.id, utilisateur.id);
   if (!dossier) notFound();
 
-  const diagnostic = dernierDiagnostic(dossier.id);
-  const bilan = dernierBilan(dossier.id);
-  const plan = obtenirPlan(dossier.id);
+  const diagnostic = dernierDiagnostic(dossier.id, utilisateur.id);
+  const bilan = dernierBilan(dossier.id, utilisateur.id);
+  const plan = obtenirPlan(dossier.id, utilisateur.id);
 
   return (
     <>

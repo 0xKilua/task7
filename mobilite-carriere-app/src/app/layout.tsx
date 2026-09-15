@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { deconnexionAction } from '@/app/auth-actions';
+import { sessionCourante } from '@/lib/auth';
 import './globals.css';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Appui conseiller mobilité-carrière',
@@ -20,6 +24,8 @@ const NAVIGATION = [
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const utilisateur = sessionCourante();
+
   return (
     <html lang="fr">
       <body>
@@ -38,25 +44,51 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </p>
               <p className="text-lg font-semibold">Appui conseiller mobilité-carrière</p>
             </div>
-            <p className="max-w-md text-xs text-etat-100">
-              Outil d&apos;aide à l&apos;accompagnement. Il ne se substitue pas au conseiller et ne
-              produit aucune décision administrative.
-            </p>
-          </div>
-          <nav aria-label="Navigation principale" className="bg-etat-700">
-            <ul className="mx-auto flex max-w-7xl flex-wrap gap-1 px-2 py-1">
-              {NAVIGATION.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="block rounded px-3 py-2 text-sm text-etat-50 hover:bg-etat-600 focus:bg-etat-600 focus:outline-none focus:ring-2 focus:ring-white"
-                  >
-                    {item.libelle}
+            <div className="flex items-center gap-4">
+              <p className="max-w-xs text-xs text-etat-100">
+                Outil d&apos;aide à l&apos;accompagnement. Il ne se substitue pas au conseiller et ne
+                produit aucune décision administrative.
+              </p>
+              {utilisateur && (
+                <div className="text-right text-xs">
+                  <Link href="/mon-compte" className="block font-medium text-white underline">
+                    {utilisateur.nom}
                   </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+                  <form action={deconnexionAction}>
+                    <button type="submit" className="mt-1 text-etat-100 underline hover:text-white">
+                      Se déconnecter
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+          </div>
+          {utilisateur && (
+            <nav aria-label="Navigation principale" className="bg-etat-700">
+              <ul className="mx-auto flex max-w-7xl flex-wrap gap-1 px-2 py-1">
+                {NAVIGATION.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="block rounded px-3 py-2 text-sm text-etat-50 hover:bg-etat-600 focus:bg-etat-600 focus:outline-none focus:ring-2 focus:ring-white"
+                    >
+                      {item.libelle}
+                    </Link>
+                  </li>
+                ))}
+                {utilisateur.role === 'administrateur' && (
+                  <li>
+                    <Link
+                      href="/administration"
+                      className="block rounded px-3 py-2 text-sm text-etat-50 hover:bg-etat-600 focus:bg-etat-600 focus:outline-none focus:ring-2 focus:ring-white"
+                    >
+                      Administration
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </nav>
+          )}
         </header>
 
         <main id="contenu" className="mx-auto max-w-7xl px-4 py-6">

@@ -11,6 +11,35 @@ const SCHEMA = `
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 
+CREATE TABLE IF NOT EXISTS utilisateurs (
+  id TEXT PRIMARY KEY,
+  identifiant TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  nom TEXT NOT NULL,
+  mot_de_passe TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('conseiller', 'administrateur')),
+  actif INTEGER NOT NULL DEFAULT 1,
+  doit_changer_mot_de_passe INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  derniere_connexion TEXT
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  jeton TEXT PRIMARY KEY,
+  utilisateur_id TEXT NOT NULL REFERENCES utilisateurs(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL,
+  expire_le TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_utilisateur ON sessions(utilisateur_id);
+
+CREATE TABLE IF NOT EXISTS tentatives_connexion (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  identifiant TEXT NOT NULL,
+  ts TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_tentatives_identifiant ON tentatives_connexion(identifiant, ts);
+
 CREATE TABLE IF NOT EXISTS documents (
   id TEXT PRIMARY KEY,
   titre TEXT NOT NULL,
@@ -70,11 +99,14 @@ CREATE TABLE IF NOT EXISTS dispositifs (
 
 CREATE TABLE IF NOT EXISTS dossiers (
   id TEXT PRIMARY KEY,
-  reference TEXT NOT NULL UNIQUE,
+  conseiller_id TEXT REFERENCES utilisateurs(id) ON DELETE RESTRICT,
+  reference TEXT NOT NULL,
   intitule TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dossiers_reference ON dossiers(conseiller_id, reference);
 
 CREATE TABLE IF NOT EXISTS diagnostics (
   id TEXT PRIMARY KEY,
@@ -130,9 +162,43 @@ export function getDb(): Database.Database {
   fs.mkdirSync(DATA_DIR, { recursive: true });
   const db = new Database(DB_PATH);
   db.exec(SCHEMA);
+  migrerDossiers(db);
   seedDispositifs(db);
   instance = db;
   return db;
+}
+
+// Les bases créées avant l'authentification n'ont pas de propriétaire de dossier, et
+// contraignent la référence à être unique globalement — ce qui révélerait à un conseiller
+// qu'un autre utilise déjà cette référence.
+function migrerDossiers(db: Database.Database) {
+  const colonnes = db.prepare('PRAGMA table_info(dossiers)').all() as { name: string }[];
+  if (colonnes.length === 0 || colonnes.some((c) => c.name === 'conseiller_id')) return;
+
+  db.pragma('foreign_keys = OFF');
+  try {
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE dossiers_migres (
+          id TEXT PRIMARY KEY,
+          conseiller_id TEXT REFERENCES utilisateurs(id) ON DELETE RESTRICT,
+          reference TEXT NOT NULL,
+          intitule TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+        INSERT INTO dossiers_migres (id, conseiller_id, reference, intitule, created_at, updated_at)
+          SELECT id, NULL, reference, intitule, created_at, updated_at FROM dossiers;
+        DROP TABLE dossiers;
+        ALTER TABLE dossiers_migres RENAME TO dossiers;
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_dossiers_reference ON dossiers(conseiller_id, reference);
+      `);
+      const anomalies = db.pragma('foreign_key_check') as unknown[];
+      if (anomalies.length > 0) throw new Error('Migration des dossiers interrompue : intégrité rompue.');
+    })();
+  } finally {
+    db.pragma('foreign_keys = ON');
+  }
 }
 
 function seedDispositifs(db: Database.Database) {

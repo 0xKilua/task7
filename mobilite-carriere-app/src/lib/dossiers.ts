@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { getDb, journaliser, nouvelId } from './db';
 import type { Bilan, Diagnostic, Dossier, PlanAccompagnement } from './types';
 
@@ -45,31 +46,43 @@ function versDossier(l: Ligne): Dossier {
   };
 }
 
-export function creerDossier(reference: string, intitule?: string): Dossier {
+export function creerDossier(conseillerId: string, reference: string, intitule?: string): Dossier {
   const db = getDb();
   const now = new Date().toISOString();
   const id = nouvelId('dos');
   db.prepare(
-    'INSERT INTO dossiers (id, reference, intitule, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-  ).run(id, reference, intitule ?? null, now, now);
+    'INSERT INTO dossiers (id, conseiller_id, reference, intitule, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+  ).run(id, conseillerId, reference, intitule ?? null, now, now);
   journaliser('dossier.creation', id, reference);
   return { id, reference, intitule: intitule ?? null, createdAt: now, updatedAt: now };
 }
 
-export function listerDossiers(limite = 50): Dossier[] {
+export function listerDossiers(conseillerId: string, limite = 50): Dossier[] {
   const lignes = getDb()
-    .prepare('SELECT * FROM dossiers ORDER BY updated_at DESC LIMIT ?')
-    .all(limite) as Ligne[];
+    .prepare('SELECT * FROM dossiers WHERE conseiller_id = ? ORDER BY updated_at DESC LIMIT ?')
+    .all(conseillerId, limite) as Ligne[];
   return lignes.map(versDossier);
 }
 
-export function obtenirDossier(id: string): Dossier | null {
-  const ligne = getDb().prepare('SELECT * FROM dossiers WHERE id = ?').get(id) as Ligne | undefined;
+// Toute lecture et toute écriture passe par cette vérification : un dossier n'est jamais
+// accessible à un autre conseiller, administrateur compris.
+export function obtenirDossier(id: string, conseillerId: string): Dossier | null {
+  const ligne = getDb()
+    .prepare('SELECT * FROM dossiers WHERE id = ? AND conseiller_id = ?')
+    .get(id, conseillerId) as Ligne | undefined;
   return ligne ? versDossier(ligne) : null;
 }
 
-export function supprimerDossier(id: string): boolean {
-  const info = getDb().prepare('DELETE FROM dossiers WHERE id = ?').run(id);
+export function exigerDossier(id: string, conseillerId: string): Dossier {
+  const dossier = obtenirDossier(id, conseillerId);
+  if (!dossier) notFound();
+  return dossier;
+}
+
+export function supprimerDossier(id: string, conseillerId: string): boolean {
+  const info = getDb()
+    .prepare('DELETE FROM dossiers WHERE id = ? AND conseiller_id = ?')
+    .run(id, conseillerId);
   if (info.changes > 0) journaliser('dossier.suppression', id);
   return info.changes > 0;
 }
@@ -111,8 +124,10 @@ export function construireSynthese(
 
 export function enregistrerDiagnostic(
   dossierId: string,
+  conseillerId: string,
   payload: Record<string, string>,
 ): Diagnostic {
+  exigerDossier(dossierId, conseillerId);
   const db = getDb();
   const id = nouvelId('diag');
   const now = new Date().toISOString();
@@ -127,7 +142,12 @@ export function enregistrerDiagnostic(
   return { id, dossierId, payload, synthese, createdAt: now };
 }
 
-export function enregistrerBilan(dossierId: string, payload: Record<string, string>): Bilan {
+export function enregistrerBilan(
+  dossierId: string,
+  conseillerId: string,
+  payload: Record<string, string>,
+): Bilan {
+  exigerDossier(dossierId, conseillerId);
   const db = getDb();
   const id = nouvelId('bil');
   const now = new Date().toISOString();
@@ -142,7 +162,8 @@ export function enregistrerBilan(dossierId: string, payload: Record<string, stri
   return { id, dossierId, payload, synthese, createdAt: now };
 }
 
-export function dernierDiagnostic(dossierId: string): Diagnostic | null {
+export function dernierDiagnostic(dossierId: string, conseillerId: string): Diagnostic | null {
+  exigerDossier(dossierId, conseillerId);
   const l = getDb()
     .prepare('SELECT * FROM diagnostics WHERE dossier_id = ? ORDER BY created_at DESC LIMIT 1')
     .get(dossierId) as Ligne | undefined;
@@ -156,7 +177,8 @@ export function dernierDiagnostic(dossierId: string): Diagnostic | null {
   };
 }
 
-export function dernierBilan(dossierId: string): Bilan | null {
+export function dernierBilan(dossierId: string, conseillerId: string): Bilan | null {
+  exigerDossier(dossierId, conseillerId);
   const l = getDb()
     .prepare('SELECT * FROM bilans WHERE dossier_id = ? ORDER BY created_at DESC LIMIT 1')
     .get(dossierId) as Ligne | undefined;
@@ -170,21 +192,24 @@ export function dernierBilan(dossierId: string): Bilan | null {
   };
 }
 
-export function bilansEnCours(): { dossier: Dossier; createdAt: string }[] {
+export function bilansEnCours(conseillerId: string): { dossier: Dossier; createdAt: string }[] {
   const lignes = getDb()
     .prepare(
       `SELECT d.*, b.created_at AS bilan_created
          FROM bilans b JOIN dossiers d ON d.id = b.dossier_id
+        WHERE d.conseiller_id = ?
         ORDER BY b.created_at DESC LIMIT 5`,
     )
-    .all() as Ligne[];
+    .all(conseillerId) as Ligne[];
   return lignes.map((l) => ({ dossier: versDossier(l), createdAt: l.bilan_created }));
 }
 
 export function enregistrerPlan(
   dossierId: string,
+  conseillerId: string,
   plan: Omit<PlanAccompagnement, 'id' | 'dossierId' | 'createdAt' | 'updatedAt'>,
 ): PlanAccompagnement {
+  exigerDossier(dossierId, conseillerId);
   const db = getDb();
   const existant = db.prepare('SELECT id, created_at FROM plans WHERE dossier_id = ?').get(dossierId) as
     | { id: string; created_at: string }
@@ -212,7 +237,8 @@ export function enregistrerPlan(
   return { id, dossierId, ...plan, createdAt, updatedAt: now };
 }
 
-export function obtenirPlan(dossierId: string): PlanAccompagnement | null {
+export function obtenirPlan(dossierId: string, conseillerId: string): PlanAccompagnement | null {
+  exigerDossier(dossierId, conseillerId);
   const l = getDb().prepare('SELECT * FROM plans WHERE dossier_id = ?').get(dossierId) as
     | Ligne
     | undefined;
@@ -226,14 +252,21 @@ export function obtenirPlan(dossierId: string): PlanAccompagnement | null {
   };
 }
 
-export function statistiques() {
+export function statistiques(conseillerId: string) {
   const db = getDb();
-  const get = (sql: string) => (db.prepare(sql).get() as { n: number }).n;
+  const get = (sql: string, ...params: string[]) => (db.prepare(sql).get(...params) as { n: number }).n;
+  const parDossier = (table: string) =>
+    get(
+      `SELECT COUNT(*) AS n FROM ${table} t JOIN dossiers d ON d.id = t.dossier_id WHERE d.conseiller_id = ?`,
+      conseillerId,
+    );
+
   return {
-    dossiers: get('SELECT COUNT(*) AS n FROM dossiers'),
-    diagnostics: get('SELECT COUNT(*) AS n FROM diagnostics'),
-    bilans: get('SELECT COUNT(*) AS n FROM bilans'),
-    plans: get('SELECT COUNT(*) AS n FROM plans'),
+    dossiers: get('SELECT COUNT(*) AS n FROM dossiers WHERE conseiller_id = ?', conseillerId),
+    diagnostics: parDossier('diagnostics'),
+    bilans: parDossier('bilans'),
+    plans: parDossier('plans'),
+    // La base documentaire est commune à tous les conseillers.
     documents: get('SELECT COUNT(*) AS n FROM documents'),
     passages: get('SELECT COUNT(*) AS n FROM passages'),
   };

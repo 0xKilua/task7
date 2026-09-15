@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import path from 'node:path';
+import { exigerAdministrateur, exigerSession } from '@/lib/auth';
 import { getDb, journaliser } from '@/lib/db';
 import { dispositifsPertinents } from '@/lib/dispositifs';
 import {
@@ -37,13 +38,14 @@ function lignes(formData: FormData, cle: string): string[] {
 }
 
 export async function creerDossierAction(formData: FormData) {
+  const utilisateur = exigerSession();
   const reference = texte(formData, 'reference');
   if (reference.length === 0) return;
   const intitule = texte(formData, 'intitule');
 
   let dossier;
   try {
-    dossier = creerDossier(reference, intitule || undefined);
+    dossier = creerDossier(utilisateur.id, reference, intitule || undefined);
   } catch (erreur) {
     const conflit =
       erreur instanceof Error && erreur.message.includes('UNIQUE constraint failed');
@@ -51,7 +53,7 @@ export async function creerDossierAction(formData: FormData) {
       '/dossiers?erreur=' +
         encodeURIComponent(
           conflit
-            ? `La référence « ${reference} » est déjà utilisée par un autre dossier.`
+            ? `Vous avez déjà un dossier portant la référence « ${reference} ».`
             : "Le dossier n'a pas pu être créé.",
         ),
     );
@@ -63,40 +65,44 @@ export async function creerDossierAction(formData: FormData) {
 }
 
 export async function supprimerDossierAction(formData: FormData) {
+  const utilisateur = exigerSession();
   const id = texte(formData, 'dossierId');
-  if (id) supprimerDossier(id);
+  if (id) supprimerDossier(id, utilisateur.id);
   revalidatePath('/dossiers');
   revalidatePath('/');
   redirect('/dossiers');
 }
 
 export async function enregistrerDiagnosticAction(formData: FormData) {
+  const utilisateur = exigerSession();
   const dossierId = texte(formData, 'dossierId');
   if (!dossierId) return;
   const payload: Record<string, string> = {};
   for (const champ of CHAMPS_DIAGNOSTIC) payload[champ.cle] = texte(formData, champ.cle);
-  enregistrerDiagnostic(dossierId, payload);
+  enregistrerDiagnostic(dossierId, utilisateur.id, payload);
   revalidatePath(`/dossiers/${dossierId}`);
   revalidatePath('/');
 }
 
 export async function enregistrerBilanAction(formData: FormData) {
+  const utilisateur = exigerSession();
   const dossierId = texte(formData, 'dossierId');
   if (!dossierId) return;
   const payload: Record<string, string> = {};
   for (const etape of ETAPES_BILAN) payload[etape.cle] = texte(formData, etape.cle);
-  enregistrerBilan(dossierId, payload);
+  enregistrerBilan(dossierId, utilisateur.id, payload);
   revalidatePath(`/dossiers/${dossierId}`);
   revalidatePath('/');
 }
 
 export async function genererPlanAction(formData: FormData) {
+  const utilisateur = exigerSession();
   const dossierId = texte(formData, 'dossierId');
   if (!dossierId) return;
 
-  const diagnostic = dernierDiagnostic(dossierId);
-  const bilan = dernierBilan(dossierId);
-  const existant = obtenirPlan(dossierId);
+  const diagnostic = dernierDiagnostic(dossierId, utilisateur.id);
+  const bilan = dernierBilan(dossierId, utilisateur.id);
+  const existant = obtenirPlan(dossierId, utilisateur.id);
 
   const d = diagnostic?.payload ?? {};
   const b = bilan?.payload ?? {};
@@ -147,7 +153,7 @@ export async function genererPlanAction(formData: FormData) {
     return [...conserve, ...ajouts];
   };
 
-  enregistrerPlan(dossierId, {
+  enregistrerPlan(dossierId, utilisateur.id, {
     constats: fusionner('constats'),
     objectifs: fusionner('objectifs'),
     pistes: fusionner('pistes'),
@@ -162,10 +168,11 @@ export async function genererPlanAction(formData: FormData) {
 }
 
 export async function enregistrerPlanAction(formData: FormData) {
+  const utilisateur = exigerSession();
   const dossierId = texte(formData, 'dossierId');
   if (!dossierId) return;
 
-  enregistrerPlan(dossierId, {
+  enregistrerPlan(dossierId, utilisateur.id, {
     constats: lignes(formData, 'constats'),
     objectifs: lignes(formData, 'objectifs'),
     pistes: lignes(formData, 'pistes'),
@@ -181,6 +188,7 @@ export async function enregistrerPlanAction(formData: FormData) {
 }
 
 export async function genererEntretienAction(formData: FormData) {
+  exigerSession();
   const type = texte(formData, 'type') || 'premiere_demande';
   const contexte = texte(formData, 'contexte');
   const dossierId = texte(formData, 'dossierId');
@@ -193,6 +201,8 @@ export async function genererEntretienAction(formData: FormData) {
 }
 
 export async function ingererDocumentAction(formData: FormData) {
+  // La base documentaire est commune : sa modification relève de l'administrateur.
+  exigerAdministrateur();
   const fichier = formData.get('fichier');
   if (!(fichier instanceof File) || fichier.size === 0) {
     redirect('/base-documentaire?erreur=' + encodeURIComponent('Aucun fichier reçu.'));
@@ -239,6 +249,7 @@ export async function ingererDocumentAction(formData: FormData) {
 }
 
 export async function supprimerDocumentAction(formData: FormData) {
+  exigerAdministrateur();
   const id = texte(formData, 'documentId');
   if (id) supprimerDocument(id);
   revalidatePath('/base-documentaire');
@@ -246,6 +257,7 @@ export async function supprimerDocumentAction(formData: FormData) {
 }
 
 export async function majDispositifAction(formData: FormData) {
+  exigerSession();
   const id = texte(formData, 'dispositifId');
   if (!id) return;
 

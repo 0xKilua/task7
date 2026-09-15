@@ -1,5 +1,6 @@
 import { ingererDocumentAction, supprimerDocumentAction } from '@/app/actions';
 import { AlerteAVerifier, Bouton, Carte, EtatVide, TitrePage } from '@/components/ui';
+import { exigerSession } from '@/lib/auth';
 import { listerDocuments } from '@/lib/search';
 
 export const dynamic = 'force-dynamic';
@@ -9,6 +10,8 @@ export default function PageBaseDocumentaire({
 }: {
   searchParams: { succes?: string; erreur?: string };
 }) {
+  const utilisateur = exigerSession();
+  const estAdministrateur = utilisateur.role === 'administrateur';
   const documents = listerDocuments();
 
   return (
@@ -30,6 +33,7 @@ export default function PageBaseDocumentaire({
       )}
 
       <div className="grid gap-5 lg:grid-cols-2">
+        {estAdministrateur ? (
         <Carte titre="Ingérer un document officiel">
           <form action={ingererDocumentAction} className="space-y-3">
             <div>
@@ -112,6 +116,14 @@ export default function PageBaseDocumentaire({
             </p>
           </form>
         </Carte>
+        ) : (
+          <Carte titre="Ingérer un document officiel">
+            <p className="text-sm text-slate-700">
+              La base documentaire est commune à tous les conseillers : seul un administrateur peut
+              y ajouter ou en retirer un document. Signalez-lui le document à intégrer.
+            </p>
+          </Carte>
+        )}
 
         <Carte titre={`Documents ingérés (${documents.length})`}>
           {documents.length === 0 ? (
@@ -147,10 +159,12 @@ export default function PageBaseDocumentaire({
                       </a>
                     )}
                   </div>
-                  <form action={supprimerDocumentAction}>
-                    <input type="hidden" name="documentId" value={doc.id} />
-                    <Bouton variante="secondaire">Retirer</Bouton>
-                  </form>
+                  {estAdministrateur && (
+                    <form action={supprimerDocumentAction}>
+                      <input type="hidden" name="documentId" value={doc.id} />
+                      <Bouton variante="secondaire">Retirer</Bouton>
+                    </form>
+                  )}
                 </li>
               ))}
             </ul>

@@ -2,6 +2,7 @@ import { compterDispositifs } from '@/lib/dispositifs';
 import { bilansEnCours, listerDossiers, statistiques } from '@/lib/dossiers';
 import { listerDocuments, recherchesRecentes } from '@/lib/search';
 import { Carte, EtatVide, LienBouton, TitrePage } from '@/components/ui';
+import { exigerSession } from '@/lib/auth';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -17,11 +18,12 @@ function formaterDate(iso: string) {
 }
 
 export default function TableauDeBord() {
-  const stats = statistiques();
-  const dossiers = listerDossiers(6);
+  const utilisateur = exigerSession();
+  const stats = statistiques(utilisateur.id);
+  const dossiers = listerDossiers(utilisateur.id, 6);
   const documents = listerDocuments();
   const recherches = recherchesRecentes(5);
-  const bilans = bilansEnCours();
+  const bilans = bilansEnCours(utilisateur.id);
   const dispositifs = compterDispositifs();
 
   return (

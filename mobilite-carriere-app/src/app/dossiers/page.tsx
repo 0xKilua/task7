@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { creerDossierAction } from '@/app/actions';
 import { Bouton, Carte, EtatVide, TitrePage } from '@/components/ui';
+import { exigerSession } from '@/lib/auth';
 import { listerDossiers } from '@/lib/dossiers';
 
 export const dynamic = 'force-dynamic';
 
 export default function PageDossiers({ searchParams }: { searchParams: { erreur?: string } }) {
-  const dossiers = listerDossiers();
+  const utilisateur = exigerSession();
+  const dossiers = listerDossiers(utilisateur.id);
 
   return (
     <>
