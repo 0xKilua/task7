@@ -39,6 +39,12 @@ function nettoyerTitre(ligne: string): string {
   return ligne.replace(/^#{1,6}\s+/, '').trim();
 }
 
+// Les PDF coupent les mots en fin de ligne : sans recollage, « légis- lateur »
+// n'est trouvable ni par la recherche ni lisible dans une citation.
+function recoller(texte: string): string {
+  return texte.replace(/(\p{L}{2,})\s?-\s*\n\s*(\p{Ll})/gu, '$1$2');
+}
+
 export function decouperEnPassages(pages: PageExtraite[]): PassageDecoupe[] {
   const passages: PassageDecoupe[] = [];
   let titreCourant: string | null = null;
@@ -47,7 +53,7 @@ export function decouperEnPassages(pages: PageExtraite[]): PassageDecoupe[] {
   let pageTampon: number | null = null;
 
   const vider = () => {
-    const contenu = tampon.join('\n').trim();
+    const contenu = recoller(tampon.join('\n')).trim();
     tampon = [];
     tailleTampon = 0;
     if (contenu.length < TAILLE_PASSAGE_MIN) return;

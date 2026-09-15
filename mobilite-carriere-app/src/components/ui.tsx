@@ -71,12 +71,33 @@ export function ChampSource({ libelle, valeur }: { libelle: string; valeur: stri
   );
 }
 
+// Le moteur de recherche encadre les termes trouvés par deux caractères de contrôle,
+// invisibles dans le texte, que l'on convertit ici en surlignage.
+function Surligne({ texte }: { texte: string }) {
+  const segments = texte.split(/([^]*)/);
+  return (
+    <>
+      {segments.map((segment, index) =>
+        index % 2 === 1 ? (
+          <mark key={index} className="bg-etat-100 font-medium text-etat-900">
+            {segment}
+          </mark>
+        ) : (
+          <span key={index}>{segment}</span>
+        ),
+      )}
+    </>
+  );
+}
+
 export function BlocCitation({ citation, index }: { citation: Citation; index: number }) {
   return (
     <li className="rounded border border-slate-200 bg-slate-50 p-3">
       <p className="text-sm text-slate-800">
         <span className="mr-1 font-semibold text-etat-700">[{index}]</span>
-        <span className="italic">{citation.extrait}</span>
+        <span className="italic">
+          <Surligne texte={citation.extrait} />
+        </span>
       </p>
       <p className="mt-2 text-xs text-slate-600">
         <span className="font-medium">{citation.documentTitre}</span>

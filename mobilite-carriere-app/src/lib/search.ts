@@ -52,7 +52,7 @@ export function rechercherPassages(requete: string, limite = 8): Citation[] {
   const lignes = db
     .prepare(
       `SELECT p.id AS passage_id, p.document_id, p.titre_section, p.page, p.contenu,
-              snippet(passages_fts, 0, '«', '»', '…', 28) AS extrait,
+              snippet(passages_fts, 0, char(1), char(2), '…', 28) AS extrait,
               bm25(passages_fts) AS score,
               d.titre, d.source, d.url, d.date_publication, d.statut
          FROM passages_fts
