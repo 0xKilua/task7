@@ -142,22 +142,59 @@ function seedDispositifs(db: Database.Database) {
   const seedPath = path.join(DATA_DIR, 'dispositifs.seed.json');
   if (!fs.existsSync(seedPath)) return;
 
-  const rows = JSON.parse(fs.readFileSync(seedPath, 'utf8')) as {
-    id: string;
-    nom: string;
-    categorie: string;
-  }[];
-
-  const insert = db.prepare(`
-    INSERT INTO dispositifs (id, nom, categorie, objectif, public_concerne, conditions,
-      demarches, acteurs, points_vigilance, ressources, date_information, source, statut_verification)
-    VALUES (@id, @nom, @categorie, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'non_verifie')
-  `);
-
-  const tx = db.transaction((items: typeof rows) => {
-    for (const item of items) insert.run(item);
+  const tx = db.transaction((items: DispositifSeed[]) => {
+    for (const item of items) insererDispositif(db, item);
   });
-  tx(rows);
+  tx(lireSeedDispositifs(seedPath));
+}
+
+export interface DispositifSeed {
+  id: string;
+  nom: string;
+  categorie: string;
+  objectif?: string | null;
+  publicConcerne?: string | null;
+  conditions?: string | null;
+  demarches?: string | null;
+  acteurs?: string | null;
+  pointsVigilance?: string | null;
+  ressources?: string | null;
+  dateInformation?: string | null;
+  source?: string | null;
+  statutVerification?: string | null;
+}
+
+export function lireSeedDispositifs(chemin = path.join(DATA_DIR, 'dispositifs.seed.json')): DispositifSeed[] {
+  return JSON.parse(fs.readFileSync(chemin, 'utf8')) as DispositifSeed[];
+}
+
+export function insererDispositif(db: Database.Database, item: DispositifSeed) {
+  db.prepare(
+    `INSERT INTO dispositifs (id, nom, categorie, objectif, public_concerne, conditions,
+       demarches, acteurs, points_vigilance, ressources, date_information, source, statut_verification)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       nom = excluded.nom, categorie = excluded.categorie, objectif = excluded.objectif,
+       public_concerne = excluded.public_concerne, conditions = excluded.conditions,
+       demarches = excluded.demarches, acteurs = excluded.acteurs,
+       points_vigilance = excluded.points_vigilance, ressources = excluded.ressources,
+       date_information = excluded.date_information, source = excluded.source,
+       statut_verification = excluded.statut_verification`,
+  ).run(
+    item.id,
+    item.nom,
+    item.categorie,
+    item.objectif ?? null,
+    item.publicConcerne ?? null,
+    item.conditions ?? null,
+    item.demarches ?? null,
+    item.acteurs ?? null,
+    item.pointsVigilance ?? null,
+    item.ressources ?? null,
+    item.dateInformation ?? null,
+    item.source ?? null,
+    item.statutVerification === 'verifie_source' ? 'verifie_source' : 'non_verifie',
+  );
 }
 
 export function journaliser(action: string, cible?: string, details?: string) {

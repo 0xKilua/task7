@@ -77,6 +77,18 @@ Quand `Ready` s'affiche, ouvrir <http://localhost:3000>. Pour arrêter : `Ctrl+C
 npm run ingest -- --fichier data\documents\GuideMobPro_2026.pdf --titre "Guide de la mobilité professionnelle 2026" --source "DGAFP" --url "https://www.fonction-publique.gouv.fr/files/files/publications/publications-dgafp/GuideMobPro_2026.pdf" --date "2026" --statut officiel
 ```
 
+## 4 bis. Mettre à jour le catalogue de dispositifs
+
+Si l'application tournait déjà avant cette version, récupérer les fiches pré-documentées depuis le
+guide DGAFP (arrêter le serveur avec `Ctrl+C`, puis) :
+
+```powershell
+git pull
+npm run dispositifs:importer
+```
+
+Les fiches déjà documentées dans l'installation ne sont pas écrasées.
+
 ## 5. Vérifier que tout fonctionne
 
 - Le bandeau orange « Base documentaire vide » a disparu du tableau de bord.

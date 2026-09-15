@@ -44,6 +44,23 @@ npm run ingest -- --fichier data/documents/GuideMobPro_2026.pdf \
 
 Réutiliser le même `--titre` remplace la version précédente du document (mise à jour incrémentale).
 
+## Catalogue de dispositifs
+
+Le catalogue est livré pré-documenté à partir du guide DGAFP « Agir pour son projet de mobilité
+professionnelle », édition 2026 : **18 fiches sur 28 sont renseignées avec leur page source**. Les
+10 autres correspondent à des dispositifs que ce guide ne documente pas ; leurs champs restent
+vides et signalés comme à vérifier, avec une note indiquant ce que le guide en dit exactement.
+
+Sur une installation où la base existe déjà :
+
+```bash
+npm run dispositifs:importer
+```
+
+L'import ajoute les fiches manquantes et met à jour celles qui n'ont pas été documentées
+localement. **Une fiche déjà documentée dans l'installation n'est jamais écrasée** : le travail du
+conseiller prime sur le contenu livré.
+
 ## Fonctionnalités
 
 | Page | Bloc MVP | Contenu |

@@ -9,7 +9,8 @@
     "start": "next start -p 3000",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "ingest": "tsx scripts/ingest-cli.ts"
+    "ingest": "tsx scripts/ingest-cli.ts",
+    "dispositifs:importer": "tsx scripts/importer-dispositifs.ts"
   },
   "engines": {
     "node": ">=20.9 <23"
