@@ -73,7 +73,24 @@ verifier(
   'Modifications du plan persistées',
   (await page.locator('#actions').inputValue()).includes('Identifier deux postes cibles'),
 );
+
+await page.click('button:has-text("Proposer un plan")');
+await page.waitForTimeout(1500);
+await page.goto(urlDossier, { waitUntil: 'networkidle' });
+verifier(
+  'Re-proposer un plan ne supprime pas les saisies du conseiller',
+  (await page.locator('#actions').inputValue()).includes('Identifier deux postes cibles'),
+);
 await page.screenshot({ path: `${SORTIE}/02-dossier.png`, fullPage: true });
+
+await page.goto(`${BASE}/dossiers`, { waitUntil: 'networkidle' });
+await page.fill('#reference', reference);
+await page.click('button:has-text("Créer le dossier")');
+await page.waitForURL(/erreur=/, { timeout: 15000 });
+verifier(
+  'Référence de dossier déjà utilisée : message clair, pas d’erreur serveur',
+  (await page.locator('main').innerText()).includes('déjà utilisée'),
+);
 
 await page.goto(`${BASE}/assistant?q=quelles+pistes+de+mobilite+geographique+explorer`, {
   waitUntil: 'networkidle',

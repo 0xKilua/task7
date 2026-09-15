@@ -104,6 +104,8 @@ mobilite-carriere-app/
   documentée que si une source est renseignée.
 - Minimisation des données : aucun nom, prénom ou identifiant d'agent n'est demandé — un dossier
   est identifié par une référence choisie par le conseiller.
+- Une nouvelle proposition de plan complète le plan existant sans écraser les lignes saisies par
+  le conseiller.
 - Journalisation des actions importantes (table `journal`).
 - Suppression d'un dossier en cascade (diagnostics, bilans, plans, entretiens).
 
@@ -116,8 +118,12 @@ PLAYWRIGHT_MODULE=<chemin playwright> node scripts/e2e.mjs   # dans un autre
 ```
 
 Le scénario de bout en bout couvre : création de dossier, diagnostic et synthèse, bilan et
-synthèse, génération puis édition et persistance du plan, trame d'entretien, catalogue de
+synthèse, génération puis édition et persistance du plan, non-écrasement des saisies lors d'une
+nouvelle proposition, référence de dossier en doublon, trame d'entretien, catalogue de
 dispositifs, affichage de la trame de l'assistant, rendu mobile et absence d'erreur JavaScript.
+
+La taille maximale d'un document déposé par l'interface est fixée par
+`experimental.serverActions.bodySizeLimit` dans `next.config.mjs` (50 Mo).
 
 Si `playwright` est installé localement, `PLAYWRIGHT_MODULE` peut être omis.
 

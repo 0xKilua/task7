@@ -5,7 +5,7 @@ import { listerDossiers } from '@/lib/dossiers';
 
 export const dynamic = 'force-dynamic';
 
-export default function PageDossiers() {
+export default function PageDossiers({ searchParams }: { searchParams: { erreur?: string } }) {
   const dossiers = listerDossiers();
 
   return (
@@ -14,6 +14,15 @@ export default function PageDossiers() {
         titre="Accompagnements"
         chapo="Chaque accompagnement est identifié par une référence choisie par le conseiller. Par principe de minimisation, l'application ne demande ni nom, ni prénom, ni identifiant d'agent."
       />
+
+      {searchParams.erreur && (
+        <p
+          role="alert"
+          className="mb-4 rounded border-l-4 border-red-400 bg-red-50 px-4 py-3 text-sm text-red-900"
+        >
+          {searchParams.erreur}
+        </p>
+      )}
 
       <div className="grid gap-5 lg:grid-cols-3">
         <Carte titre="Nouvel accompagnement">

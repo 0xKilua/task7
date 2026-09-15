@@ -45,6 +45,20 @@ function recoller(texte: string): string {
   return texte.replace(/(\p{L}{2,})\s?-\s*\n\s*(\p{Ll})/gu, '$1$2');
 }
 
+// Une entrée de sommaire ou d'index n'apporte aucune information au conseiller :
+// elle ne fait que renvoyer vers une page, et pollue les résultats de recherche.
+function estRenvoiDeSommaire(ligne: string): boolean {
+  return /\.{4,}|(?:\.\s){4,}/.test(ligne);
+}
+
+// Ne vise que les pages d'index restées chargées de numéros : un tableau de mots
+// est pauvre en lettres lui aussi, mais doit rester indexé.
+function estListeDeRenvois(contenu: string): boolean {
+  const lettres = contenu.replace(/[^\p{L}]/gu, '').length;
+  const chiffres = contenu.replace(/[^0-9]/g, '').length;
+  return lettres / contenu.length < 0.5 && chiffres / contenu.length > 0.15;
+}
+
 export function decouperEnPassages(pages: PageExtraite[]): PassageDecoupe[] {
   const passages: PassageDecoupe[] = [];
   let titreCourant: string | null = null;
@@ -56,7 +70,7 @@ export function decouperEnPassages(pages: PageExtraite[]): PassageDecoupe[] {
     const contenu = recoller(tampon.join('\n')).trim();
     tampon = [];
     tailleTampon = 0;
-    if (contenu.length < TAILLE_PASSAGE_MIN) return;
+    if (contenu.length < TAILLE_PASSAGE_MIN || estListeDeRenvois(contenu)) return;
     passages.push({
       ordre: passages.length,
       titreSection: titreCourant,
@@ -69,7 +83,7 @@ export function decouperEnPassages(pages: PageExtraite[]): PassageDecoupe[] {
     const lignes = texte.split(/\r?\n/);
     for (const ligne of lignes) {
       const brut = ligne.trim();
-      if (brut.length === 0) continue;
+      if (brut.length === 0 || estRenvoiDeSommaire(brut)) continue;
 
       if (estTitreSection(brut)) {
         vider();

@@ -40,7 +40,23 @@ export async function creerDossierAction(formData: FormData) {
   const reference = texte(formData, 'reference');
   if (reference.length === 0) return;
   const intitule = texte(formData, 'intitule');
-  const dossier = creerDossier(reference, intitule || undefined);
+
+  let dossier;
+  try {
+    dossier = creerDossier(reference, intitule || undefined);
+  } catch (erreur) {
+    const conflit =
+      erreur instanceof Error && erreur.message.includes('UNIQUE constraint failed');
+    redirect(
+      '/dossiers?erreur=' +
+        encodeURIComponent(
+          conflit
+            ? `La référence « ${reference} » est déjà utilisée par un autre dossier.`
+            : "Le dossier n'a pas pu être créé.",
+        ),
+    );
+  }
+
   revalidatePath('/dossiers');
   revalidatePath('/');
   redirect(`/dossiers/${dossier.id}`);
@@ -101,7 +117,7 @@ export async function genererPlanAction(formData: FormData) {
   const listeOuVide = (...valeurs: (string | undefined)[]) =>
     valeurs.filter((v): v is string => Boolean(v && v.trim().length > 0)).map((v) => v.trim());
 
-  const plan = {
+  const propositions = {
     constats: listeOuVide(d.situationProfessionnelle, d.anciennete, b.parcours, b.pointsAppui),
     objectifs: listeOuVide(d.souhaitsEvolution, d.projetProfessionnel, b.souhaitsEvolution),
     pistes: listeOuVide(b.pistesProfessionnelles, d.mobiliteFonctionnelle, d.mobiliteGeographique),
@@ -121,10 +137,27 @@ export async function genererPlanAction(formData: FormData) {
       'Valider avec l’agent les objectifs retenus.',
       'Confirmer les conditions applicables auprès du service RH compétent.',
     ],
-    ...(existant ? {} : {}),
   };
 
-  enregistrerPlan(dossierId, plan);
+  // Les lignes déjà saisies par le conseiller priment : une nouvelle proposition
+  // complète le plan existant, elle ne l'écrase pas.
+  const fusionner = (cle: keyof typeof propositions) => {
+    const conserve = existant?.[cle] ?? [];
+    const ajouts = propositions[cle].filter((item) => !conserve.includes(item));
+    return [...conserve, ...ajouts];
+  };
+
+  enregistrerPlan(dossierId, {
+    constats: fusionner('constats'),
+    objectifs: fusionner('objectifs'),
+    pistes: fusionner('pistes'),
+    dispositifs: fusionner('dispositifs'),
+    aVerifier: fusionner('aVerifier'),
+    actions: fusionner('actions'),
+    ressources: fusionner('ressources'),
+    echeances: fusionner('echeances'),
+    prochainesEtapes: fusionner('prochainesEtapes'),
+  });
   revalidatePath(`/dossiers/${dossierId}`);
 }
 
@@ -154,7 +187,9 @@ export async function genererEntretienAction(formData: FormData) {
   const trame = genererTrame(type, contexte);
   enregistrerEntretien(type, trame, dossierId || null);
   revalidatePath('/entretien');
-  redirect(`/entretien?type=${encodeURIComponent(type)}&contexte=${encodeURIComponent(contexte)}`);
+  const parametres = new URLSearchParams({ type, contexte });
+  if (dossierId) parametres.set('dossierId', dossierId);
+  redirect(`/entretien?${parametres.toString()}`);
 }
 
 export async function ingererDocumentAction(formData: FormData) {

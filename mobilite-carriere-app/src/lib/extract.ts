@@ -36,11 +36,18 @@ async function extrairePdf(buffer: Buffer): Promise<PageExtraite[]> {
         items: ItemPdf[];
       }>;
     }) => {
-      const contenu = await pageData.getTextContent({
-        normalizeWhitespace: true,
-        disableCombineTextItems: false,
-      });
-      const lignes = reconstruireLignes(contenu.items);
+      // Une page illisible doit tout de même occuper son rang : les numéros de page
+      // des citations sont déduits de la position dans ce tableau.
+      let lignes: LignePdf[] = [];
+      try {
+        const contenu = await pageData.getTextContent({
+          normalizeWhitespace: true,
+          disableCombineTextItems: false,
+        });
+        lignes = reconstruireLignes(contenu.items);
+      } catch {
+        lignes = [];
+      }
       pages.push(lignes);
       return lignes.map((l) => l.texte).join('\n');
     },
@@ -146,13 +153,22 @@ function decouperColonnes(items: ItemPositionne[], profondeur: number): ItemPosi
   if (!gouttiere) return [items];
 
   const coupure = xMin + ((gouttiere.debut + gouttiere.fin) / 2 / NB_CASES) * largeur;
-  const gauche = items.filter((i) => i.x + i.largeur / 2 < coupure);
-  const droite = items.filter((i) => i.x + i.largeur / 2 >= coupure);
+
+  // Un titre qui enjambe la gouttière n'appartient à aucune colonne : le rattacher
+  // à l'une d'elles fausserait la section attribuée aux passages de la page.
+  const pleineLargeur = items.filter((i) => i.x < coupure && i.x + i.largeur > coupure);
+  const restants = items.filter((i) => !pleineLargeur.includes(i));
+  const gauche = restants.filter((i) => i.x + i.largeur / 2 < coupure);
+  const droite = restants.filter((i) => i.x + i.largeur / 2 >= coupure);
 
   const minimum = items.length * 0.2;
   if (gauche.length < minimum || droite.length < minimum) return [items];
 
-  return [...decouperColonnes(gauche, profondeur + 1), ...decouperColonnes(droite, profondeur + 1)];
+  const colonnes = [
+    ...decouperColonnes(gauche, profondeur + 1),
+    ...decouperColonnes(droite, profondeur + 1),
+  ];
+  return pleineLargeur.length > 0 ? [pleineLargeur, ...colonnes] : colonnes;
 }
 
 function plusLargeGouttiere(occupe: boolean[]): { debut: number; fin: number } | null {
@@ -187,7 +203,9 @@ function tailleMediane(lignes: LignePdf[]): number {
 // Le seuil reste élevé car un document très maquetté multiplie les tailles de police.
 function estTitrePdf(ligne: LignePdf, tailleCorps: number): boolean {
   if (tailleCorps <= 0 || ligne.taille < tailleCorps * 1.35) return false;
-  if (ligne.texte.length < 8 || ligne.texte.length > 100) return false;
+  // La borne haute reste alignée sur celle du découpage en passages, sinon un titre
+  // trop long repart dans le texte indexé en gardant son préfixe « ## ».
+  if (ligne.texte.length < 8 || ligne.texte.length > 90) return false;
   if (/[.;:,]$/.test(ligne.texte)) return false;
 
   const lettres = ligne.texte.replace(/[^A-Za-zÀ-ÿ]/g, '').length;

@@ -62,18 +62,22 @@ export function rechercherPassages(requete: string, limite = 8): Citation[] {
         ORDER BY score
         LIMIT ?`,
     )
-    .all(construireRequeteFts(tokens), limite * 3) as LigneResultat[];
+    .all(construireRequeteFts(tokens), limite * 4) as LigneResultat[];
 
   const minTokens = tokens.length >= 3 ? Math.ceil(tokens.length * SEUIL_COUVERTURE) : 1;
 
   return lignes
-    .filter((ligne) => {
+    .map((ligne) => {
       const contenu = normaliser(ligne.contenu);
-      const presents = tokens.filter((t) => contenu.includes(t)).length;
-      return presents >= minTokens;
+      return { ligne, couverture: tokens.filter((t) => contenu.includes(t)).length };
     })
+    .filter((r) => r.couverture >= minTokens)
+    // Un passage contenant tous les termes recherchés répond mieux qu'un passage
+    // très bien classé sur un seul d'entre eux.
+    .sort((a, b) => b.couverture - a.couverture || a.ligne.score - b.ligne.score)
+    .filter(dedoublonner())
     .slice(0, limite)
-    .map((ligne) => ({
+    .map(({ ligne }) => ({
       passageId: ligne.passage_id,
       documentId: ligne.document_id,
       documentTitre: ligne.titre,
@@ -86,6 +90,20 @@ export function rechercherPassages(requete: string, limite = 8): Citation[] {
       extrait: ligne.extrait,
       score: ligne.score,
     }));
+}
+
+// Un même contenu se répète d'une page à l'autre dans les documents maquettés :
+// le conseiller n'a pas besoin de le lire deux fois.
+function dedoublonner() {
+  const vus = new Set<string>();
+  return ({ ligne }: { ligne: LigneResultat }) => {
+    // Empreinte sur l'intégralité du passage : deux passages distincts partageant
+    // la même accroche doivent rester visibles tous les deux.
+    const empreinte = normaliser(ligne.contenu).replace(/[^a-z0-9]/g, '');
+    if (vus.has(empreinte)) return false;
+    vus.add(empreinte);
+    return true;
+  };
 }
 
 export function enregistrerRecherche(requete: string, nbResultats: number) {
