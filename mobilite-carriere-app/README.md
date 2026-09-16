@@ -23,6 +23,13 @@ npm run dev
 L'application est disponible sur <http://localhost:3000>. La base SQLite (`data/app.db`) est créée
 automatiquement au premier lancement et le catalogue de dispositifs est initialisé.
 
+**Premier accès** : tant qu'aucun compte n'existe, toute visite redirige vers `/installation`, qui
+fait créer le compte administrateur (identifiant + mot de passe, 12 caractères minimum). Cet
+administrateur peut ensuite ouvrir les comptes des conseillers depuis `/administration` — aucun
+autre moyen de créer un compte n'existe. Un conseiller peut changer son mot de passe depuis
+`/mon-compte` ; le mot de passe actuel est toujours redemandé, sauf lors du changement forcé imposé
+à la première connexion d'un compte nouvellement créé.
+
 ## Alimenter la base documentaire
 
 La base est **vide au premier lancement** : tant qu'aucun document n'est ingéré, l'assistant et la
@@ -85,6 +92,10 @@ conseiller prime sur le contenu livré.
 | `/entretien` | Préparation d'entretien | Trames de questions ouvertes par type d'entretien |
 | `/base-documentaire` | Base documentaire | Ingestion, liste, retrait des documents sources |
 | `/projet` | Documentation | Cahier des charges et roadmap rendus depuis le dépôt |
+| `/installation` | Premier accès | Création du compte administrateur (une seule fois, tant qu'aucun compte n'existe) |
+| `/connexion` | Authentification | Connexion par identifiant + mot de passe, tentatives limitées |
+| `/mon-compte` | Compte | Changement du mot de passe (courant redemandé), déconnexion |
+| `/administration` | Gestion des comptes | Réservée au rôle administrateur : création, activation/désactivation, réinitialisation |
 
 ## Architecture
 
@@ -102,14 +113,21 @@ mobilite-carriere-app/
     ├── components/ui.tsx       Composants partagés
     └── lib/
         ├── db.ts               Schéma SQLite, journalisation
+        ├── auth.ts             Comptes, mots de passe (scrypt), sessions, contrôle d'accès
         ├── extract.ts          Extraction de texte (PDF / Markdown / texte)
         ├── ingest.ts           Découpage en passages + indexation
         ├── search.ts           Recherche FTS5 + citations
         ├── assistant.ts        Réponse ancrée sur les passages retrouvés
         ├── dispositifs.ts      Catalogue
-        ├── dossiers.ts         Dossiers, diagnostics, bilans, plans
+        ├── dossiers.ts         Dossiers, diagnostics, bilans, plans (cloisonnés par conseiller)
         └── entretien.ts        Trames d'entretien
 ```
+
+`src/middleware.ts` redirige vers `/connexion` en l'absence de cookie de session, mais ne
+remplace pas le contrôle d'accès : n'ayant pas accès à la base, il ne peut vérifier qu'une session
+existe, pas qu'elle est valide. Chaque page et chaque action serveur revalident donc elles-mêmes
+la session (`exigerSession()` / `exigerAdministrateur()`) et, pour les dossiers, la propriété
+(`conseiller_id`).
 
 **Choix techniques** (proposition par défaut, à valider — cf. Phase 0 de la roadmap) :
 
@@ -136,8 +154,17 @@ mobilite-carriere-app/
   est identifié par une référence choisie par le conseiller.
 - Une nouvelle proposition de plan complète le plan existant sans écraser les lignes saisies par
   le conseiller.
-- Journalisation des actions importantes (table `journal`).
+- Journalisation des actions importantes (table `journal`), sans identifiant saisi en clair lors
+  d'un échec de connexion.
 - Suppression d'un dossier en cascade (diagnostics, bilans, plans, entretiens).
+- Mots de passe hachés (scrypt) ; jetons de session hachés (SHA-256) en base, jamais stockés en
+  clair ; comparaison à temps constant et réponse identique face à un identifiant inconnu, pour ne
+  pas laisser deviner les comptes existants ; tentatives de connexion limitées et fenêtrées.
+- Dossiers et recherches cloisonnés par conseiller (`conseiller_id`) : un conseiller ne voit que
+  ses propres dossiers, et l'administrateur n'a **pas** d'accès élargi à ceux des autres — un choix
+  délibéré, cohérent avec le principe de confidentialité du cahier des charges.
+- Le middleware ne fait que rediriger en l'absence de cookie ; chaque page et chaque action
+  serveur revalident elles-mêmes la session et, pour les dossiers, la propriété.
 
 ## Tests
 
@@ -167,8 +194,13 @@ réel, voir le tableau en tête de ce guide.
 ## Limites connues / suite
 
 - Recherche **lexicale** (FTS5) uniquement : la recherche sémantique (embeddings) reste à ajouter.
-- Pas d'authentification ni de gestion des droits : à implémenter avant tout usage réel avec des
-  données d'agents (Lot 0 de la roadmap).
-- Pas de chiffrement au repos de la base locale.
-- Catalogue de dispositifs livré avec les intitulés seuls : chaque fiche doit être documentée
-  depuis le guide DGAFP avant d'être considérée comme fiable.
+- Authentification par identifiant + mot de passe et cloisonnement des dossiers par conseiller
+  sont implémentés (voir « Garde-fous implémentés »), mais aucune validation DPO/RSSI n'a été
+  faite : à obtenir avant tout usage réel avec des données d'agents.
+- Pas de chiffrement au repos de la base locale (au-delà des mots de passe, hachés, et des jetons
+  de session, stockés sous forme de hachage).
+- Pas de journal d'export ni d'alerte automatique en cas d'activité suspecte : la table `journal`
+  trace les actions mais n'est consultée que manuellement.
+- 8 fiches du catalogue de dispositifs viennent d'une synthèse de recherche web non lue
+  directement (`statutVerification: "non_verifie"`) : à vérifier auprès des textes primaires avant
+  tout usage réel (voir « Catalogue de dispositifs » ci-dessus).
