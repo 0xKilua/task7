@@ -46,10 +46,22 @@ Réutiliser le même `--titre` remplace la version précédente du document (mis
 
 ## Catalogue de dispositifs
 
-Le catalogue est livré pré-documenté à partir du guide DGAFP « Agir pour son projet de mobilité
-professionnelle », édition 2026 : **18 fiches sur 28 sont renseignées avec leur page source**. Les
-10 autres correspondent à des dispositifs que ce guide ne documente pas ; leurs champs restent
-vides et signalés comme à vérifier, avec une note indiquant ce que le guide en dit exactement.
+Le catalogue distingue deux niveaux de fiabilité, visibles dans l'interface (badge vert / badge
+ambre) :
+
+- **18 fiches** viennent du guide DGAFP « Agir pour son projet de mobilité professionnelle »,
+  édition 2026, lu directement page par page : `statutVerification: "verifie_source"`, avec
+  citation précise (section, page).
+- **8 fiches** (disponibilité, VAE, congé de formation professionnelle, période de
+  professionnalisation, formation statutaire, conseil en évolution professionnelle, entretien
+  professionnel, accompagnement à la reconversion) documentent des dispositifs que ce guide ne
+  couvre pas. Leur contenu vient d'une recherche web (Légifrance, portail de la fonction
+  publique) dont les pages n'ont pas pu être lues directement dans l'environnement de
+  développement — elles restent donc `statutVerification: "non_verifie"`, avec un encart
+  explicite et les liens vers les textes primaires à vérifier avant tout usage auprès d'un agent.
+- **2 fiches** (mobilité géographique, kiosque des référentiels métiers) restent volontairement
+  peu renseignées : le guide les traite différemment (un critère plutôt qu'un dispositif ; une
+  page à consulter directement dans le guide plutôt qu'à dupliquer ici).
 
 Sur une installation où la base existe déjà :
 
