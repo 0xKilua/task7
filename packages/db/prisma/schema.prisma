@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum PhotoFraming {
+  portrait
+  buste
+  demi_corps
+  pied_a_tete
+  indetermine
+}
+
+enum SimulationModule {
+  coiffure
+  couleur
+  vetements
+  silhouette
+}
+
+enum SimulationStatus {
+  queued
+  analyzing
+  preparing
+  generating
+  finalizing
+  completed
+  failed
+  provider_not_configured
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String
+  displayName       String?
+  role              UserRole  @default(user)
+  /// Poids de reference renseigne par l'utilisateur pour le module silhouette (kg). Jamais deduit automatiquement.
+  referenceWeightKg Float?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  /// Suppression logique conservee un temps limite pour audit, purge definitive par job planifie (voir DATA_RETENTION_DAYS).
+  deletedAt         DateTime?
+
+  photos        Photo[]
+  simulations   Simulation[]
+  favorites     Favorite[]
+  refreshTokens RefreshToken[]
+  auditLogs     AdminAuditLog[]
+
+  @@index([deletedAt])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Photo {
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storageKey      String
+  format          String
+  widthPx         Int
+  heightPx        Int
+  framing         PhotoFraming @default(indetermine)
+  faceDetected    Boolean      @default(false)
+  faceCount       Int          @default(0)
+  bodyDetected    Boolean      @default(false)
+  fullBodyVisible Boolean      @default(false)
+  sharpnessScore  Float        @default(0)
+  warnings        Json         @default("[]")
+  createdAt       DateTime     @default(now())
+  /// Politique de retention RGPD : date de suppression automatique planifiee.
+  expiresAt       DateTime?
+  deletedAt       DateTime?
+
+  simulations Simulation[]
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Simulation {
+  id               String            @id @default(cuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photoId          String
+  photo            Photo             @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  module           SimulationModule
+  status           SimulationStatus  @default(queued)
+  /// Selection utilisateur serialisee (hair/outfit/silhouetteDeltaKg) - voir @relook/types SimulationRequest.
+  requestJson      Json
+  resultStorageKey String?
+  errorMessage     String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+
+  favorites Favorite[]
+
+  @@index([userId, createdAt])
+  @@index([photoId])
+  @@index([status])
+}
+
+model Favorite {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  simulationId String
+  simulation   Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@unique([userId, simulationId])
+}
+
+model CatalogHairstyle {
+  id                String   @id
+  name              String
+  description       String
+  length            String
+  texture           String
+  family            String
+  tags              Json     @default("[]")
+  trendSeason       String?
+  trendSourceUrl    String?
+  referenceImageUrl String
+  transformParams   Json
+  suitableForFraming Json    @default("[\"portrait\",\"buste\"]")
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([length])
+  @@index([family])
+}
+
+model CatalogHairColor {
+  id            String   @id
+  name          String
+  baseColor     String
+  technique     String
+  targetLab     Json
+  secondaryLab  Json?
+  tags          Json     @default("[]")
+  swatchHex     String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([baseColor])
+  @@index([technique])
+}
+
+model CatalogClothing {
+  id              String   @id
+  name            String
+  category        String
+  type            String
+  fit             String
+  color           String
+  colorHex        String?
+  material        String
+  style           String
+  season          String
+  occasion        String
+  tags            Json     @default("[]")
+  garmentImageUrl String
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
+  @@index([type])
+}
+
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      User     @relation(fields: [adminId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  diff       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
