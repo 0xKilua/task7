@@ -1,122 +1,122 @@
-# 🏗 Scaffold-ETH
+# Relook — relooking virtuel
 
-> everything you need to build on Ethereum! 🚀
+Application permettant de simuler, a partir d'une photo, un changement de
+coiffure, de couleur de cheveux, de vetements et de silhouette — en
+conservant le visage, l'identite et les proportions de la personne.
 
-🧪 Quickly experiment with Solidity using a frontend that adapts to your smart contract:
+➡️ Pour l'architecture detaillee, les choix techniques et leurs
+justifications, voir [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
-![image](https://user-images.githubusercontent.com/2653167/124158108-c14ca380-da56-11eb-967e-69cde37ca8eb.png)
+## Structure du monorepo
 
-
-# 🏄‍♂️ Quick Start
-
-Prerequisites: [Node (v16 LTS)](https://nodejs.org/en/download/) plus [Yarn (v1.x)](https://classic.yarnpkg.com/en/docs/install/) and [Git](https://git-scm.com/downloads)
-
-> clone/fork 🏗 scaffold-eth:
-
-```bash
-git clone https://github.com/scaffold-eth/scaffold-eth.git
+```
+apps/
+  web/        Next.js 14 (App Router) — application web, mobile-first
+  api/        Fastify + TypeScript — backend, auth, orchestration des simulations
+  mobile/     Expo / React Native — squelette iOS/Android (voir apps/mobile/README.md)
+services/
+  vision/     Python/FastAPI/MediaPipe — analyse photo, recoloration, silhouette (100% local, CPU)
+packages/
+  types/          Schemas Zod partages (web/api)
+  catalog-data/   Catalogue de depart (coiffures, couleurs, vetements)
+  db/             Schema Prisma + client + seed
+  ai-engine/      Abstraction fournisseur IA generatif (Replicate) pour coiffure/vetements
+infra/
+  docker/         docker-compose (Postgres, Redis, MinIO, vision, api, web)
 ```
 
-> install and start your 👷‍ Hardhat chain:
+## Ce qui est reellement fonctionnel des maintenant (sans aucune cle API)
+
+- Upload et validation de photo (format, taille, resolution, compression, EXIF).
+- Analyse reelle de la photo : detection visage/corps, classification du
+  cadrage (portrait / buste / demi-corps / pied-a-tete), score de nettete
+  (MediaPipe Face Landmarker + Pose Landmarker, en local sur CPU).
+- **Recoloration des cheveux** : segmentation reelle des cheveux
+  (MediaPipe Hair Segmenter) + transfert de couleur en espace LAB qui
+  preserve texture/volume/reflets. 14 couleurs de base + 6 techniques
+  (meches, balayage, ombre, degrade, racines differentes, bicolore).
+- **Simulation de silhouette** par palier de 2kg : warp guide par la
+  pose (MediaPipe Pose Landmarker) et borne par la silhouette reelle
+  (Selfie Segmenter), limite aux epaules -> haut des cuisses pour ne
+  jamais toucher au visage ni deformer les membres.
+- Comptes utilisateurs (JWT), catalogue (coiffures/couleurs/vetements),
+  administration du catalogue avec journal d'audit, galerie/historique,
+  favoris, suppression de compte conforme RGPD (effacement immediat des
+  fichiers et donnees).
+
+## Ce qui necessite une configuration supplementaire
+
+Le **changement de forme de coiffure** (longueur/coupe) et l'**essayage
+virtuel de vetements** necessitent un modele de diffusion generatif que ce
+CPU ne peut pas faire tourner de maniere realiste. Ces deux modules sont
+integres pour de vrai contre l'API Replicate (`packages/ai-engine`), mais
+**necessitent `REPLICATE_API_TOKEN`**. Sans cette cle, l'application ne
+simule jamais un faux resultat : le statut de la simulation est
+explicitement `provider_not_configured`, affiche clairement dans
+l'interface (voir `apps/web/src/components/SimulationPanel.tsx`).
+
+## Demarrage rapide (developpement local)
+
+Prerequis : Node.js 20+, pnpm 9+, Python 3.11+, PostgreSQL 16, Redis 7.
+(Une configuration docker-compose alternative est fournie dans
+`infra/docker/`, avec MinIO pour le stockage S3-compatible.)
 
 ```bash
-cd scaffold-eth
-yarn install
-yarn chain
+# 1. Dependances Node
+pnpm install
+
+# 2. Service de vision (Python)
+cd services/vision
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+./scripts/download_models.sh
+uvicorn app.main:app --port 8100 &
+cd ../..
+
+# 3. Base de donnees
+cp .env.example .env   # completer DATABASE_URL, JWT secrets, etc.
+pnpm --filter @relook/db migrate
+pnpm --filter @relook/db seed
+
+# 4. Backend
+pnpm --filter @relook/api dev          # API sur :4000
+pnpm --filter @relook/api worker:dev   # worker de simulations (processus separe)
+
+# 5. Frontend web
+NEXT_PUBLIC_API_URL=http://localhost:4000 pnpm --filter @relook/web dev   # :3000
 ```
 
-> in a second terminal window, start your 📱 frontend:
+Voir [`.env.example`](./.env.example) pour la liste complete des variables
+d'environnement, et le README de chaque app/service pour le detail.
 
-```bash
-cd scaffold-eth
-yarn start
-```
+## Tests
 
-> in a third terminal window, 🛰 deploy your contract:
+| Perimetre | Commande | Couverture |
+| --- | --- | --- |
+| `packages/types`, `catalog-data`, `ai-engine` | `pnpm --filter <pkg> test` | logique metier, validation catalogue, integration Replicate mockee |
+| `services/vision` | `cd services/vision && pytest` | 25 tests sur photos reelles (analyse, recoloration, silhouette, API) |
+| `apps/api` | `pnpm --filter @relook/api test` | 30 tests d'integration (vraie base Postgres, Redis, service de vision) |
+| `apps/web` | `pnpm --filter @relook/web exec playwright test` | 3 parcours de bout en bout, vrai navigateur, pile complete |
+| `apps/mobile` | `cd apps/mobile && npx tsc --noEmit` + `npx expo export` | typage + bundling Metro (pas de simulateur dans cet environnement) |
 
-```bash
-cd scaffold-eth
-yarn deploy
-```
+**109 tests automatises** passent contre de vrais services (pas de mocks
+pour la logique de vision/couleur/silhouette), plus 3 tests de bout en
+bout en navigateur reel couvrant l'inscription, l'upload d'une vraie
+photo, une simulation couleur complete avec comparaison avant/apres, une
+simulation de silhouette, et la verification que les modules non
+configures l'indiquent clairement.
 
-🔏 Edit your smart contract `YourContract.sol` in `packages/hardhat/contracts`
+## Confidentialite et RGPD
 
-📝 Edit your frontend `App.jsx` in `packages/react-app/src`
+- Photos et resultats stockes de maniere isolee par utilisateur
+  (`STORAGE_PROVIDER=s3` en production, chiffrement en transit via HTTPS).
+- Suppression de compte = suppression immediate et definitive des photos,
+  simulations et favoris (`DELETE /account`).
+- Suppression individuelle d'une photo ou d'une simulation a tout moment.
+- Politique de retention configurable (`DATA_RETENTION_DAYS`).
+- Aucune photo n'est utilisee pour entrainer un modele.
+- Voir `ARCHITECTURE.md` pour le detail des mesures de securite.
 
-💼 Edit your deployment scripts in `packages/hardhat/deploy`
+## Licence
 
-📱 Open http://localhost:3000 to see the app
-
-# 📚 Documentation
-
-Documentation, tutorials, challenges, and many more resources, visit: [docs.scaffoldeth.io](https://docs.scaffoldeth.io)
-
-
-# 🍦 Other Flavors
-- [scaffold-eth-typescript](https://github.com/scaffold-eth/scaffold-eth-typescript)
-- [scaffold-eth-tailwind](https://github.com/stevenpslade/scaffold-eth-tailwind)
-- [scaffold-nextjs](https://github.com/scaffold-eth/scaffold-eth/tree/scaffold-nextjs)
-- [scaffold-chakra](https://github.com/scaffold-eth/scaffold-eth/tree/chakra-ui)
-- [eth-hooks](https://github.com/scaffold-eth/eth-hooks)
-- [eth-components](https://github.com/scaffold-eth/eth-components)
-- [scaffold-eth-expo](https://github.com/scaffold-eth/scaffold-eth-expo)
-- [scaffold-eth-truffle](https://github.com/trufflesuite/scaffold-eth)
-
-
-
-# 🔭 Learning Solidity
-
-📕 Read the docs: https://docs.soliditylang.org
-
-📚 Go through each topic from [solidity by example](https://solidity-by-example.org) editing `YourContract.sol` in **🏗 scaffold-eth**
-
-- [Primitive Data Types](https://solidity-by-example.org/primitives/)
-- [Mappings](https://solidity-by-example.org/mapping/)
-- [Structs](https://solidity-by-example.org/structs/)
-- [Modifiers](https://solidity-by-example.org/function-modifier/)
-- [Events](https://solidity-by-example.org/events/)
-- [Inheritance](https://solidity-by-example.org/inheritance/)
-- [Payable](https://solidity-by-example.org/payable/)
-- [Fallback](https://solidity-by-example.org/fallback/)
-
-📧 Learn the [Solidity globals and units](https://docs.soliditylang.org/en/latest/units-and-global-variables.html)
-
-# 🛠 Buidl
-
-Check out all the [active branches](https://github.com/scaffold-eth/scaffold-eth/branches/active), [open issues](https://github.com/scaffold-eth/scaffold-eth/issues), and join/fund the 🏰 [BuidlGuidl](https://BuidlGuidl.com)!
-
-  
- - 🚤  [Follow the full Ethereum Speed Run](https://medium.com/@austin_48503/%EF%B8%8Fethereum-dev-speed-run-bd72bcba6a4c)
-
-
- - 🎟  [Create your first NFT](https://github.com/scaffold-eth/scaffold-eth/tree/simple-nft-example)
- - 🥩  [Build a staking smart contract](https://github.com/scaffold-eth/scaffold-eth/tree/challenge-1-decentralized-staking)
- - 🏵  [Deploy a token and vendor](https://github.com/scaffold-eth/scaffold-eth/tree/challenge-2-token-vendor)
- - 🎫  [Extend the NFT example to make a "buyer mints" marketplace](https://github.com/scaffold-eth/scaffold-eth/tree/buyer-mints-nft)
- - 🎲  [Learn about commit/reveal](https://github.com/scaffold-eth/scaffold-eth-examples/tree/commit-reveal-with-frontend)
- - ✍️  [Learn how ecrecover works](https://github.com/scaffold-eth/scaffold-eth-examples/tree/signature-recover)
- - 👩‍👩‍👧‍👧  [Build a multi-sig that uses off-chain signatures](https://github.com/scaffold-eth/scaffold-eth/tree/meta-multi-sig)
- - ⏳  [Extend the multi-sig to stream ETH](https://github.com/scaffold-eth/scaffold-eth/tree/streaming-meta-multi-sig)
- - ⚖️  [Learn how a simple DEX works](https://medium.com/@austin_48503/%EF%B8%8F-minimum-viable-exchange-d84f30bd0c90)
- - 🦍  [Ape into learning!](https://github.com/scaffold-eth/scaffold-eth/tree/aave-ape)
-
-# 💌 P.S.
-
-🌍 You need an RPC key for testnets and production deployments, create an [Alchemy](https://www.alchemy.com/) account and replace the value of `ALCHEMY_KEY = xxx` in `packages/react-app/src/constants.js` with your new key.
-
-📣 Make sure you update the `InfuraID` before you go to production. Huge thanks to [Infura](https://infura.io/) for our special account that fields 7m req/day!
-
-# 🏃💨 Speedrun Ethereum
-Register as a builder [here](https://speedrunethereum.com) and start on some of the challenges and build a portfolio.
-
-# 💬 Support Chat
-
-Join the telegram [support chat 💬](https://t.me/joinchat/KByvmRe5wkR-8F_zz6AjpA) to ask questions and find others building with 🏗 scaffold-eth!
-
----
-
-🙏 Please check out our [Gitcoin grant](https://gitcoin.co/grants/2851/scaffold-eth) too!
-
-### Automated with Gitpod
-
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#github.com/scaffold-eth/scaffold-eth)
+MIT — voir [`LICENSE`](./LICENSE).
