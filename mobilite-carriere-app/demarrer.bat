@@ -20,22 +20,26 @@ if errorlevel 1 (
 
 for /f "delims=" %%v in ('node --version') do echo Node.js detecte : %%v
 
-if not exist "node_modules" (
+echo.
+echo Verification des dependances ^(rapide si rien n'a change, plus long
+echo apres une mise a jour du projet^)...
+call npm install
+if errorlevel 1 (
     echo.
-    echo Installation des dependances ^(quelques minutes la premiere fois^)...
-    call npm install
-    if errorlevel 1 (
-        echo.
-        echo Echec de l'installation.
-        echo Si l'erreur concerne better-sqlite3 ou node-gyp, il manque les outils de
-        echo compilation C++ : relancez l'installateur Node.js en cochant
-        echo "Tools for Native Modules", ou installez Visual Studio Build Tools.
-        echo.
-        pause
-        exit /b 1
-    )
-) else (
-    echo Dependances deja installees.
+    echo Echec de l'installation.
+    echo Si l'erreur concerne better-sqlite3 ou node-gyp, il manque les outils de
+    echo compilation C++ : relancez l'installateur Node.js en cochant
+    echo "Tools for Native Modules", ou installez Visual Studio Build Tools.
+    echo.
+    pause
+    exit /b 1
+)
+
+REM Un cache de build laisse par une version precedente peut provoquer des
+REM erreurs "Failed to fetch" une fois le code mis a jour : on repart propre.
+if exist ".next" (
+    echo Nettoyage du cache de build precedent...
+    rmdir /s /q ".next"
 )
 
 echo.
