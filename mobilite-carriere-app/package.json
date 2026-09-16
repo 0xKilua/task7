@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit",
     "ingest": "tsx scripts/ingest-cli.ts",
     "dispositifs:importer": "tsx scripts/importer-dispositifs.ts",
-    "sauvegarder": "tsx scripts/sauvegarder.ts"
+    "sauvegarder": "tsx scripts/sauvegarder.ts",
+    "comptes:lister": "tsx scripts/comptes-cli.ts lister",
+    "comptes:reinitialiser": "tsx scripts/comptes-cli.ts reinitialiser"
   },
   "engines": {
     "node": ">=20.9 <23"
