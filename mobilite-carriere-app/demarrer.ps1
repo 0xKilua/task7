@@ -18,8 +18,8 @@ try {
 
 $majeur = [int]($versionNode.Split('.')[0])
 Write-Host "Node.js detecte : v$versionNode"
-if ($majeur -lt 20 -or $majeur -gt 22) {
-    Write-Host "Version testee : Node 20 a 22. La v$majeur peut poser probleme (module natif better-sqlite3)." -ForegroundColor Yellow
+if ($majeur -lt 22 -or $majeur -gt 24) {
+    Write-Host "Versions testees : Node 22 et 24. La v$majeur peut poser probleme." -ForegroundColor Yellow
 }
 
 # Ce script a pu tourner grace a un contournement valable uniquement pour cette fenetre
@@ -53,10 +53,9 @@ if (Test-Serveur) {
 Write-Host "`nVerification des dependances (rapide si rien n'a change, plus long apres une mise a jour du projet)..." -ForegroundColor Cyan
 npm install
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "`nEchec de l'installation." -ForegroundColor Red
-    Write-Host "Si l'erreur concerne better-sqlite3 / node-gyp, il manque les outils de compilation C++ :"
-    Write-Host "  relancez l'installateur Node.js et cochez 'Tools for Native Modules',"
-    Write-Host "  ou installez Visual Studio Build Tools (charge de travail 'Desktop development with C++')."
+    Write-Host "`nEchec de l'installation des dependances." -ForegroundColor Red
+    Write-Host "Verifiez la connexion internet puis relancez ce script."
+    Write-Host "Si une erreur EPERM apparait, une fenetre serveur tourne encore : fermez-la puis relancez."
     Read-Host "Appuyez sur Entree pour fermer"
     exit 1
 }

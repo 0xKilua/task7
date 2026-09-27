@@ -4,10 +4,9 @@ Procédure complète, de zéro jusqu'au guide DGAFP ingéré. Comptez 10 à 15 m
 
 ## 1. Installer Node.js
 
-1. Télécharger la version **LTS** sur <https://nodejs.org> (Node 20 ou 22 — évitez la version « Current »).
-2. Lancer l'installateur, **cocher la case « Tools for Native Modules »** quand elle est proposée.
-   Cette case installe les outils de compilation C++ dont a besoin la base de données locale
-   (`better-sqlite3`). Sans elle, l'installation des dépendances peut échouer.
+1. Télécharger la version **LTS** sur <https://nodejs.org> (Node 22 ou 24 — évitez la version « Current »).
+2. Lancer l'installateur avec les options par défaut. La case « Tools for Native Modules » n'est
+   pas nécessaire : la base de données locale (`better-sqlite3`) est livrée précompilée.
 3. Vérifier dans PowerShell :
    ```powershell
    node --version
@@ -108,7 +107,9 @@ Les fiches déjà documentées dans l'installation ne sont pas écrasées.
 
 | Symptôme | Cause | Solution |
 |---|---|---|
-| `npm install` échoue sur `better-sqlite3` / `node-gyp` | Outils de compilation C++ absents | Relancer l'installateur Node.js en cochant « Tools for Native Modules », ou installer Visual Studio Build Tools (charge de travail « Desktop development with C++ »), puis `npm install` à nouveau |
+| Le site affiche `TypeError: Failed to fetch` | Le serveur s'est arrêté (fenêtre fermée, ou plantage) | Regarder la fenêtre du serveur : si elle affiche une erreur, la recopier ; sinon fermer toutes les fenêtres serveur et relancer `demarrer.bat` |
+| La fenêtre du serveur s'arrête sur `Assertion failed: (env) != nullptr` | Ancienne version de `better-sqlite3` (11.x) sous Node 24 | Fermer les fenêtres serveur, `git pull`, puis relancer `demarrer.bat` : il installe la version 13, qui n'est pas concernée |
+| `npm install` échoue avec `EPERM` | Une fenêtre serveur tourne encore et verrouille des fichiers | Fermer toutes les fenêtres serveur, puis relancer `demarrer.bat` |
 | « l'exécution de scripts est désactivée sur ce système » (sur `npm`, `npm.ps1` ou `demarrer.ps1`) | Politique d'exécution PowerShell trop restrictive | Double-cliquer sur `demarrer.bat` (jamais concerné, et corrige la politique durablement au passage) ; ou une fois, dans la fenêtre bloquée : `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` (permanent, contrairement à `-Scope Process` qu'il faudrait répéter à chaque fenêtre) |
 | `Port 3000 is already in use` | Un autre programme occupe le port | `npm run dev -- -p 3001` puis ouvrir <http://localhost:3001> |
 | `node : terme non reconnu` | Node absent du PATH | Fermer et rouvrir PowerShell après l'installation de Node |

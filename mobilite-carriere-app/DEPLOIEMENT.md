@@ -9,10 +9,10 @@
 
 | Élément | Statut |
 |---|---|
-| Build de production (`npm run build`) | ✅ vérifié dans cette session |
-| Compilation du module natif `better-sqlite3` sur Debian/Node 20-22 | ✅ vérifié (installation réussie dans cet environnement) |
-| Script de sauvegarde (`npm run sauvegarder`) | ✅ vérifié : sauvegarde à chaud produite et restaurée avec succès |
-| **`docker build` de l'image ci-dessous** | ❌ **non vérifié** — Docker Hub est bloqué par la politique réseau de l'environnement où ce projet a été développé. Le Dockerfile suit le schéma standard documenté pour `better-sqlite3` (étape de compilation séparée, image finale sans outils de build), mais n'a pas pu être construit ni lancé ici. **À construire et tester avant tout déploiement réel :** `docker build -t mobilite-carriere-app .` puis `docker run --rm -p 3000:3000 -v donnees:/app/data mobilite-carriere-app` et vérifier que la page d'installation s'affiche sur `http://localhost:3000`. |
+| Build de production (`npm run build`) sous Node 24 | ✅ vérifié, puis suite de bout en bout complète (32/32) sur `npm run start` |
+| Module `better-sqlite3` 13 (binaires précompilés Node-API, sans compilation) sous Node 22 et 24 | ✅ vérifié : suite de bout en bout 32/32 sur chacune |
+| Script de sauvegarde (`npm run sauvegarder`) | ✅ vérifié : sauvegarde à chaud identique à la source, contrôle d'intégrité `ok` |
+| **`docker build` de l'image ci-dessous** | ❌ **non vérifié** — Docker Hub est bloqué par la politique réseau de l'environnement où ce projet a été développé. Le Dockerfile suit le schéma standard (image Node 24 officielle, `npm ci`, build, image finale sans les sources), mais n'a pas pu être construit ni lancé ici. **À construire et tester avant tout déploiement réel :** `docker build -t mobilite-carriere-app .` puis `docker run --rm -p 3000:3000 -v donnees:/app/data mobilite-carriere-app` et vérifier que la page d'installation s'affiche sur `http://localhost:3000`. |
 
 ## 1. Construire l'image
 
@@ -20,8 +20,8 @@
 docker build -t mobilite-carriere-app .
 ```
 
-L'image compile `better-sqlite3` dans une étape jetable (outils de compilation non conservés
-dans l'image finale) puis construit l'application. Le résultat tourne sous un utilisateur non
+L'image installe les dépendances (`better-sqlite3` fournit son binaire précompilé : aucun outil
+de compilation n'est nécessaire) puis construit l'application. Le résultat tourne sous un utilisateur non
 root et attend ses données dans `/app/data`.
 
 ## 2. Lancer avec reverse proxy HTTPS (exemple autonome)

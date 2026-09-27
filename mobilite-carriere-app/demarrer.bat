@@ -47,10 +47,9 @@ echo apres une mise a jour du projet^)...
 call npm install
 if errorlevel 1 (
     echo.
-    echo Echec de l'installation.
-    echo Si l'erreur concerne better-sqlite3 ou node-gyp, il manque les outils de
-    echo compilation C++ : relancez l'installateur Node.js en cochant
-    echo "Tools for Native Modules", ou installez Visual Studio Build Tools.
+    echo Echec de l'installation des dependances.
+    echo Verifiez la connexion internet puis relancez ce fichier.
+    echo Si une erreur EPERM apparait, une fenetre serveur tourne encore : fermez-la puis relancez.
     echo.
     pause
     exit /b 1

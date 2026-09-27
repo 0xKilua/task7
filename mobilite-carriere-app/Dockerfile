@@ -1,22 +1,18 @@
-# Image de production. better-sqlite3 est un module natif : la première étape
-# installe les outils de compilation nécessaires, les étapes suivantes ne les
-# embarquent pas dans l'image finale.
+# Image de production. better-sqlite3 (>= 13) livre ses binaires précompilés
+# (Node-API) : aucun outil de compilation n'est nécessaire.
 
-FROM node:20-bookworm-slim AS deps
+FROM node:24-bookworm-slim AS deps
 WORKDIR /app
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 make g++ \
-    && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:20-bookworm-slim AS builder
+FROM node:24-bookworm-slim AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-FROM node:20-bookworm-slim AS runner
+FROM node:24-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 RUN groupadd --system --gid 1001 nodejs \
