@@ -81,14 +81,51 @@ function reinitialiser() {
   );
 }
 
+function renommer() {
+  const actuel = argument('identifiant-actuel');
+  const nouveau = argument('nouvel-identifiant')?.trim();
+  if (!actuel || !nouveau) {
+    console.error(
+      'Usage : npm run comptes:renommer -- --identifiant-actuel <identifiant existant> --nouvel-identifiant <nouvel identifiant>',
+    );
+    process.exit(1);
+  }
+
+  const db = getDb();
+  const ligne = db.prepare('SELECT id FROM utilisateurs WHERE identifiant = ?').get(actuel) as
+    | { id: string }
+    | undefined;
+  if (!ligne) {
+    console.error(
+      `Aucun compte avec l'identifiant « ${actuel} ». Utilise "npm run comptes:lister" pour voir les identifiants existants.`,
+    );
+    process.exit(1);
+  }
+
+  const conflit = db.prepare('SELECT id FROM utilisateurs WHERE identifiant = ? AND id != ?').get(nouveau, ligne.id);
+  if (conflit) {
+    console.error(`L'identifiant « ${nouveau} » est déjà pris par un autre compte.`);
+    process.exit(1);
+  }
+
+  db.prepare('UPDATE utilisateurs SET identifiant = ? WHERE id = ?').run(nouveau, ligne.id);
+  journaliser('utilisateur.renomme_cli', ligne.id, `${actuel} -> ${nouveau}`);
+
+  console.log(
+    `Identifiant changé : « ${actuel} » devient « ${nouveau} ». Le mot de passe ne change pas ; les dossiers et l'historique du compte sont conservés.`,
+  );
+}
+
 function main() {
   const commande = process.argv[2];
   if (commande === 'lister') return lister();
   if (commande === 'reinitialiser') return reinitialiser();
+  if (commande === 'renommer') return renommer();
 
   console.error('Usage :');
   console.error('  npm run comptes:lister');
   console.error('  npm run comptes:reinitialiser -- --identifiant <identifiant> --mot-de-passe <nouveau mot de passe>');
+  console.error('  npm run comptes:renommer -- --identifiant-actuel <identifiant existant> --nouvel-identifiant <nouvel identifiant>');
   process.exit(1);
 }
 
