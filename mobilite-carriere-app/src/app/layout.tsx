@@ -31,12 +31,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <a
           href="#contenu"
-          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:px-4 focus:py-2 focus:shadow"
+          className="sr-only print:hidden focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:px-4 focus:py-2 focus:shadow"
         >
           Aller au contenu principal
         </a>
 
-        <header className="bg-etat-800 text-white">
+        <header className="bg-etat-800 text-white print:hidden">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-3">
             <div>
               <p className="text-xs uppercase tracking-wide text-etat-200">
@@ -91,11 +91,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           )}
         </header>
 
-        <main id="contenu" className="mx-auto max-w-7xl px-4 py-6">
+        <main id="contenu" className="mx-auto max-w-7xl px-4 py-6 print:max-w-none print:p-0">
           {children}
         </main>
 
-        <footer className="mx-auto max-w-7xl px-4 pb-10 pt-4 text-xs text-slate-500">
+        <footer className="mx-auto max-w-7xl px-4 pb-10 pt-4 text-xs text-slate-500 print:hidden">
           <p>
             Les réponses s&apos;appuient exclusivement sur les documents ingérés dans la base
             documentaire. En l&apos;absence de source, l&apos;application le signale explicitement.

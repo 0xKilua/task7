@@ -9,6 +9,8 @@ import { dispositifsPertinents } from '@/lib/dispositifs';
 import {
   CHAMPS_DIAGNOSTIC,
   ETAPES_BILAN,
+  ErreurSaisie,
+  ajouterNoteSuivi,
   creerDossier,
   dernierBilan,
   dernierDiagnostic,
@@ -16,8 +18,10 @@ import {
   enregistrerDiagnostic,
   enregistrerPlan,
   exigerDossier,
+  mettreAJourSuivi,
   obtenirPlan,
   supprimerDossier,
+  supprimerNoteSuivi,
 } from '@/lib/dossiers';
 import { enregistrerEntretien, genererTrame } from '@/lib/entretien';
 import { extraireDepuisBuffer } from '@/lib/extract';
@@ -72,6 +76,57 @@ export async function supprimerDossierAction(formData: FormData) {
   revalidatePath('/dossiers');
   revalidatePath('/');
   redirect('/dossiers');
+}
+
+// Exécute une écriture sur le suivi d'un dossier ; une erreur de saisie est renvoyée à la
+// page du dossier, tout le reste (dossier d'un autre conseiller compris) remonte tel quel.
+function ecrireSuivi(dossierId: string, ecriture: () => void) {
+  let erreur: string | null = null;
+  try {
+    ecriture();
+  } catch (e) {
+    if (!(e instanceof ErreurSaisie)) throw e;
+    erreur = e.message;
+  }
+  revalidatePath(`/dossiers/${dossierId}`);
+  revalidatePath('/dossiers');
+  revalidatePath('/');
+  redirect(`/dossiers/${dossierId}${erreur ? `?erreur=${encodeURIComponent(erreur)}` : ''}#suivi`);
+}
+
+export async function mettreAJourSuiviAction(formData: FormData) {
+  const utilisateur = exigerSession();
+  const dossierId = texte(formData, 'dossierId');
+  if (!dossierId) return;
+  const rdv = texte(formData, 'prochainRdv');
+  ecrireSuivi(dossierId, () =>
+    mettreAJourSuivi(dossierId, utilisateur.id, texte(formData, 'statut'), rdv || null),
+  );
+}
+
+export async function ajouterNoteSuiviAction(formData: FormData) {
+  const utilisateur = exigerSession();
+  const dossierId = texte(formData, 'dossierId');
+  if (!dossierId) return;
+  ecrireSuivi(dossierId, () =>
+    ajouterNoteSuivi(
+      dossierId,
+      utilisateur.id,
+      texte(formData, 'dateEchange'),
+      texte(formData, 'modalite'),
+      texte(formData, 'compteRendu'),
+    ),
+  );
+}
+
+export async function supprimerNoteSuiviAction(formData: FormData) {
+  const utilisateur = exigerSession();
+  const dossierId = texte(formData, 'dossierId');
+  const noteId = texte(formData, 'noteId');
+  if (!dossierId || !noteId) return;
+  ecrireSuivi(dossierId, () => {
+    supprimerNoteSuivi(noteId, dossierId, utilisateur.id);
+  });
 }
 
 export async function enregistrerDiagnosticAction(formData: FormData) {

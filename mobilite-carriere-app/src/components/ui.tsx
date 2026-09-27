@@ -1,5 +1,21 @@
 import Link from 'next/link';
-import { MESSAGE_A_VERIFIER, type Citation } from '@/lib/types';
+import { LIBELLES_STATUT, MESSAGE_A_VERIFIER, type Citation, type StatutDossier } from '@/lib/types';
+
+const COULEURS_STATUT: Record<StatutDossier, string> = {
+  en_cours: 'border-etat-200 bg-etat-50 text-etat-800',
+  en_attente: 'border-amber-300 bg-amber-50 text-amber-800',
+  clos: 'border-slate-300 bg-slate-100 text-slate-600',
+};
+
+export function BadgeStatut({ statut }: { statut: StatutDossier }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${COULEURS_STATUT[statut]}`}
+    >
+      {LIBELLES_STATUT[statut]}
+    </span>
+  );
+}
 
 export function TitrePage({ titre, chapo }: { titre: string; chapo?: string }) {
   return (

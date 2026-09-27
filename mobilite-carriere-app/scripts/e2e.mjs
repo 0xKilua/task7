@@ -39,6 +39,7 @@ async function connecter(identifiant, motDePasse) {
 const ROUTES_PROTEGEES = [
   '/',
   '/dossiers',
+  '/dossiers/dos_inexistant/restitution',
   '/assistant?q=detachement',
   '/recherche?q=detachement',
   '/entretien',
@@ -177,6 +178,123 @@ verifier(
 );
 await page.screenshot({ path: `${SORTIE}/02-dossier.png`, fullPage: true });
 
+// --- Suivi de l'accompagnement --------------------------------------------
+const local = (d) => {
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+const rdvPasse = local(new Date(Date.now() - 3 * 86_400_000));
+const rdvFutur = local(new Date(Date.now() + 7 * 86_400_000));
+
+async function enregistrerSuivi(statut, rdv) {
+  await page.goto(urlDossier, { waitUntil: 'networkidle' });
+  await page.selectOption('#statut', statut);
+  await page.fill('#prochainRdv', rdv);
+  await page.click('button:has-text("Enregistrer le suivi")');
+  await page.waitForTimeout(1500);
+  await page.goto(urlDossier, { waitUntil: 'networkidle' });
+}
+
+await enregistrerSuivi('en_cours', rdvPasse);
+verifier(
+  'Rendez-vous passé signalé sur le dossier',
+  (await page.locator('main').innerText()).includes('est passé'),
+);
+await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+const carteRelance = page.locator('section', { has: page.getByRole('heading', { name: 'À relancer' }) });
+verifier(
+  'Tableau de bord : dossier au rendez-vous passé listé « À relancer »',
+  (await carteRelance.innerText()).includes(reference),
+);
+
+await enregistrerSuivi('en_attente', rdvFutur);
+verifier(
+  'Statut et prochain rendez-vous enregistrés',
+  (await page.locator('#statut').inputValue()) === 'en_attente' &&
+    (await page.locator('#prochainRdv').inputValue()) === rdvFutur,
+);
+
+const NOTE_CONSERVEE = `Point téléphonique ${suffixe} sur les postes cibles`;
+const NOTE_SUPPRIMEE = `Note erronée ${suffixe}`;
+for (const note of [NOTE_CONSERVEE, NOTE_SUPPRIMEE]) {
+  await page.fill('#compteRendu', note);
+  await page.click('button:has-text("Ajouter au suivi")');
+  await page.waitForTimeout(1500);
+  await page.goto(urlDossier, { waitUntil: 'networkidle' });
+}
+verifier(
+  'Échanges consignés dans l’historique',
+  (await page.locator('#suivi').innerText()).includes(NOTE_CONSERVEE) &&
+    (await page.locator('#suivi').innerText()).includes(NOTE_SUPPRIMEE),
+);
+await page
+  .locator('#suivi li', { hasText: NOTE_SUPPRIMEE })
+  .getByRole('button', { name: 'Supprimer' })
+  .click();
+await page.waitForTimeout(1500);
+await page.goto(urlDossier, { waitUntil: 'networkidle' });
+verifier(
+  'Suppression d’un échange consigné',
+  (await page.locator('#suivi').innerText()).includes(NOTE_CONSERVEE) &&
+    !(await page.locator('#suivi').innerText()).includes(NOTE_SUPPRIMEE),
+);
+await page.screenshot({ path: `${SORTIE}/02b-suivi.png`, fullPage: true });
+
+await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+const carteRdv = page.locator('section', { has: page.getByRole('heading', { name: 'Prochains rendez-vous' }) });
+verifier(
+  'Tableau de bord : prochain rendez-vous affiché',
+  (await carteRdv.innerText()).includes(reference),
+);
+verifier(
+  'Tableau de bord : le dossier n’est plus « À relancer »',
+  !(await carteRelance.innerText()).includes(reference),
+);
+
+await page.goto(`${BASE}/dossiers?statut=en_attente`, { waitUntil: 'networkidle' });
+const listeEnAttente = await page.locator('main').innerText();
+await page.goto(`${BASE}/dossiers?statut=clos`, { waitUntil: 'networkidle' });
+verifier(
+  'Liste filtrable par statut',
+  listeEnAttente.includes(reference) && !(await page.locator('main').innerText()).includes(reference),
+);
+
+// --- Document de restitution ----------------------------------------------
+await page.goto(`${urlDossier}/restitution`, { waitUntil: 'networkidle' });
+const restitution = await page.locator('article').innerText();
+verifier(
+  'Restitution : situation, plan et prochain rendez-vous repris',
+  restitution.includes('Synthèse de votre accompagnement') &&
+    restitution.includes(reference) &&
+    restitution.includes('Agent en poste administratif') &&
+    restitution.includes('Identifier deux postes cibles') &&
+    restitution.includes('Prochain rendez-vous'),
+);
+verifier(
+  'Restitution : les notes internes de suivi n’y figurent pas',
+  !restitution.includes(NOTE_CONSERVEE),
+);
+verifier(
+  'Restitution : points à vérifier rappelés, sans jargon interne',
+  restitution.includes('Information à vérifier') && !restitution.includes('entrée non encore documentée'),
+);
+await page.emulateMedia({ media: 'print' });
+verifier(
+  'Restitution : en-tête du site et outils masqués à l’impression',
+  !(await page.getByRole('navigation', { name: 'Navigation principale' }).isVisible()) &&
+    !(await page.getByRole('button', { name: /Imprimer/ }).isVisible()),
+);
+await page.pdf({ path: `${SORTIE}/07-restitution.pdf`, format: 'A4', printBackground: true });
+await page.emulateMedia({ media: 'screen' });
+await page.screenshot({ path: `${SORTIE}/07-restitution.png`, fullPage: true });
+
+await page.goto(`${urlDossier}/restitution?choix=1&sections=plan`, { waitUntil: 'networkidle' });
+const restitutionPartielle = await page.locator('article').innerText();
+verifier(
+  'Restitution : choix des sections respecté',
+  restitutionPartielle.includes("Plan d'accompagnement") && !restitutionPartielle.includes('Votre situation'),
+);
+
 await page.goto(`${BASE}/dossiers`, { waitUntil: 'networkidle' });
 await page.fill('#reference', reference);
 await page.click('button:has-text("Créer le dossier")');
@@ -249,6 +367,13 @@ const corps = await page.locator('body').innerText();
 verifier(
   'Un conseiller ne peut pas ouvrir le dossier d’un autre par son URL',
   !corps.includes('Agent en poste administratif') && !corps.includes(reference),
+);
+
+await page.goto(`${urlDossier}/restitution`, { waitUntil: 'networkidle' });
+const corpsRestitution = await page.locator('body').innerText();
+verifier(
+  'Un conseiller ne peut pas éditer la restitution du dossier d’un autre',
+  !corpsRestitution.includes('Agent en poste administratif') && !corpsRestitution.includes(reference),
 );
 
 await page.goto(`${BASE}/dossiers`, { waitUntil: 'networkidle' });

@@ -1,26 +1,26 @@
 import { compterDispositifs } from '@/lib/dispositifs';
-import { bilansEnCours, listerDossiers, statistiques } from '@/lib/dossiers';
+import {
+  JOURS_SANS_ACTIVITE,
+  bilansEnCours,
+  dossiersARelancer,
+  listerDossiers,
+  rendezVousAVenir,
+  statistiques,
+} from '@/lib/dossiers';
+import { formaterHorodatage as formaterDate, formaterRdv } from '@/lib/format';
 import { listerDocuments, recherchesRecentes } from '@/lib/search';
-import { Carte, EtatVide, LienBouton, TitrePage } from '@/components/ui';
+import { BadgeStatut, Carte, EtatVide, LienBouton, TitrePage } from '@/components/ui';
 import { exigerSession } from '@/lib/auth';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-function formaterDate(iso: string) {
-  return new Date(iso).toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 export default function TableauDeBord() {
   const utilisateur = exigerSession();
   const stats = statistiques(utilisateur.id);
   const dossiers = listerDossiers(utilisateur.id, 6);
+  const rendezVous = rendezVousAVenir(utilisateur.id, 5);
+  const aRelancer = dossiersARelancer(utilisateur.id, 5);
   const documents = listerDocuments();
   const recherches = recherchesRecentes(utilisateur.id, 5);
   const bilans = bilansEnCours(utilisateur.id);
@@ -52,7 +52,12 @@ export default function TableauDeBord() {
       )}
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Indicateur libelle="Accompagnements" valeur={stats.dossiers} href="/dossiers" />
+        <Indicateur
+          libelle="Accompagnements"
+          valeur={stats.dossiers}
+          href="/dossiers"
+          complement={`${stats.dossiersActifs} actif${stats.dossiersActifs > 1 ? 's' : ''} (non clos)`}
+        />
         <Indicateur libelle="Bilans réalisés" valeur={stats.bilans} href="/dossiers" />
         <Indicateur
           libelle="Documents ingérés"
@@ -84,6 +89,58 @@ export default function TableauDeBord() {
           </div>
         </Carte>
 
+        <Carte titre="Prochains rendez-vous">
+          {rendezVous.length === 0 ? (
+            <EtatVide titre="Aucun rendez-vous prévu">
+              Fixez la date du prochain rendez-vous dans le suivi de chaque accompagnement.
+            </EtatVide>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {rendezVous.map((dossier) => (
+                <li key={dossier.id} className="py-2">
+                  <Link
+                    href={`/dossiers/${dossier.id}`}
+                    className="text-sm font-medium text-etat-700 underline"
+                  >
+                    {dossier.reference}
+                  </Link>
+                  <p className="text-xs text-slate-700">{dossier.prochainRdv && formaterRdv(dossier.prochainRdv)}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Carte>
+
+        <Carte titre="À relancer">
+          {aRelancer.length === 0 ? (
+            <EtatVide titre="Rien à relancer">
+              Aucun rendez-vous passé sans suite, aucun accompagnement actif sans activité depuis{' '}
+              {JOURS_SANS_ACTIVITE} jours.
+            </EtatVide>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {aRelancer.map(({ dossier, motif }) => (
+                <li key={dossier.id} className="py-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/dossiers/${dossier.id}#suivi`}
+                      className="text-sm font-medium text-etat-700 underline"
+                    >
+                      {dossier.reference}
+                    </Link>
+                    <BadgeStatut statut={dossier.statut} />
+                  </div>
+                  <p className="text-xs text-amber-800">
+                    {motif === 'rdv_passe' && dossier.prochainRdv
+                      ? `Rendez-vous du ${formaterRdv(dossier.prochainRdv)} passé, suivi à mettre à jour`
+                      : `Sans activité depuis le ${formaterDate(dossier.updatedAt)}`}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Carte>
+
         <Carte titre="Dossiers récents">
           {dossiers.length === 0 ? (
             <EtatVide titre="Aucun accompagnement enregistré">
@@ -93,12 +150,15 @@ export default function TableauDeBord() {
             <ul className="divide-y divide-slate-100">
               {dossiers.map((dossier) => (
                 <li key={dossier.id} className="py-2">
-                  <Link
-                    href={`/dossiers/${dossier.id}`}
-                    className="text-sm font-medium text-etat-700 underline"
-                  >
-                    {dossier.reference}
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/dossiers/${dossier.id}`}
+                      className="text-sm font-medium text-etat-700 underline"
+                    >
+                      {dossier.reference}
+                    </Link>
+                    <BadgeStatut statut={dossier.statut} />
+                  </div>
                   {dossier.intitule && (
                     <p className="text-xs text-slate-600">{dossier.intitule}</p>
                   )}

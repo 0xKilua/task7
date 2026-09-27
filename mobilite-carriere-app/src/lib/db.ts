@@ -102,12 +102,25 @@ CREATE TABLE IF NOT EXISTS dossiers (
   conseiller_id TEXT REFERENCES utilisateurs(id) ON DELETE RESTRICT,
   reference TEXT NOT NULL,
   intitule TEXT,
+  statut TEXT NOT NULL DEFAULT 'en_cours' CHECK (statut IN ('en_cours', 'en_attente', 'clos')),
+  prochain_rdv TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 -- L'index sur conseiller_id est créé après migrerDossiers(), pas ici : sur une base
 -- antérieure à l'authentification, CREATE TABLE IF NOT EXISTS ne fait rien (la table
 -- existe déjà sans cette colonne), et l'index échouerait avant que la migration ne l'ajoute.
+
+CREATE TABLE IF NOT EXISTS notes_suivi (
+  id TEXT PRIMARY KEY,
+  dossier_id TEXT NOT NULL REFERENCES dossiers(id) ON DELETE CASCADE,
+  date_echange TEXT NOT NULL,
+  modalite TEXT NOT NULL CHECK (modalite IN ('entretien', 'telephone', 'visio', 'courriel', 'autre')),
+  contenu TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_notes_suivi_dossier ON notes_suivi(dossier_id, date_echange);
 
 CREATE TABLE IF NOT EXISTS diagnostics (
   id TEXT PRIMARY KEY,
@@ -166,6 +179,7 @@ export function getDb(): Database.Database {
   const db = new Database(DB_PATH);
   db.exec(SCHEMA);
   migrerDossiers(db);
+  migrerSuiviDossiers(db);
   migrerRecherches(db);
   // Après migration : la colonne conseiller_id existe forcément, base neuve ou migrée.
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_dossiers_reference ON dossiers(conseiller_id, reference)');
@@ -205,6 +219,17 @@ function migrerDossiers(db: Database.Database) {
   } finally {
     db.pragma('foreign_keys = ON');
   }
+}
+
+function migrerSuiviDossiers(db: Database.Database) {
+  const colonnes = db.prepare('PRAGMA table_info(dossiers)').all() as { name: string }[];
+  if (colonnes.some((c) => c.name === 'statut')) return;
+  db.transaction(() => {
+    db.exec(
+      "ALTER TABLE dossiers ADD COLUMN statut TEXT NOT NULL DEFAULT 'en_cours' CHECK (statut IN ('en_cours', 'en_attente', 'clos'))",
+    );
+    db.exec('ALTER TABLE dossiers ADD COLUMN prochain_rdv TEXT');
+  })();
 }
 
 // Une requête de recherche est saisie en traitant le dossier d'un agent : elle relève du

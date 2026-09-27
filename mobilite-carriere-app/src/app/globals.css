@@ -10,6 +10,15 @@ body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
 
+@media print {
+  @page {
+    margin: 16mm 14mm;
+  }
+  body {
+    @apply bg-white;
+  }
+}
+
 .prose-doc h1 {
   @apply text-2xl font-semibold text-etat-800 mt-8 mb-3;
 }
