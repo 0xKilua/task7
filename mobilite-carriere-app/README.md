@@ -53,18 +53,34 @@ npm run ingest -- --fichier data/documents/GuideMobPro_2026.pdf \
 
 Réutiliser le même `--titre` remplace la version précédente du document (mise à jour incrémentale).
 
+**Textes officiels livrés avec l'application** — la sixième partie du Code du travail (formation
+professionnelle : CEP, CPF, VAE, bilan de compétences), version en vigueur au 1er septembre 2026,
+tirée du fonds LEGI de la DILA :
+
+```bash
+npm run sources:importer
+```
+
+Le reste du Code du travail, qui régit le contrat de travail de droit privé, n'est pas livré : il
+fausserait les réponses données à des agents publics. `scripts/extraire-code-travail.mjs`
+régénère le fichier depuis une version plus récente du fonds LEGI.
+
+**Après une mise à jour de l'application, ré-ingérer le guide DGAFP** (même titre) : l'ingestion
+répare désormais les mots coupés par la mise en page du PDF, qui devenaient introuvables.
+
 ## Catalogue de dispositifs
 
 Le catalogue distingue deux niveaux de fiabilité, visibles dans l'interface (badge vert / badge
 ambre) :
 
-- **18 fiches** viennent du guide DGAFP « Agir pour son projet de mobilité professionnelle »,
-  édition 2026, lu directement page par page : `statutVerification: "verifie_source"`, avec
-  citation précise (section, page).
-- **8 fiches** (disponibilité, VAE, congé de formation professionnelle, période de
-  professionnalisation, formation statutaire, conseil en évolution professionnelle, entretien
-  professionnel, accompagnement à la reconversion) documentent des dispositifs que ce guide ne
-  couvre pas. Leur contenu vient d'une recherche web (Légifrance, portail de la fonction
+- **20 fiches vérifiées sur source** (`statutVerification: "verifie_source"`) : 18 depuis le
+  guide DGAFP « Agir pour son projet de mobilité professionnelle », édition 2026, lu page par
+  page ; 2 (conseil en évolution professionnelle, VAE) depuis les articles du Code du travail en
+  vigueur au 1er septembre 2026, chaque affirmation citée.
+- **6 fiches** (disponibilité, congé de formation professionnelle, période de
+  professionnalisation, formation statutaire, entretien professionnel, accompagnement à la
+  reconversion) relèvent des textes de la fonction publique, que ni le guide ni le Code du
+  travail ne couvrent. Leur contenu vient d'une recherche web (Légifrance, portail de la fonction
   publique) dont les pages n'ont pas pu être lues directement dans l'environnement de
   développement — elles restent donc `statutVerification: "non_verifie"`, avec un encart
   explicite et les liens vers les textes primaires à vérifier avant tout usage auprès d'un agent.
@@ -90,7 +106,8 @@ conseiller prime sur le contenu livré.
 | `/assistant` | Assistant mobilité-carrière | Trame Situation → Analyse sourcée → Pistes → Points à vérifier → Prochaines étapes → Sources |
 | `/recherche` | Recherche documentaire | Recherche plein texte dans les passages, avec citations |
 | `/dispositifs` | Exploration des dispositifs | Catalogue filtrable + fiche détaillée + édition sourcée |
-| `/dossiers` | Fiche de situation, bilan, plan | Diagnostic en 14 champs, bilan en 12 étapes, synthèses, plan éditable |
+| `/dossiers` | Accompagnements | Statut (en cours / en attente / clos), prochain rendez-vous, historique des échanges ; diagnostic en 14 champs, bilan en 12 étapes, synthèses, plan éditable ; export des données (droit d'accès) |
+| `/dossiers/[id]/restitution` | Document de restitution | Synthèse imprimable ou en PDF à remettre à l'agent, sources citées, notes internes exclues |
 | `/entretien` | Préparation d'entretien | Trames de questions ouvertes par type d'entretien |
 | `/base-documentaire` | Base documentaire | Ingestion, liste, retrait des documents sources |
 | `/projet` | Documentation | Cahier des charges et roadmap rendus depuis le dépôt |
@@ -98,6 +115,8 @@ conseiller prime sur le contenu livré.
 | `/connexion` | Authentification | Connexion par identifiant + mot de passe, tentatives limitées |
 | `/mon-compte` | Compte | Changement du mot de passe (courant redemandé), déconnexion |
 | `/administration` | Gestion des comptes | Réservée au rôle administrateur : création, activation/désactivation, réinitialisation |
+| `/administration/donnees` | Conservation | Durées de conservation fixées avec le DPO, aperçu et purge confirmée |
+| `/administration/journal` | Traçabilité | Journal des actions avec leur auteur, sans donnée sur les agents |
 
 ## Architecture
 
@@ -176,7 +195,18 @@ npm run dev                           # dans un terminal
 PLAYWRIGHT_MODULE=<chemin playwright> node scripts/e2e.mjs   # dans un autre
 ```
 
-Le scénario de bout en bout couvre : création de dossier, diagnostic et synthèse, bilan et
+**Pertinence de la recherche** — jeu de 38 questions de référence sur le guide DGAFP et de 5
+sujets qu'il ne traite pas (`scripts/questions-reference.json`) :
+
+```bash
+npm run recherche:evaluer -- --fichier chemin/vers/GuideMobPro_2026.pdf
+```
+
+Résultat actuel : bonne page dans les 3 premiers résultats pour 38/38 questions, aucun faux
+résultat sur les 5 sujets hors corpus.
+
+Le scénario de bout en bout (52 vérifications) couvre aussi le suivi, la restitution, l'export,
+le journal, la conservation et le cloisonnement de chacun. Il couvre : création de dossier, diagnostic et synthèse, bilan et
 synthèse, génération puis édition et persistance du plan, non-écrasement des saisies lors d'une
 nouvelle proposition, référence de dossier en doublon, trame d'entretien, catalogue de
 dispositifs, affichage de la trame de l'assistant, rendu mobile et absence d'erreur JavaScript.
@@ -206,8 +236,10 @@ ni outils C++ ne sont nécessaires, sous Windows comme sous Linux.
   faite : à obtenir avant tout usage réel avec des données d'agents.
 - Pas de chiffrement au repos de la base locale (au-delà des mots de passe, hachés, et des jetons
   de session, stockés sous forme de hachage).
-- Pas de journal d'export ni d'alerte automatique en cas d'activité suspecte : la table `journal`
-  trace les actions mais n'est consultée que manuellement.
-- 8 fiches du catalogue de dispositifs viennent d'une synthèse de recherche web non lue
-  directement (`statutVerification: "non_verifie"`) : à vérifier auprès des textes primaires avant
-  tout usage réel (voir « Catalogue de dispositifs » ci-dessus).
+- Pas d'alerte automatique en cas d'activité suspecte : le journal des actions se consulte depuis
+  `/administration/journal`.
+- 6 fiches du catalogue de dispositifs viennent d'une synthèse de recherche web non lue
+  directement (`statutVerification: "non_verifie"`) : à vérifier auprès des textes de la fonction
+  publique avant tout usage réel (voir « Catalogue de dispositifs » ci-dessus). Le Code général
+  de la fonction publique n'a pas pu être intégré : aucune copie lisible depuis l'environnement
+  de développement.

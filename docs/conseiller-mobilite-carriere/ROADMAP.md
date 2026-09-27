@@ -22,21 +22,23 @@ Un **prototype local exécutable** est disponible dans [`mobilite-carriere-app/`
 
 | Lot Phase 3 | État | Réserve |
 |---|---|---|
-| Lot 0 — Socle technique | Partiel | Base et migrations en place ; **authentification et droits non implémentés** |
-| Lot 1 — Base documentaire & RAG | Fait (lexical) | Ingestion PDF/MD/TXT, découpage, index FTS5, citations, cas « aucune source » ; recherche **sémantique à ajouter** |
+| Lot 0 — Socle technique | Fait | Authentification, rôles, cloisonnement des dossiers par conseiller, migrations automatiques, revue de sécurité |
+| Lot 1 — Base documentaire & RAG | Fait (lexical) | Guide DGAFP et Code du travail (6e partie) ; sigles, rejet des sujets hors corpus, réparation des mots coupés ; pertinence mesurée (38/38 dans les 3 premiers) ; recherche **sémantique à ajouter** |
 | Lot 2 — Assistant | Fait (sans LLM) | Restitution ancrée sur les passages retrouvés, trame complète, questions de clarification |
 | Lot 3 — Fiche de situation | Fait | 14 champs + synthèse structurée |
 | Lot 4 — Bilan de parcours | Fait | 12 étapes + synthèse |
-| Lot 5 — Dispositifs | Fait | Catalogue filtrable + fiche + édition sourcée ; **fiches non encore documentées** |
+| Lot 5 — Dispositifs | Fait | 20 fiches sur 28 vérifiées sur source ; **6 fiches relevant des textes de la fonction publique restent à vérifier** |
 | Lot 6 — Préparation d'entretien | Fait | 7 types de trames, questions ouvertes |
-| Lot 7 — Plan d'accompagnement | Fait | Génération + édition libre + persistance |
-| Lot 8 — Tableau de bord | Fait | Indicateurs, dossiers, bilans, recherches, ressources |
+| Lot 7 — Plan d'accompagnement | Fait | Génération, édition libre, document de restitution imprimable pour l'agent |
+| Lot 8 — Tableau de bord | Fait | Prochains rendez-vous, dossiers à relancer, indicateurs, recherches, ressources |
+| Suivi & conformité (ajout) | Fait | Statut, rendez-vous et historique des échanges ; export des données, politique de conservation, journal traçable |
+| Déploiement | Prêt | Image Docker vérifiée (suite complète contre le conteneur) ; script d'installation serveur ; **validation DPO/RSSI de l'hébergement à obtenir** |
 
-Tests de bout en bout : 14 vérifications automatisées (`scripts/e2e.mjs`), toutes passantes.
+Tests de bout en bout : 52 vérifications automatisées (`scripts/e2e.mjs`), toutes passantes.
 
-**Reste prioritairement à faire** : ingérer le guide DGAFP (Phase 0 #3), implémenter
-l'authentification et les droits (Lot 0), documenter les fiches dispositif depuis la source,
-ajouter la recherche sémantique.
+**Reste prioritairement à faire** : validation DPO/RSSI avant tout usage avec de vraies données,
+vérification des 6 fiches restantes sur le Code général de la fonction publique, recherche
+sémantique.
 
 ---
 

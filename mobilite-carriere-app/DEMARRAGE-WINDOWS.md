@@ -96,6 +96,18 @@ npm run dispositifs:importer
 
 Les fiches déjà documentées dans l'installation ne sont pas écrasées.
 
+## 4 ter. Ajouter les textes officiels livrés
+
+Le Code du travail (formation professionnelle, version au 1er septembre 2026) est fourni avec
+l'application. Pour l'ajouter à la base documentaire, serveur arrêté ou non :
+
+```powershell
+npm run sources:importer
+```
+
+Après une mise à jour de l'application, **ré-ingérer aussi le guide DGAFP** (même titre, via
+**Base documentaire**) : la nouvelle ingestion répare les mots coupés par la mise en page du PDF.
+
 ## 5. Vérifier que tout fonctionne
 
 - Le bandeau orange « Base documentaire vide » a disparu du tableau de bord.
