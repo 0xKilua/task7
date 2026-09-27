@@ -1,6 +1,7 @@
 import { ingererDocumentAction, supprimerDocumentAction } from '@/app/actions';
 import { AlerteAVerifier, Bouton, Carte, EtatVide, TitrePage } from '@/components/ui';
 import { exigerSession } from '@/lib/auth';
+import { mentionDate } from '@/lib/format';
 import { listerDocuments } from '@/lib/search';
 
 export const dynamic = 'force-dynamic';
@@ -141,7 +142,7 @@ export default function PageBaseDocumentaire({
                     <p className="text-sm font-medium text-slate-800">{doc.titre}</p>
                     <p className="text-xs text-slate-600">
                       {doc.source}
-                      {doc.datePublication && ` · publié en ${doc.datePublication}`} ·{' '}
+                      {doc.datePublication && ` · ${mentionDate(doc.datePublication, 'publié en')}`} ·{' '}
                       {doc.nbPassages} passages
                     </p>
                     <p className="text-xs text-slate-500">

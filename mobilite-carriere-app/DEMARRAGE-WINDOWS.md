@@ -84,30 +84,18 @@ Quand `Ready` s'affiche, ouvrir <http://localhost:3000>. Pour arrêter : `Ctrl+C
 npm run ingest -- --fichier data\documents\GuideMobPro_2026.pdf --titre "Guide de la mobilité professionnelle 2026" --source "DGAFP" --url "https://www.fonction-publique.gouv.fr/files/files/publications/publications-dgafp/GuideMobPro_2026.pdf" --date "2026" --statut officiel
 ```
 
-## 4 bis. Mettre à jour le catalogue de dispositifs
+## 4 bis. Textes officiels et catalogue : rien à faire
 
-Si l'application tournait déjà avant cette version, récupérer les fiches pré-documentées depuis le
-guide DGAFP (arrêter le serveur avec `Ctrl+C`, puis) :
-
-```powershell
-git pull
-npm run dispositifs:importer
-```
-
-Les fiches déjà documentées dans l'installation ne sont pas écrasées.
-
-## 4 ter. Ajouter les textes officiels livrés
-
-Le Code du travail (formation professionnelle, version au 1er septembre 2026) est fourni avec
-l'application. Pour l'ajouter à la base documentaire, serveur arrêté ou non :
-
-```powershell
-npm run sources:importer
-```
+Au démarrage, l'application installe d'elle-même les textes officiels livrés (Code du travail —
+formation professionnelle, version au 1er septembre 2026 ; 11 fiches service-public.fr sur la
+carrière et la formation des fonctionnaires) et le catalogue de dispositifs, puis les met à jour à
+chaque nouvelle version (`git pull` puis relance de `demarrer.bat`). Une fiche de dispositif
+modifiée dans votre installation n'est jamais écrasée.
 
 ## 5. Vérifier que tout fonctionne
 
-- Le bandeau orange « Base documentaire vide » a disparu du tableau de bord.
+- Le tableau de bord n'affiche plus de bandeau orange (« Guide … DGAFP à ajouter »).
+- **Base documentaire** liste le guide DGAFP, le Code du travail et les fiches service-public.fr.
 - Sur **Recherche documentaire**, un terme du guide renvoie des passages cités avec leur section et
   leur numéro de page.
 - Sur **Assistant**, une question renvoie une analyse appuyée sur des extraits sourcés.

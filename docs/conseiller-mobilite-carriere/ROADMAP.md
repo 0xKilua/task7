@@ -23,11 +23,11 @@ Un **prototype local exécutable** est disponible dans [`mobilite-carriere-app/`
 | Lot Phase 3 | État | Réserve |
 |---|---|---|
 | Lot 0 — Socle technique | Fait | Authentification, rôles, cloisonnement des dossiers par conseiller, migrations automatiques, revue de sécurité |
-| Lot 1 — Base documentaire & RAG | Fait (lexical) | Guide DGAFP et Code du travail (6e partie) ; sigles, rejet des sujets hors corpus, réparation des mots coupés ; pertinence mesurée (38/38 dans les 3 premiers) ; recherche **sémantique à ajouter** |
+| Lot 1 — Base documentaire & RAG | Fait (lexical) | Guide DGAFP, Code du travail (6e partie) et 11 fiches service-public.fr, textes livrés installés et mis à jour au démarrage ; sigles, formes d'un mot sans ses dérivés, rejet des sujets hors corpus, réparation des mots coupés ; pertinence mesurée (38/38 dans les 3 premiers sur le guide seul, 33/38 avec les textes livrés, qui répondent souvent eux-mêmes) ; recherche **sémantique à ajouter** |
 | Lot 2 — Assistant | Fait (sans LLM) | Restitution ancrée sur les passages retrouvés, trame complète, questions de clarification |
 | Lot 3 — Fiche de situation | Fait | 14 champs + synthèse structurée |
 | Lot 4 — Bilan de parcours | Fait | 12 étapes + synthèse |
-| Lot 5 — Dispositifs | Fait | 20 fiches sur 28 vérifiées sur source ; **6 fiches relevant des textes de la fonction publique restent à vérifier** |
+| Lot 5 — Dispositifs | Fait | 26 fiches sur 28 vérifiées sur source (guide DGAFP, Code du travail, fiches service-public.fr) ; catalogue mis à jour au démarrage sans écraser les fiches modifiées localement |
 | Lot 6 — Préparation d'entretien | Fait | 7 types de trames, questions ouvertes |
 | Lot 7 — Plan d'accompagnement | Fait | Génération, édition libre, document de restitution imprimable pour l'agent |
 | Lot 8 — Tableau de bord | Fait | Prochains rendez-vous, dossiers à relancer, indicateurs, recherches, ressources |

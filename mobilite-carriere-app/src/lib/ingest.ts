@@ -5,6 +5,9 @@ import type { StatutDocument } from './types';
 
 const TAILLE_PASSAGE_CIBLE = 1100;
 const TAILLE_PASSAGE_MIN = 120;
+// À incrémenter à chaque changement du découpage : les textes livrés sont alors ré-ingérés
+// au démarrage suivant.
+export const VERSION_DECOUPAGE = 2;
 
 export interface MetadonneesDocument {
   titre: string;
@@ -24,8 +27,9 @@ export interface PassageDecoupe {
 
 function estTitreSection(ligne: string): boolean {
   const l = ligne.trim();
+  // Titre explicite d'un texte balisé : il peut porter tout son chemin (versant, cas…).
+  if (/^#{1,6}\s+\S/.test(l)) return l.length <= 250;
   if (l.length === 0 || l.length > 90) return false;
-  if (/^#{1,6}\s+/.test(l)) return true;
   if (/[.;:,]$/.test(l)) return false;
   if (/^\d+(\.\d+)*[.)]?\s+\S/.test(l) && l.length < 80) return true;
   const lettres = l.replace(/[^A-Za-zÀ-ÿ]/g, '');

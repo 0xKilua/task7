@@ -8,6 +8,9 @@ import type { Citation, DocumentSource } from './types';
 // courant, porte des mots secondaires qu'aucun passage ne réunit tous : on en exige moins,
 // sans descendre sous le tiers.
 function seuilCouverture(nombreNotions: number): number {
+  // Deux mots désignent une notion précise : « rupture conventionnelle » n'est pas
+  // « dispositions conventionnelles ». Seul un mot courant (« rôle ») peut manquer.
+  if (nombreNotions <= 2) return 0.6;
   return Math.max(0.34, 0.5 - 0.04 * Math.max(0, nombreNotions - 3));
 }
 // Au-delà de cette part d'information portée par des mots absents de la base, la question
@@ -15,6 +18,10 @@ function seuilCouverture(nombreNotions: number): number {
 // renvoyer un passage sur le congé de formation au seul motif qu'il contient « congé ».
 const SEUIL_HORS_CORPUS = 0.4;
 const CANDIDATS_MAX = 80;
+// L'outil sert la fonction publique de l'État : à pertinence voisine, la règle de l'État passe
+// avant celles des versants territorial et hospitalier, qui restent affichées.
+const PONDERATION_AUTRE_VERSANT = 0.8;
+const AUTRE_VERSANT = /^(FPT|FPH)\b/;
 
 const MOTS_VIDES = new Set([
   'les', 'des', 'une', 'un', 'le', 'la', 'de', 'du', 'et', 'ou', 'que', 'qui', 'quoi', 'dans',
@@ -69,10 +76,27 @@ interface Notion {
   mot?: string;
 }
 
-function notionMot(debut: string): Notion {
+// Terminaisons admises après le radical d'un mot : pluriel et féminin (« détachée »,
+// « professionnelles »), pas les dérivés — « départ » ne doit pas trouver « département », ni
+// « fonction » « fonctionnaire ».
+const TERMINAISON_MAX = 3;
+
+// « derive » : mot absent de la base, cherché par son début sous toutes ses formes dérivées.
+function notionMot(debut: string, derive = false): Notion {
   // Début de mot uniquement : « cep » ne doit pas être vu dans « exception ».
-  const motif = new RegExp(`(?:^|[^a-z0-9])${echapper(debut)}`);
+  const fin = derive ? '' : `[a-z0-9]{0,${TERMINAISON_MAX}}(?![a-z0-9])`;
+  const motif = new RegExp(`(?:^|[^a-z0-9])${echapper(debut)}${fin}`);
   return { fts: `"${debut}"*`, presente: (t) => motif.test(t.normalise), mot: debut };
+}
+
+// Formes réellement indexées du mot : sa rareté se mesure sur elles seules, une troncature
+// "depart"* compterait aussi « département ».
+function formesIndexees(db: Database.Database, debut: string): string[] {
+  return (
+    db
+      .prepare('SELECT term FROM passages_vocab WHERE term GLOB ? AND length(term) <= ?')
+      .all(`${debut}*`, debut.length + TERMINAISON_MAX) as { term: string }[]
+  ).map((r) => r.term);
 }
 
 // Suite de mots dont chacun peut porter une terminaison (pluriel, féminin) :
@@ -141,11 +165,14 @@ function compterPassages(db: Database.Database, fts: string): number {
 // « reconversion ») ou avec une faute de frappe : on raccourcit son début, sans descendre
 // sous 70 % de sa longueur pour ne pas rapprocher des mots sans rapport.
 function resoudreNotion(db: Database.Database, notion: Notion): { notion: Notion; n: number } {
-  const n = compterPassages(db, notion.fts);
-  if (n > 0 || !notion.mot || notion.mot.length < 7) return { notion, n };
+  if (!notion.mot) return { notion, n: compterPassages(db, notion.fts) };
+  const formes = formesIndexees(db, notion.mot);
+  // Le classement garde la troncature : chaque forme rare, cherchée seule, pèserait trop.
+  if (formes.length > 0) return { notion, n: compterPassages(db, formes.map((f) => `"${f}"`).join(' OR ')) };
+  if (notion.mot.length < 7) return { notion, n: 0 };
   const minimum = Math.max(6, Math.ceil(notion.mot.length * 0.7));
   for (let longueur = notion.mot.length - 1; longueur >= minimum; longueur--) {
-    const variante = notionMot(notion.mot.slice(0, longueur));
+    const variante = notionMot(notion.mot.slice(0, longueur), true);
     const nVariante = compterPassages(db, variante.fts);
     if (nVariante > 0) return { notion: variante, n: nVariante };
   }
@@ -213,7 +240,7 @@ export function rechercherPassages(requete: string, limite = 8): Citation[] {
     // le classement revient ensuite à BM25, qui préfère la page consacrée au sujet à la page
     // d'introduction qui mentionne tous les sujets en une ligne.
     .filter((r) => r.couverture >= seuilCouverture(connues.length))
-    .sort((a, b) => a.ligne.score - b.ligne.score)
+    .sort((a, b) => scoreClassement(a.ligne) - scoreClassement(b.ligne))
     .filter(dedoublonner())
     .slice(0, limite)
     .map(({ ligne }) => ({
@@ -229,6 +256,11 @@ export function rechercherPassages(requete: string, limite = 8): Citation[] {
       extrait: ligne.extrait,
       score: ligne.score,
     }));
+}
+
+// Score bm25 : négatif, d'autant plus bas que le passage est pertinent.
+function scoreClassement(ligne: LigneResultat): number {
+  return AUTRE_VERSANT.test(ligne.titre_section ?? '') ? ligne.score * PONDERATION_AUTRE_VERSANT : ligne.score;
 }
 
 // Un même contenu se répète d'une page à l'autre dans les documents maquettés :

@@ -99,7 +99,10 @@ Les sauvegardes sont écrites dans le volume, sous `/app/data/sauvegardes`. Pour
 la machine hôte : `docker compose cp app:/app/data/sauvegardes ./sauvegardes`.
 
 Autres commandes d'administration disponibles sur le serveur : `docker compose exec app npm run
-comptes:lister` (et `comptes:reinitialiser`, `comptes:renommer`), `dispositifs:importer`.
+comptes:lister` (et `comptes:reinitialiser`, `comptes:renommer`). Les textes officiels et le
+catalogue de dispositifs livrés sont hors du volume de données (`/app/contenus`) : une nouvelle
+image les applique d'elle-même au démarrage ; `dispositifs:importer` et `sources:importer` les
+réappliquent à la demande.
 
 **Sortir également ces sauvegardes du volume Docker vers un stockage distinct** (autre
 machine, stockage réseau de l'administration) : une sauvegarde qui reste sur le même disque que

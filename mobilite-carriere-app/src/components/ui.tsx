@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { LIBELLES_STATUT, MESSAGE_A_VERIFIER, type Citation, type StatutDossier } from '@/lib/types';
+import { mentionDate } from '@/lib/format';
 
 const COULEURS_STATUT: Record<StatutDossier, string> = {
   en_cours: 'border-etat-200 bg-etat-50 text-etat-800',
@@ -121,7 +122,7 @@ export function BlocCitation({ citation, index }: { citation: Citation; index: n
         {citation.page !== null && <> — page {citation.page}</>}
         {' · '}
         Source : {citation.source}
-        {citation.datePublication && <> · Document daté de {citation.datePublication}</>}
+        {citation.datePublication && <> · {mentionDate(citation.datePublication, 'Document daté de')}</>}
         {citation.url && (
           <>
             {' · '}

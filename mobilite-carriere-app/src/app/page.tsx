@@ -1,3 +1,4 @@
+import { lireSourcesLivrees } from '@/lib/db';
 import { compterDispositifs } from '@/lib/dispositifs';
 import {
   JOURS_SANS_ACTIVITE,
@@ -22,6 +23,10 @@ export default function TableauDeBord() {
   const rendezVous = rendezVousAVenir(utilisateur.id, 5);
   const aRelancer = dossiersARelancer(utilisateur.id, 5);
   const documents = listerDocuments();
+  // Les textes livrés s'installent seuls : seul le guide DGAFP, déposé par l'administrateur,
+  // peut manquer.
+  const titresLivres = new Set(lireSourcesLivrees().sources.map((s) => s.titre));
+  const guideAAjouter = documents.length > 0 && documents.every((d) => titresLivres.has(d.titre));
   const recherches = recherchesRecentes(utilisateur.id, 5);
   const bilans = bilansEnCours(utilisateur.id);
   const dispositifs = compterDispositifs();
@@ -45,6 +50,23 @@ export default function TableauDeBord() {
             institutionnelle.{' '}
             <Link className="underline" href="/base-documentaire">
               Alimenter la base documentaire
+            </Link>
+            .
+          </p>
+        </div>
+      )}
+
+      {guideAAjouter && (
+        <div
+          role="status"
+          className="mb-6 rounded border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        >
+          <p className="font-semibold">Guide de la mobilité professionnelle de la DGAFP à ajouter</p>
+          <p className="mt-1">
+            Les textes livrés avec l&apos;application (Code du travail, fiches service-public.fr) sont en
+            place ; le guide DGAFP, référence principale de l&apos;accompagnement, reste à déposer.{' '}
+            <Link className="underline" href="/base-documentaire">
+              Base documentaire
             </Link>
             .
           </p>

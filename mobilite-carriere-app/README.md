@@ -53,17 +53,24 @@ npm run ingest -- --fichier data/documents/GuideMobPro_2026.pdf \
 
 Réutiliser le même `--titre` remplace la version précédente du document (mise à jour incrémentale).
 
-**Textes officiels livrés avec l'application** — la sixième partie du Code du travail (formation
-professionnelle : CEP, CPF, VAE, bilan de compétences), version en vigueur au 1er septembre 2026,
-tirée du fonds LEGI de la DILA :
+**Textes officiels livrés avec l'application** (`contenus/sources/`), ingérés automatiquement au
+démarrage, et de nouveau à chaque nouvelle version d'un texte :
 
-```bash
-npm run sources:importer
-```
+- la sixième partie du Code du travail (formation professionnelle : CEP, CPF, VAE, bilan de
+  compétences), version en vigueur au 1er septembre 2026, tirée du fonds LEGI de la DILA. Le
+  reste du Code, qui régit le contrat de travail de droit privé, n'est pas livré : il fausserait
+  les réponses données à des agents publics ;
+- 11 fiches pratiques de service-public.fr (DILA) sur la carrière et la formation des
+  fonctionnaires : disponibilité, détachement, congé de formation professionnelle, congé de
+  transition professionnelle, période de professionnalisation, formations statutaire et continue,
+  entretien de formation, CPF, bilan de compétences, évaluation professionnelle. Une fiche = un
+  document, avec son adresse et sa date de modification ; chaque extrait cité porte son versant
+  (FPE, FPT, FPH) et son cas (« FPE › Convenances personnelles › Quelle est la durée… ? »).
 
-Le reste du Code du travail, qui régit le contrat de travail de droit privé, n'est pas livré : il
-fausserait les réponses données à des agents publics. `scripts/extraire-code-travail.mjs`
-régénère le fichier depuis une version plus récente du fonds LEGI.
+`scripts/extraire-code-travail.mjs` et `scripts/extraire-fiches-service-public.mjs` régénèrent
+ces fichiers depuis une version plus récente des données de la DILA. `npm run sources:importer`
+force leur ré-ingestion. Un texte livré retiré depuis la base documentaire ne revient qu'avec une
+version plus récente.
 
 L'ingestion répare les mots coupés par la mise en page des PDF (« p arfois »), qui devenaient
 introuvables. Les documents ingérés avec une version antérieure sont réparés automatiquement,
@@ -74,30 +81,24 @@ une seule fois, au démarrage suivant : pas besoin de les ré-ingérer.
 Le catalogue distingue deux niveaux de fiabilité, visibles dans l'interface (badge vert / badge
 ambre) :
 
-- **20 fiches vérifiées sur source** (`statutVerification: "verifie_source"`) : 18 depuis le
+- **26 fiches vérifiées sur source** (`statutVerification: "verifie_source"`) : 18 depuis le
   guide DGAFP « Agir pour son projet de mobilité professionnelle », édition 2026, lu page par
   page ; 2 (conseil en évolution professionnelle, VAE) depuis les articles du Code du travail en
-  vigueur au 1er septembre 2026, chaque affirmation citée.
-- **6 fiches** (disponibilité, congé de formation professionnelle, période de
-  professionnalisation, formation statutaire, entretien professionnel, accompagnement à la
-  reconversion) relèvent des textes de la fonction publique, que ni le guide ni le Code du
-  travail ne couvrent. Leur contenu vient d'une recherche web (Légifrance, portail de la fonction
-  publique) dont les pages n'ont pas pu être lues directement dans l'environnement de
-  développement — elles restent donc `statutVerification: "non_verifie"`, avec un encart
-  explicite et les liens vers les textes primaires à vérifier avant tout usage auprès d'un agent.
+  vigueur au 1er septembre 2026 ; 6 (disponibilité, congé de formation professionnelle, période
+  de professionnalisation, formation statutaire et continue, entretien professionnel, congé de
+  transition professionnelle) depuis les fiches service-public.fr livrées, lues directement,
+  chaque fiche renvoyant à sa fiche officielle et aux articles du code général de la fonction
+  publique qu'elle cite.
 - **2 fiches** (mobilité géographique, kiosque des référentiels métiers) restent volontairement
   peu renseignées : le guide les traite différemment (un critère plutôt qu'un dispositif ; une
   page à consulter directement dans le guide plutôt qu'à dupliquer ici).
 
-Sur une installation où la base existe déjà :
-
-```bash
-npm run dispositifs:importer
-```
-
-L'import ajoute les fiches manquantes et met à jour celles qui n'ont pas été documentées
-localement. **Une fiche déjà documentée dans l'installation n'est jamais écrasée** : le travail du
-conseiller prime sur le contenu livré.
+Le catalogue livré (`contenus/dispositifs.seed.json`) est appliqué automatiquement au démarrage
+de chaque nouvelle version : fiches ajoutées, corrigées ou nouvellement vérifiées arrivent sans
+commande (`npm run dispositifs:importer` le réapplique à la demande). **Une fiche vérifiée
+modifiée dans l'installation n'est jamais écrasée** : le travail du conseiller prime sur le
+contenu livré. L'application la reconnaît à ce qu'elle ne correspond plus à la dernière version
+livrée, dont elle conserve l'empreinte.
 
 ## Fonctionnalités
 
@@ -123,9 +124,9 @@ conseiller prime sur le contenu livré.
 
 ```
 mobilite-carriere-app/
+├── contenus/                   Contenus livrés : catalogue de dispositifs, textes officiels
 ├── data/
 │   ├── app.db                  SQLite (non versionné)
-│   ├── dispositifs.seed.json   Catalogue initial (noms seuls, champs à documenter)
 │   └── documents/              Documents sources déposés (non versionnés)
 ├── scripts/
 │   ├── ingest-cli.ts           Ingestion en ligne de commande
@@ -203,8 +204,10 @@ sujets qu'il ne traite pas (`scripts/questions-reference.json`) :
 npm run recherche:evaluer -- --fichier chemin/vers/GuideMobPro_2026.pdf
 ```
 
-Résultat actuel : bonne page dans les 3 premiers résultats pour 38/38 questions, aucun faux
-résultat sur les 5 sujets hors corpus.
+Résultat actuel : bonne page dans les 3 premiers résultats pour 38/38 questions (33 en première
+position), aucun faux résultat sur les 5 sujets hors corpus. L'évaluation porte sur le guide
+seul ; `--corpus-complet` y ajoute les textes livrés, pour mesurer leur concurrence (33/38 : les
+fiches service-public.fr répondent elles-mêmes, par exemple, aux questions sur le détachement).
 
 Le scénario de bout en bout (52 vérifications) couvre aussi le suivi, la restitution, l'export,
 le journal, la conservation et le cloisonnement de chacun. Il couvre : création de dossier, diagnostic et synthèse, bilan et

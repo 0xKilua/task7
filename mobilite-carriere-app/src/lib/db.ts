@@ -1,10 +1,14 @@
 import Database from 'better-sqlite3';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { ingererDocument, VERSION_DECOUPAGE } from './ingest';
 import { construireVocabulaire, reparerMotsCoupes } from './mots-coupes';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_PATH = process.env.MCC_DB_PATH ?? path.join(DATA_DIR, 'app.db');
+// Contenus livrés avec l'application, hors du dossier de données (volume en production).
+const CONTENUS_DIR = path.join(process.cwd(), 'contenus');
 
 let instance: Database.Database | null = null;
 
@@ -71,6 +75,9 @@ CREATE VIRTUAL TABLE IF NOT EXISTS passages_fts USING fts5(
   content_rowid='id',
   tokenize="unicode61 remove_diacritics 2"
 );
+
+-- Vocabulaire indexé : la recherche y choisit les formes d'un mot (pluriel, féminin).
+CREATE VIRTUAL TABLE IF NOT EXISTS passages_vocab USING fts5vocab(passages_fts, 'row');
 
 CREATE TRIGGER IF NOT EXISTS passages_ai AFTER INSERT ON passages BEGIN
   INSERT INTO passages_fts(rowid, contenu, titre_section)
@@ -195,9 +202,126 @@ export function getDb(): Database.Database {
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_dossiers_reference ON dossiers(conseiller_id, reference)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_recherches_conseiller ON recherches(conseiller_id, id)');
   reparerPassagesExistants(db);
-  seedDispositifs(db);
+  // La synchronisation passe par les fonctions d'ingestion, qui appellent getDb() : la
+  // connexion doit être disponible avant.
   instance = db;
+  // Désactivable pour les mesures qui doivent porter sur un seul document (évaluation).
+  if (process.env.MCC_CONTENUS_LIVRES !== 'non') {
+    synchroniserCatalogue(db);
+    synchroniserSources(db);
+  }
   return db;
+}
+
+function lireParametre(db: Database.Database, cle: string): string | null {
+  const ligne = db.prepare('SELECT valeur FROM parametres WHERE cle = ?').get(cle) as { valeur: string } | undefined;
+  return ligne?.valeur ?? null;
+}
+
+function ecrireParametre(db: Database.Database, cle: string, valeur: string) {
+  db.prepare(
+    'INSERT INTO parametres (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur',
+  ).run(cle, valeur);
+}
+
+const empreinte = (contenu: Buffer) => crypto.createHash('sha256').update(contenu).digest('hex');
+
+const COLONNES_FICHE = [
+  'nom', 'categorie', 'objectif', 'public_concerne', 'conditions', 'demarches', 'acteurs',
+  'points_vigilance', 'ressources', 'date_information', 'source', 'statut_verification',
+] as const;
+
+const empreinteFiche = (valeurs: unknown[]) => empreinte(Buffer.from(JSON.stringify(valeurs)));
+
+function valeursSeed(item: DispositifSeed): unknown[] {
+  return [
+    item.nom, item.categorie, item.objectif ?? null, item.publicConcerne ?? null, item.conditions ?? null,
+    item.demarches ?? null, item.acteurs ?? null, item.pointsVigilance ?? null, item.ressources ?? null,
+    item.dateInformation ?? null, item.source ?? null,
+    item.statutVerification === 'verifie_source' ? 'verifie_source' : 'non_verifie',
+  ];
+}
+
+// Le catalogue livré est appliqué à chaque nouvelle version : fiches ajoutées ou corrigées
+// arrivent sans commande. Une fiche vérifiée modifiée dans l'installation n'est jamais
+// écrasée : le travail du conseiller prime. On la reconnaît à ce qu'elle ne correspond plus
+// à la dernière version livrée, dont l'empreinte est conservée.
+export function importerCatalogue(db: Database.Database, items: DispositifSeed[]) {
+  const lire = db.prepare(`SELECT ${COLONNES_FICHE.join(', ')} FROM dispositifs WHERE id = ?`);
+  const bilan = { ajoutees: 0, misesAJour: 0, preservees: 0 };
+  db.transaction(() => {
+    for (const item of items) {
+      const ligne = lire.get(item.id) as Record<string, unknown> | undefined;
+      const cle = `catalogue.fiche.${item.id}`;
+      const livree = empreinteFiche(valeursSeed(item));
+      if (ligne) {
+        const actuelle = empreinteFiche(COLONNES_FICHE.map((c) => ligne[c]));
+        if (actuelle === livree) {
+          ecrireParametre(db, cle, livree);
+          continue;
+        }
+        if (ligne.statut_verification === 'verifie_source' && lireParametre(db, cle) !== actuelle) {
+          bilan.preservees++;
+          continue;
+        }
+      }
+      insererDispositif(db, item);
+      ecrireParametre(db, cle, livree);
+      if (ligne) bilan.misesAJour++;
+      else bilan.ajoutees++;
+    }
+  })();
+  return bilan;
+}
+
+// Un contenu livré illisible ne doit jamais empêcher l'application de démarrer.
+function synchroniserCatalogue(db: Database.Database) {
+  const chemin = path.join(CONTENUS_DIR, 'dispositifs.seed.json');
+  try {
+    if (!fs.existsSync(chemin)) return;
+    const contenu = fs.readFileSync(chemin);
+    const version = empreinte(contenu);
+    if (lireParametre(db, 'catalogue.empreinte') === version) return;
+    const bilan = importerCatalogue(db, JSON.parse(contenu.toString('utf8')) as DispositifSeed[]);
+    ecrireParametre(db, 'catalogue.empreinte', version);
+    journaliser('dispositifs.import', undefined, `${bilan.ajoutees} ajoutées, ${bilan.misesAJour} mises à jour, ${bilan.preservees} préservées`);
+  } catch (erreur) {
+    console.error('Catalogue de dispositifs non mis à jour :', erreur instanceof Error ? erreur.message : erreur);
+  }
+}
+
+interface SourceLivree {
+  fichier: string;
+  titre: string;
+  source: string;
+  url: string;
+  datePublication: string;
+  statut: 'officiel' | 'a_verifier';
+}
+
+export function lireSourcesLivrees(): { dossier: string; sources: SourceLivree[] } {
+  const dossier = path.join(CONTENUS_DIR, 'sources');
+  const manifeste = path.join(dossier, 'sources.json');
+  return { dossier, sources: fs.existsSync(manifeste) ? (JSON.parse(fs.readFileSync(manifeste, 'utf8')) as SourceLivree[]) : [] };
+}
+
+// Les textes officiels livrés sont ingérés à chaque nouvelle version du fichier. Un texte
+// retiré depuis la base documentaire ne revient qu'avec une version plus récente.
+function synchroniserSources(db: Database.Database) {
+  const { dossier, sources } = lireSourcesLivrees();
+  for (const s of sources) {
+    const chemin = path.join(dossier, s.fichier);
+    try {
+      const contenu = fs.readFileSync(chemin);
+      const cle = `source.${s.fichier}.empreinte`;
+      const version = `${empreinte(contenu)}:${VERSION_DECOUPAGE}`;
+      if (lireParametre(db, cle) === version) continue;
+      ingererDocument({ ...s }, [{ page: null, texte: contenu.toString('utf8') }]);
+      ecrireParametre(db, cle, version);
+    } catch (erreur) {
+      console.error(`Texte officiel « ${s.titre} » non ingéré :`, erreur instanceof Error ? erreur.message : erreur);
+    }
+  }
 }
 
 // Les bases créées avant l'authentification n'ont pas de propriétaire de dossier, et
@@ -295,19 +419,6 @@ function reparerPassagesExistants(db: Database.Database) {
   })();
 }
 
-function seedDispositifs(db: Database.Database) {
-  const count = db.prepare('SELECT COUNT(*) AS n FROM dispositifs').get() as { n: number };
-  if (count.n > 0) return;
-
-  const seedPath = path.join(DATA_DIR, 'dispositifs.seed.json');
-  if (!fs.existsSync(seedPath)) return;
-
-  const tx = db.transaction((items: DispositifSeed[]) => {
-    for (const item of items) insererDispositif(db, item);
-  });
-  tx(lireSeedDispositifs(seedPath));
-}
-
 export interface DispositifSeed {
   id: string;
   nom: string;
@@ -324,7 +435,7 @@ export interface DispositifSeed {
   statutVerification?: string | null;
 }
 
-export function lireSeedDispositifs(chemin = path.join(DATA_DIR, 'dispositifs.seed.json')): DispositifSeed[] {
+export function lireSeedDispositifs(chemin = path.join(CONTENUS_DIR, 'dispositifs.seed.json')): DispositifSeed[] {
   return JSON.parse(fs.readFileSync(chemin, 'utf8')) as DispositifSeed[];
 }
 

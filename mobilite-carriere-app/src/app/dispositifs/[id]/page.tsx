@@ -14,6 +14,7 @@ import { obtenirDispositif } from '@/lib/dispositifs';
 import { rechercherPassages } from '@/lib/search';
 import { BlocCitation } from '@/components/ui';
 import { exigerSession } from '@/lib/auth';
+import { mentionDate } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +49,7 @@ export default function PageDispositif({ params }: { params: { id: string } }) {
         {dispositif.statutVerification === 'verifie_source' ? (
           <EtiquetteOfficielle>
             Fiche documentée — source : {dispositif.source}
-            {dispositif.dateInformation && ` · information datée de ${dispositif.dateInformation}`}
+            {dispositif.dateInformation && ` · ${mentionDate(dispositif.dateInformation, 'information datée de')}`}
           </EtiquetteOfficielle>
         ) : (
           <EtiquetteIA>

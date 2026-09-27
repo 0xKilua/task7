@@ -28,10 +28,9 @@ COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
-# Amorçage livré à l'image (catalogue de dispositifs, notice) ; les données
-# réelles (base, documents ingérés) vivent dans le volume monté ci-dessous.
-COPY --from=builder /app/data/dispositifs.seed.json ./data/dispositifs.seed.json
-COPY --from=builder /app/data/sources ./data/sources
+# Contenus livrés (catalogue, textes officiels) hors du volume de données : une nouvelle
+# image les met à jour, ce que le volume monté sur /app/data empêcherait.
+COPY --from=builder /app/contenus ./contenus
 COPY --from=builder /app/data/documents/README.md ./data/documents/README.md
 RUN mkdir -p /app/data/documents && chown -R conseiller:nodejs /app/data
 

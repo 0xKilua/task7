@@ -1,4 +1,4 @@
-// Produit data/sources/code-du-travail-formation.md à partir du fonds LEGI de la DILA,
+// Produit contenus/sources/code-du-travail-formation.md à partir du fonds LEGI de la DILA,
 // diffusé par les ministères sociaux (paquet npm @socialgouv/legi-data).
 // Usage : npm pack @socialgouv/legi-data && tar xzf socialgouv-legi-data-*.tgz
 //         node scripts/extraire-code-travail.mjs package/data/LEGITEXT000006072050.json
@@ -45,6 +45,6 @@ const entete = [
   'Ces dispositions régissent d’abord les salariés de droit privé. Pour un agent public, seules certaines s’appliquent (conseil en évolution professionnelle, validation des acquis de l’expérience…) : vérifier le texte propre à la fonction publique.',
   '',
 ];
-fs.mkdirSync('data/sources', { recursive: true });
-fs.writeFileSync('data/sources/code-du-travail-formation.md', [...entete, ...lignes].join('\n'));
+fs.mkdirSync('contenus/sources', { recursive: true });
+fs.writeFileSync('contenus/sources/code-du-travail-formation.md', [...entete, ...lignes].join('\n'));
 console.log(`${articles} articles en vigueur extraits (version du ${code.data.dateDebutVersion}).`);

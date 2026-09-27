@@ -19,7 +19,9 @@ function argument(nom: string): string | undefined {
 async function main() {
   const fichier = argument('fichier');
   if (!fichier || !fs.existsSync(fichier)) {
-    console.error('Usage : npm run recherche:evaluer -- --fichier <chemin du guide DGAFP (PDF)> [--seuil 0.8]');
+    console.error(
+      'Usage : npm run recherche:evaluer -- --fichier <chemin du guide DGAFP (PDF)> [--seuil 0.8] [--corpus-complet]',
+    );
     process.exit(1);
   }
   const seuil = Number(argument('seuil') ?? 0.8);
@@ -27,6 +29,10 @@ async function main() {
   // Base jetable : l'évaluation ne touche jamais à la base de l'application.
   const dossierTemp = fs.mkdtempSync(path.join(os.tmpdir(), 'mcc-evaluation-'));
   process.env.MCC_DB_PATH = path.join(dossierTemp, 'evaluation.db');
+  // Les pages attendues et les questions hors corpus se rapportent au seul guide : les textes
+  // livrés avec l'application en sont exclus, sauf demande explicite (concurrence réelle).
+  const corpusComplet = process.argv.includes('--corpus-complet');
+  if (!corpusComplet) process.env.MCC_CONTENUS_LIVRES = 'non';
   const { extraireTexte } = await import('../src/lib/extract');
   const { ingererDocument } = await import('../src/lib/ingest');
   const { rechercherPassages } = await import('../src/lib/search');
@@ -41,7 +47,9 @@ async function main() {
       { titre: 'Évaluation', source: 'DGAFP', statut: 'officiel' },
       pages,
     );
-    console.log(`${jeu.document} — ${pages.length} pages, ${nbPassages} passages indexés\n`);
+    console.log(
+      `${jeu.document} — ${pages.length} pages, ${nbPassages} passages indexés${corpusComplet ? ' (avec les textes livrés)' : ''}\n`,
+    );
 
     let a1 = 0;
     let a3 = 0;
@@ -60,7 +68,11 @@ async function main() {
       );
     }
 
-    console.log('\nQuestions hors corpus (aucun passage attendu) :');
+    console.log(
+      corpusComplet
+        ? '\nQuestions hors guide (indicatif : les textes livrés peuvent légitimement y répondre) :'
+        : '\nQuestions hors corpus (aucun passage attendu) :',
+    );
     let horsCorpusPropres = 0;
     for (const question of jeu.horsCorpus) {
       const resultats = rechercherPassages(question, 5);
@@ -82,7 +94,7 @@ Pertinence (${n} questions) :
   rang réciproque moyen   : ${(rangsInverses / n).toFixed(2)}
 Hors corpus sans faux résultat : ${horsCorpusPropres}/${jeu.horsCorpus.length}`);
 
-    const reussi = taux3 >= seuil && horsCorpusPropres === jeu.horsCorpus.length;
+    const reussi = taux3 >= seuil && (corpusComplet || horsCorpusPropres === jeu.horsCorpus.length);
     console.log(reussi ? '\nÉvaluation réussie.' : `\nÉvaluation en échec (seuil « 3 premiers » : ${Math.round(seuil * 100)} %).`);
     process.exitCode = reussi ? 0 : 1;
   } finally {

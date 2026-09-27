@@ -32,3 +32,9 @@ export function formaterHorodatage(iso: string): string {
     minute: '2-digit',
   });
 }
+
+// Une date seule appelle une formule (« publié en 2026 ») ; une mention rédigée
+// (« Version en vigueur au 1er septembre 2026 ») se suffit à elle-même.
+export function mentionDate(date: string, formule: string): string {
+  return /^\d/.test(date.trim()) ? `${formule} ${date}` : date;
+}
