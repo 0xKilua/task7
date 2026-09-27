@@ -126,6 +126,19 @@ export function creerUtilisateur(
   };
 }
 
+// Sur un serveur exposé à Internet, la page d'installation ouverte laisserait le premier
+// visiteur venu créer le compte administrateur : le jeton, connu du seul installateur,
+// le lui interdit.
+export function jetonInstallationRequis(): boolean {
+  return Boolean(process.env.MCC_JETON_INSTALLATION);
+}
+
+export function jetonInstallationValide(saisi: string): boolean {
+  const attendu = process.env.MCC_JETON_INSTALLATION ?? '';
+  const empreinte = (texte: string) => crypto.createHash('sha256').update(texte).digest();
+  return attendu.length > 0 && crypto.timingSafeEqual(empreinte(saisi.trim()), empreinte(attendu));
+}
+
 export function aucunUtilisateur(): boolean {
   const row = getDb().prepare('SELECT COUNT(*) AS n FROM utilisateurs').get() as { n: number };
   return row.n === 0;

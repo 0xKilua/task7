@@ -3,7 +3,7 @@
 
 FROM node:24-bookworm-slim AS deps
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json .npmrc ./
 RUN npm ci
 
 FROM node:24-bookworm-slim AS builder
@@ -18,10 +18,15 @@ ENV NODE_ENV=production
 RUN groupadd --system --gid 1001 nodejs \
     && useradd --system --uid 1001 --gid nodejs conseiller
 
-COPY --from=builder /app/.next ./.next
+COPY --from=builder --chown=conseiller:nodejs /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/next.config.mjs ./next.config.mjs
+# Commandes d'administration (sauvegarde, comptes, catalogue) utilisables sur le serveur :
+# docker compose exec app npm run comptes:lister
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
 # Amorçage livré à l'image (catalogue de dispositifs, notice) ; les données
 # réelles (base, documents ingérés) vivent dans le volume monté ci-dessous.

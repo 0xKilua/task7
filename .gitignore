@@ -66,3 +66,6 @@ yarn-error.log*
 
 # doc directory
 /doc
+# Secrets et configuration générés sur le serveur par installer-serveur.sh
+mobilite-carriere-app/.env
+mobilite-carriere-app/Caddyfile

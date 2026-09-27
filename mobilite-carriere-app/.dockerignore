@@ -10,3 +10,5 @@ data/documents/*
 .git
 *.log
 scripts/e2e.mjs
+.env
+Caddyfile

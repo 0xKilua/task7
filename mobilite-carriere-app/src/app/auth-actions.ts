@@ -6,6 +6,8 @@ import { redirect } from 'next/navigation';
 import {
   COOKIE_SESSION,
   aucunUtilisateur,
+  jetonInstallationRequis,
+  jetonInstallationValide,
   changerMotDePasse,
   connecter,
   creerUtilisateur,
@@ -38,6 +40,9 @@ export async function installationAction(formData: FormData) {
   // Sans ce verrou, la page d'installation permettrait de se créer un compte
   // administrateur sur une instance déjà en service.
   if (!aucunUtilisateur()) redirect('/connexion');
+  if (jetonInstallationRequis() && !jetonInstallationValide(texte(formData, 'jeton'))) {
+    redirect('/installation?erreur=' + encodeURIComponent("Jeton d'installation incorrect."));
+  }
 
   const identifiant = texte(formData, 'identifiant').trim();
   const nom = texte(formData, 'nom').trim();

@@ -9,6 +9,8 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      # Défini dans le fichier .env par installer-serveur.sh : exigé pour créer le premier compte.
+      - MCC_JETON_INSTALLATION=${MCC_JETON_INSTALLATION:-}
     volumes:
       - donnees:/app/data
     expose:

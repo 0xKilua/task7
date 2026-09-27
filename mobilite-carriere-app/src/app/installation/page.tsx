@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { installationAction } from '@/app/auth-actions';
-import { aucunUtilisateur } from '@/lib/auth';
+import { aucunUtilisateur, jetonInstallationRequis } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +23,22 @@ export default function PageInstallation({ searchParams }: { searchParams: { err
         )}
 
         <form action={installationAction} className="mt-5 space-y-4">
+          {jetonInstallationRequis() && (
+            <div>
+              <label htmlFor="jeton" className="block text-sm font-medium text-slate-700">
+                Jeton d&apos;installation
+              </label>
+              <input
+                id="jeton"
+                name="jeton"
+                type="password"
+                autoComplete="off"
+                required
+                className="mt-1 w-full rounded border border-slate-300 p-2 text-sm"
+              />
+              <p className="mt-1 text-xs text-slate-500">Affiché par le script d&apos;installation du serveur.</p>
+            </div>
+          )}
           <div>
             <label htmlFor="nom" className="block text-sm font-medium text-slate-700">
               Nom affiché

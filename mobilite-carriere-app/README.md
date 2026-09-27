@@ -188,10 +188,15 @@ Si `playwright` est installé localement, `PLAYWRIGHT_MODULE` peut être omis.
 
 ## Déploiement
 
-Guide complet : [DEPLOIEMENT.md](./DEPLOIEMENT.md) (Docker, reverse proxy HTTPS, sauvegardes,
-mise à jour). **Le `docker build` n'a pas pu être testé dans l'environnement de développement**
-(Docker Hub y était bloqué par la politique réseau) — à construire et vérifier avant tout usage
-réel, voir le tableau en tête de ce guide.
+- **Mise en ligne gratuite pas à pas** (serveur Oracle Cloud « Always Free », adresse DuckDNS,
+  HTTPS automatique) : [MISE-EN-LIGNE-GRATUITE.md](./MISE-EN-LIGNE-GRATUITE.md). Le script
+  `installer-serveur.sh` installe et démarre tout en une commande.
+- **Référence technique** (Docker, reverse proxy existant, sauvegardes, mise à jour) :
+  [DEPLOIEMENT.md](./DEPLOIEMENT.md). L'image Docker est vérifiée : suite de bout en bout
+  complète contre le conteneur de production.
+
+Aucune dépendance n'est compilée à l'installation (`.npmrc` : `ignore-scripts=true`) : ni Python
+ni outils C++ ne sont nécessaires, sous Windows comme sous Linux.
 
 ## Limites connues / suite
 

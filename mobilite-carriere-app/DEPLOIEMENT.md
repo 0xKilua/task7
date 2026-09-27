@@ -9,10 +9,15 @@
 
 | Élément | Statut |
 |---|---|
-| Build de production (`npm run build`) sous Node 24 | ✅ vérifié, puis suite de bout en bout complète (32/32) sur `npm run start` |
+| **`docker build` de l'image** | ✅ vérifié : image construite, puis suite de bout en bout complète (52/52) contre le conteneur de production, sans erreur dans ses journaux |
+| `docker compose` avec Caddy en HTTPS | ✅ vérifié en local (certificat interne de Caddy, redirection HTTP → HTTPS). L'obtention d'un certificat Let's Encrypt pour un vrai domaine n'a pas pu l'être : elle exige un serveur joignable depuis Internet |
+| Commandes d'administration dans le conteneur (`sauvegarder`, `comptes:*`, `dispositifs:importer`) | ✅ vérifié |
+| Build de production (`npm run build`) sous Node 24 | ✅ vérifié |
 | Module `better-sqlite3` 13 (binaires précompilés Node-API, sans compilation) sous Node 22 et 24 | ✅ vérifié : suite de bout en bout 32/32 sur chacune |
 | Script de sauvegarde (`npm run sauvegarder`) | ✅ vérifié : sauvegarde à chaud identique à la source, contrôle d'intégrité `ok` |
-| **`docker build` de l'image ci-dessous** | ❌ **non vérifié** — Docker Hub est bloqué par la politique réseau de l'environnement où ce projet a été développé. Le Dockerfile suit le schéma standard (image Node 24 officielle, `npm ci`, build, image finale sans les sources), mais n'a pas pu être construit ni lancé ici. **À construire et tester avant tout déploiement réel :** `docker build -t mobilite-carriere-app .` puis `docker run --rm -p 3000:3000 -v donnees:/app/data mobilite-carriere-app` et vérifier que la page d'installation s'affiche sur `http://localhost:3000`. |
+
+**Serveur neuf, exposé à Internet :** le script `installer-serveur.sh` fait tout (Docker, pare-feu,
+HTTPS, jeton d'installation) — voir [MISE-EN-LIGNE-GRATUITE.md](./MISE-EN-LIGNE-GRATUITE.md).
 
 ## 1. Construire l'image
 
@@ -69,10 +74,15 @@ Ouvrir l'URL publique : la page `/installation` s'affiche tant qu'aucun compte n
 demande de créer le compte administrateur. Ensuite, créer les comptes conseillers depuis
 `/administration`.
 
+**Serveur joignable depuis Internet : définir un jeton d'installation.** Sans lui, le premier
+visiteur arrivé sur `/installation` pourrait créer le compte administrateur. Mettre
+`MCC_JETON_INSTALLATION=<valeur aléatoire>` dans le fichier `.env` à côté de
+`docker-compose.yml` (`installer-serveur.sh` le fait) : la page exige alors ce jeton.
+
 ## 5. Sauvegardes
 
 ```bash
-docker exec mobilite-carriere-app npm run sauvegarder
+docker compose exec app npm run sauvegarder
 ```
 
 Écrit une copie cohérente de la base dans `data/sauvegardes/`, horodatée, et purge
@@ -82,8 +92,14 @@ sauvegarde se fait à chaud (l'application peut continuer de tourner pendant l'o
 Planifier son exécution régulière, par exemple via une tâche cron sur l'hôte :
 
 ```cron
-0 3 * * * docker exec mobilite-carriere-app npm run sauvegarder >> /var/log/mcc-sauvegarde.log 2>&1
+0 3 * * * cd /chemin/vers/mobilite-carriere-app && docker compose exec -T app npm run sauvegarder >> /var/log/mcc-sauvegarde.log 2>&1
 ```
+
+Les sauvegardes sont écrites dans le volume, sous `/app/data/sauvegardes`. Pour les copier sur
+la machine hôte : `docker compose cp app:/app/data/sauvegardes ./sauvegardes`.
+
+Autres commandes d'administration disponibles sur le serveur : `docker compose exec app npm run
+comptes:lister` (et `comptes:reinitialiser`, `comptes:renommer`), `dispositifs:importer`.
 
 **Sortir également ces sauvegardes du volume Docker vers un stockage distinct** (autre
 machine, stockage réseau de l'administration) : une sauvegarde qui reste sur le même disque que
@@ -96,8 +112,7 @@ choisi, relancer.
 
 ```bash
 git pull
-docker build -t mobilite-carriere-app .
-docker compose up -d   # ou docker run ... comme à l'étape 3
+docker compose up -d --build   # ou : sudo bash installer-serveur.sh <domaine>
 ```
 
 Le schéma de base est migré automatiquement au démarrage (voir les fonctions `migrer*` dans
@@ -107,7 +122,7 @@ réversible.
 
 ## 7. Ce que ce déploiement ne couvre pas
 
-- **Journalisation centralisée** : `docker logs mobilite-carriere-app` donne les journaux
+- **Journalisation centralisée** : `docker compose logs app` donne les journaux
   applicatifs ; les relier à un système de supervision relève de l'infrastructure d'accueil.
 - **Sauvegarde automatique hors machine** : le cron ci-dessus écrit localement, son transfert
   vers un stockage distinct est à mettre en place.
@@ -116,5 +131,6 @@ réversible.
   déploiement multi-instances.
 - **Rotation des secrets** : il n'y a pas de secret applicatif à gérer (les jetons de session
   sont générés aléatoirement et stockés hachés, sans clé de signature) — rien à roter de ce
-  côté. Le seul secret réel est le mot de passe de chaque compte, gérable depuis
-  `/administration`.
+  côté. Les secrets réels sont le mot de passe de chaque compte, gérable depuis
+  `/administration`, et le jeton d'installation, qui ne sert plus une fois le premier compte
+  créé.

@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "ingest": "tsx scripts/ingest-cli.ts",
     "dispositifs:importer": "tsx scripts/importer-dispositifs.ts",
-    "sauvegarder": "tsx scripts/sauvegarder.ts",
+    "sauvegarder": "node scripts/sauvegarder.mjs",
     "recherche:evaluer": "tsx scripts/evaluer-recherche.ts",
     "comptes:lister": "tsx scripts/comptes-cli.ts lister",
     "comptes:reinitialiser": "tsx scripts/comptes-cli.ts reinitialiser",
