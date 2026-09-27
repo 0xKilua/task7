@@ -105,9 +105,6 @@ l'application. Pour l'ajouter à la base documentaire, serveur arrêté ou non :
 npm run sources:importer
 ```
 
-Après une mise à jour de l'application, **ré-ingérer aussi le guide DGAFP** (même titre, via
-**Base documentaire**) : la nouvelle ingestion répare les mots coupés par la mise en page du PDF.
-
 ## 5. Vérifier que tout fonctionne
 
 - Le bandeau orange « Base documentaire vide » a disparu du tableau de bord.

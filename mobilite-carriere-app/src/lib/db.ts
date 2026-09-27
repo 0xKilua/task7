@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
+import { construireVocabulaire, reparerMotsCoupes } from './mots-coupes';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_PATH = process.env.MCC_DB_PATH ?? path.join(DATA_DIR, 'app.db');
@@ -193,6 +194,7 @@ export function getDb(): Database.Database {
   // Après migration : la colonne conseiller_id existe forcément, base neuve ou migrée.
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_dossiers_reference ON dossiers(conseiller_id, reference)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_recherches_conseiller ON recherches(conseiller_id, id)');
+  reparerPassagesExistants(db);
   seedDispositifs(db);
   instance = db;
   return db;
@@ -265,6 +267,32 @@ function migrerRecherches(db: Database.Database) {
   const colonnes = db.prepare('PRAGMA table_info(recherches)').all() as { name: string }[];
   if (colonnes.length === 0 || colonnes.some((c) => c.name === 'conseiller_id')) return;
   db.exec('ALTER TABLE recherches ADD COLUMN conseiller_id TEXT REFERENCES utilisateurs(id) ON DELETE CASCADE');
+}
+
+// Les documents ingérés avant la réparation des mots coupés sont corrigés une fois, sur
+// place : le PDF d'origine n'est pas conservé, et les identifiants de passage restent
+// stables pour ne pas invalider les citations. Réinsérer la ligne met l'index FTS à jour.
+function reparerPassagesExistants(db: Database.Database) {
+  const CLE = 'migration.mots_coupes_v1';
+  if (db.prepare('SELECT 1 FROM parametres WHERE cle = ?').get(CLE)) return;
+  db.transaction(() => {
+    const documents = db.prepare('SELECT id FROM documents').all() as { id: string }[];
+    for (const { id } of documents) {
+      const passages = db
+        .prepare('SELECT id, document_id, ordre, titre_section, contenu, page FROM passages WHERE document_id = ?')
+        .all(id) as { id: number; document_id: string; ordre: number; titre_section: string | null; contenu: string; page: number | null }[];
+      const vocabulaire = construireVocabulaire(passages.map((p) => p.contenu));
+      for (const p of passages) {
+        const contenu = reparerMotsCoupes(p.contenu, vocabulaire);
+        const titre = p.titre_section === null ? null : reparerMotsCoupes(p.titre_section, vocabulaire);
+        if (contenu === p.contenu && titre === p.titre_section) continue;
+        db.prepare('DELETE FROM passages WHERE id = ?').run(p.id);
+        db.prepare('INSERT INTO passages (id, document_id, ordre, titre_section, contenu, page) VALUES (?, ?, ?, ?, ?, ?)')
+          .run(p.id, p.document_id, p.ordre, titre, contenu, p.page);
+      }
+    }
+    db.prepare('INSERT INTO parametres (cle, valeur) VALUES (?, ?)').run(CLE, new Date().toISOString());
+  })();
 }
 
 function seedDispositifs(db: Database.Database) {

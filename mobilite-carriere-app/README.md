@@ -65,8 +65,9 @@ Le reste du Code du travail, qui régit le contrat de travail de droit privé, n
 fausserait les réponses données à des agents publics. `scripts/extraire-code-travail.mjs`
 régénère le fichier depuis une version plus récente du fonds LEGI.
 
-**Après une mise à jour de l'application, ré-ingérer le guide DGAFP** (même titre) : l'ingestion
-répare désormais les mots coupés par la mise en page du PDF, qui devenaient introuvables.
+L'ingestion répare les mots coupés par la mise en page des PDF (« p arfois »), qui devenaient
+introuvables. Les documents ingérés avec une version antérieure sont réparés automatiquement,
+une seule fois, au démarrage suivant : pas besoin de les ré-ingérer.
 
 ## Catalogue de dispositifs
 
