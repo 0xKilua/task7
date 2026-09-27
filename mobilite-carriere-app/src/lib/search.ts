@@ -1,7 +1,20 @@
+import type Database from 'better-sqlite3';
 import { getDb } from './db';
+import { SIGLES } from './sigles';
 import type { Citation, DocumentSource } from './types';
 
-const SEUIL_COUVERTURE = 0.34;
+// Part de l'information de la requête qu'un passage doit contenir pour être retenu, chaque
+// notion pesant selon sa rareté dans la base. Une question longue, rédigée en langage
+// courant, porte des mots secondaires qu'aucun passage ne réunit tous : on en exige moins,
+// sans descendre sous le tiers.
+function seuilCouverture(nombreNotions: number): number {
+  return Math.max(0.34, 0.5 - 0.04 * Math.max(0, nombreNotions - 3));
+}
+// Au-delà de cette part d'information portée par des mots absents de la base, la question
+// porte sur un sujet que les documents ne traitent pas : « congé de maternité » ne doit pas
+// renvoyer un passage sur le congé de formation au seul motif qu'il contient « congé ».
+const SEUIL_HORS_CORPUS = 0.4;
+const CANDIDATS_MAX = 80;
 
 const MOTS_VIDES = new Set([
   'les', 'des', 'une', 'un', 'le', 'la', 'de', 'du', 'et', 'ou', 'que', 'qui', 'quoi', 'dans',
@@ -10,6 +23,13 @@ const MOTS_VIDES = new Set([
   'nous', 'vous', 'plus', 'moins', 'tout', 'tous', 'toute', 'toutes', 'quel', 'quelle', 'quels',
   'quelles', 'comment', 'pourquoi', 'peut', 'peuvent', 'faire', 'fait', 'mais', 'donc', 'car',
   'si', 'ne', 'pas', 'en', 'au', 'y', 'a', 'me', 'te', 'se', 'lui', 'leur', 'leurs', 'dont',
+  // Tournures de question : elles ne disent rien du sujet, mais absentes des documents,
+  // elles pèseraient autant qu'un terme rare.
+  'veut', 'veux', 'voudrait', 'voudraient', 'voulez', 'souhaite', 'souhaitent', 'souhaiterait',
+  'souhaitez', 'souhaiter', 'aimerait', 'aimerais', 'dois', 'doit', 'doivent', 'faut', 'savoir',
+  'autre', 'autres', 'avant', 'apres', 'quand', 'alors', 'ainsi', 'aussi', 'tres', 'bien', 'deja',
+  'encore', 'comme', 'chez', 'entre', 'votre', 'notre', 'vos', 'nos', 'cela', 'ceci', 'celui',
+  'celle', 'etc',
 ]);
 
 export function normaliser(texte: string): string {
@@ -25,8 +45,111 @@ export function extraireTokens(requete: string): string[] {
     .filter((t) => t.length >= 3 && !MOTS_VIDES.has(t));
 }
 
-function construireRequeteFts(tokens: string[]): string {
-  return tokens.map((t) => `"${t.replace(/"/g, '')}"*`).join(' OR ');
+function sansAccents(texte: string): string {
+  return texte.normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function motsNormalises(texte: string): string {
+  return normaliser(texte).replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function echapper(texte: string): string {
+  return texte.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+interface TexteCompare {
+  normalise: string;
+  sansAccents: string;
+}
+
+// Une notion recherchée : un mot, ou un sigle avec ses formes développées.
+interface Notion {
+  fts: string;
+  presente: (texte: TexteCompare) => boolean;
+  mot?: string;
+}
+
+function notionMot(debut: string): Notion {
+  // Début de mot uniquement : « cep » ne doit pas être vu dans « exception ».
+  const motif = new RegExp(`(?:^|[^a-z0-9])${echapper(debut)}`);
+  return { fts: `"${debut}"*`, presente: (t) => motif.test(t.normalise), mot: debut };
+}
+
+// Suite de mots dont chacun peut porter une terminaison (pluriel, féminin) :
+// « conseillers mobilité-carrière » répond à « conseiller mobilité-carrière ».
+function motifForme(forme: string): RegExp {
+  const mots = motsNormalises(forme).split(' ');
+  return new RegExp(`(?:^|[^a-z0-9])${mots.map((m) => `${echapper(m)}[a-z0-9]*`).join('[^a-z0-9]+')}`);
+}
+
+function ftsForme(forme: string): string {
+  const significatifs = motsNormalises(forme)
+    .split(' ')
+    .filter((m) => m.length >= 3 && !MOTS_VIDES.has(m));
+  return `(${significatifs.map((m) => `"${m}"*`).join(' AND ')})`;
+}
+
+const NOTIONS_SIGLES = SIGLES.map((s) => {
+  const motifsFormes = s.formes.map(motifForme);
+  // Dans les documents, le sigle n'est reconnu qu'en capitales : « ROME » ne doit pas
+  // trouver la ville, ni « CEP » le mot « cep ».
+  const motifSigle = new RegExp(`(?:^|[^A-Za-z0-9])${echapper(s.sigle)}(?![A-Za-z0-9])`);
+  return {
+    motifSigleRequete: new RegExp(` ${echapper(s.sigle.toLowerCase())} `),
+    motifsFormes,
+    notion: {
+      // Sigle cherché sans troncature : "cep"* trouverait « cependant ».
+      fts: [`"${s.sigle.toLowerCase()}"`, ...s.formes.map(ftsForme)].join(' OR '),
+      presente: (t: TexteCompare) =>
+        motifSigle.test(t.sansAccents) || motifsFormes.some((m) => m.test(t.normalise)),
+    } satisfies Notion,
+  };
+});
+
+function analyserRequete(requete: string): Notion[] {
+  let reste = ` ${motsNormalises(requete)} `;
+  const notions: Notion[] = [];
+
+  for (const s of NOTIONS_SIGLES) {
+    let trouve = false;
+    if (s.motifSigleRequete.test(reste)) {
+      reste = reste.replace(s.motifSigleRequete, ' ');
+      trouve = true;
+    }
+    for (const motif of s.motifsFormes) {
+      if (motif.test(reste)) {
+        reste = reste.replace(motif, ' ');
+        trouve = true;
+      }
+    }
+    if (trouve) notions.push(s.notion);
+  }
+
+  for (const token of new Set(extraireTokens(reste))) notions.push(notionMot(token));
+  return notions;
+}
+
+function compterPassages(db: Database.Database, fts: string): number {
+  return (
+    db.prepare('SELECT COUNT(*) AS n FROM passages_fts WHERE passages_fts MATCH ?').get(fts) as {
+      n: number;
+    }
+  ).n;
+}
+
+// Un mot absent de la base peut y figurer sous une autre forme (« reconvertir » →
+// « reconversion ») ou avec une faute de frappe : on raccourcit son début, sans descendre
+// sous 70 % de sa longueur pour ne pas rapprocher des mots sans rapport.
+function resoudreNotion(db: Database.Database, notion: Notion): { notion: Notion; n: number } {
+  const n = compterPassages(db, notion.fts);
+  if (n > 0 || !notion.mot || notion.mot.length < 7) return { notion, n };
+  const minimum = Math.max(6, Math.ceil(notion.mot.length * 0.7));
+  for (let longueur = notion.mot.length - 1; longueur >= minimum; longueur--) {
+    const variante = notionMot(notion.mot.slice(0, longueur));
+    const nVariante = compterPassages(db, variante.fts);
+    if (nVariante > 0) return { notion: variante, n: nVariante };
+  }
+  return { notion, n: 0 };
 }
 
 interface LigneResultat {
@@ -45,10 +168,25 @@ interface LigneResultat {
 }
 
 export function rechercherPassages(requete: string, limite = 8): Citation[] {
-  const tokens = extraireTokens(requete);
-  if (tokens.length === 0) return [];
+  const notions = analyserRequete(requete);
+  if (notions.length === 0) return [];
 
   const db = getDb();
+  const total = (db.prepare('SELECT COUNT(*) AS n FROM passages').get() as { n: number }).n;
+  if (total === 0) return [];
+  // Poids d'une notion selon sa rareté (idf de BM25) : un mot présent partout n'apporte
+  // presque rien, un mot absent de la base pèse le plus lourd.
+  const resolues = notions.map((notion) => {
+    const r = resoudreNotion(db, notion);
+    return { ...r, poids: Math.log((total - r.n + 0.5) / (r.n + 0.5) + 1) };
+  });
+  const poidsTotal = resolues.reduce((somme, r) => somme + r.poids, 0);
+  const poidsInconnu = resolues.filter((r) => r.n === 0).reduce((somme, r) => somme + r.poids, 0);
+  if (poidsInconnu / poidsTotal >= SEUIL_HORS_CORPUS) return [];
+
+  const connues = resolues.filter((r) => r.n > 0);
+  const poidsConnu = connues.reduce((somme, r) => somme + r.poids, 0);
+
   const lignes = db
     .prepare(
       `SELECT p.id AS passage_id, p.document_id, p.titre_section, p.page, p.contenu,
@@ -62,19 +200,20 @@ export function rechercherPassages(requete: string, limite = 8): Citation[] {
         ORDER BY score
         LIMIT ?`,
     )
-    .all(construireRequeteFts(tokens), limite * 4) as LigneResultat[];
-
-  const minTokens = tokens.length >= 3 ? Math.ceil(tokens.length * SEUIL_COUVERTURE) : 1;
+    .all(connues.map((r) => `(${r.notion.fts})`).join(' OR '), CANDIDATS_MAX) as LigneResultat[];
 
   return lignes
     .map((ligne) => {
-      const contenu = normaliser(ligne.contenu);
-      return { ligne, couverture: tokens.filter((t) => contenu.includes(t)).length };
+      const brut = `${ligne.titre_section ?? ''}\n${ligne.contenu}`;
+      const texte = { normalise: normaliser(brut), sansAccents: sansAccents(brut) };
+      const couvert = connues.reduce((somme, r) => somme + (r.notion.presente(texte) ? r.poids : 0), 0);
+      return { ligne, couverture: couvert / poidsConnu };
     })
-    .filter((r) => r.couverture >= minTokens)
-    // Un passage contenant tous les termes recherchés répond mieux qu'un passage
-    // très bien classé sur un seul d'entre eux.
-    .sort((a, b) => b.couverture - a.couverture || a.ligne.score - b.ligne.score)
+    // La couverture écarte les passages qui ne répondent qu'à une partie de la question ;
+    // le classement revient ensuite à BM25, qui préfère la page consacrée au sujet à la page
+    // d'introduction qui mentionne tous les sujets en une ligne.
+    .filter((r) => r.couverture >= seuilCouverture(connues.length))
+    .sort((a, b) => a.ligne.score - b.ligne.score)
     .filter(dedoublonner())
     .slice(0, limite)
     .map(({ ligne }) => ({

@@ -45,6 +45,40 @@ function recoller(texte: string): string {
   return texte.replace(/(\p{L}{2,})\s?-\s*\n\s*(\p{Ll})/gu, '$1$2');
 }
 
+function construireVocabulaire(pages: PageExtraite[]): Map<string, number> {
+  const vocabulaire = new Map<string, number>();
+  for (const { texte } of pages) {
+    for (const mot of texte.toLowerCase().match(/\p{L}+/gu) ?? []) {
+      vocabulaire.set(mot, (vocabulaire.get(mot) ?? 0) + 1);
+    }
+  }
+  return vocabulaire;
+}
+
+// Le crénage des PDF maquettés insère des espaces au milieu des mots (« p arfois »,
+// « régio - nales ») : ces mots deviennent introuvables. Deux fragments ne sont recollés
+// que si le mot obtenu existe intact ailleurs dans le même document et que l'un d'eux
+// n'y apparaît pas seul — « par ce » ou « de puis » restent donc en l'état.
+export function reparerMotsCoupes(texte: string, vocabulaire: Map<string, number>): string {
+  const frequence = (mot: string) => vocabulaire.get(mot.toLowerCase()) ?? 0;
+  let courant = texte;
+  // Plusieurs passes pour les mots coupés en trois (« moda lit és »).
+  for (let passe = 0; passe < 3; passe++) {
+    const suivant = courant.replace(
+      /(\p{L}+)([ \t]+-[ \t]+|[ \t])(?=(\p{Ll}+))/gu,
+      (tout, a: string, _separateur: string, b: string) => {
+        const joint = a + b;
+        const recollable =
+          joint.length >= 5 && frequence(joint) >= 1 && (frequence(a) <= 1 || frequence(b) <= 1);
+        return recollable ? a : tout;
+      },
+    );
+    if (suivant === courant) break;
+    courant = suivant;
+  }
+  return courant;
+}
+
 // Une entrée de sommaire ou d'index n'apporte aucune information au conseiller :
 // elle ne fait que renvoyer vers une page, et pollue les résultats de recherche.
 function estRenvoiDeSommaire(ligne: string): boolean {
@@ -79,8 +113,10 @@ export function decouperEnPassages(pages: PageExtraite[]): PassageDecoupe[] {
     });
   };
 
+  const vocabulaire = construireVocabulaire(pages);
+
   for (const { page, texte } of pages) {
-    const lignes = texte.split(/\r?\n/);
+    const lignes = reparerMotsCoupes(texte, vocabulaire).split(/\r?\n/);
     for (const ligne of lignes) {
       const brut = ligne.trim();
       if (brut.length === 0 || estRenvoiDeSommaire(brut)) continue;
