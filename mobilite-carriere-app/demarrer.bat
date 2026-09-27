@@ -25,6 +25,22 @@ REM qui empeche npm de fonctionner dans une fenetre PowerShell ouverte directeme
 REM (ce fichier .bat, lui, n'est jamais soumis a cette politique).
 powershell -NoProfile -Command "$p = Get-ExecutionPolicy -Scope CurrentUser; if ($p -eq 'Restricted' -or $p -eq 'Undefined') { Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force }" >nul 2>&1
 
+REM Si le site tourne deja (fenetre serveur encore ouverte), on ne relance rien :
+REM supprimer .next sous un serveur actif le casse ("Failed to fetch").
+where curl >nul 2>&1
+if not errorlevel 1 (
+    curl -s -o NUL http://localhost:3000
+    if not errorlevel 1 (
+        echo.
+        echo Le site tourne deja : ouverture du navigateur...
+        start http://localhost:3000
+        echo Si le site affiche une erreur, fermez la fenetre du serveur puis relancez ce fichier.
+        echo.
+        pause
+        exit /b 0
+    )
+)
+
 echo.
 echo Verification des dependances ^(rapide si rien n'a change, plus long
 echo apres une mise a jour du projet^)...

@@ -30,6 +30,26 @@ if ($politique -eq 'Restricted' -or $politique -eq 'Undefined') {
     Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
 }
 
+# Une reponse HTTP d'erreur (500...) prouve aussi que le serveur tourne.
+function Test-Serveur {
+    try {
+        Invoke-WebRequest -Uri 'http://localhost:3000' -UseBasicParsing -TimeoutSec 2 | Out-Null
+        return $true
+    } catch {
+        return [bool]$_.Exception.Response
+    }
+}
+
+# Si le site tourne deja (fenetre serveur encore ouverte), on ne relance rien :
+# supprimer .next sous un serveur actif le casse ("Failed to fetch").
+if (Test-Serveur) {
+    Write-Host "`nLe site tourne deja : ouverture du navigateur..." -ForegroundColor Green
+    Start-Process 'http://localhost:3000'
+    Write-Host "Si le site affiche une erreur, fermez la fenetre du serveur puis relancez ce script."
+    Read-Host "`nAppuyez sur Entree pour fermer cette fenetre"
+    exit 0
+}
+
 Write-Host "`nVerification des dependances (rapide si rien n'a change, plus long apres une mise a jour du projet)..." -ForegroundColor Cyan
 npm install
 if ($LASTEXITCODE -ne 0) {
@@ -54,13 +74,11 @@ Start-Process cmd -ArgumentList '/k', 'npm run dev' -WorkingDirectory $PSScriptR
 Write-Host "Attente du demarrage du serveur..."
 $pret = $false
 for ($i = 0; $i -lt 90; $i++) {
-    try {
-        Invoke-WebRequest -Uri 'http://localhost:3000' -UseBasicParsing -TimeoutSec 1 | Out-Null
+    if (Test-Serveur) {
         $pret = $true
         break
-    } catch {
-        Start-Sleep -Seconds 1
     }
+    Start-Sleep -Seconds 1
 }
 
 if ($pret) {
