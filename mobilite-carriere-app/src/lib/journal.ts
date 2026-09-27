@@ -27,6 +27,7 @@ export const LIBELLES_ACTIONS: Record<string, string> = {
   'document.suppression': 'Document retiré',
   'dispositif.mise_a_jour': 'Fiche dispositif modifiée',
   'dispositifs.import': 'Import du catalogue de dispositifs',
+  'sources.import': 'Import des textes officiels livrés',
   'conservation.politique': 'Politique de conservation modifiée',
   'conservation.purge': 'Application de la politique de conservation',
 };
