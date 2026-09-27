@@ -144,6 +144,7 @@ export function decouperEnPassages(pages: PageExtraite[]): PassageDecoupe[] {
 export function ingererDocument(
   meta: MetadonneesDocument,
   pages: PageExtraite[],
+  acteurId?: string,
 ): { documentId: string; nbPassages: number; remplace: boolean } {
   const db = getDb();
   const passages = decouperEnPassages(pages);
@@ -188,14 +189,14 @@ export function ingererDocument(
   });
 
   tx();
-  journaliser(existant ? 'document.mise_a_jour' : 'document.ingestion', documentId, meta.titre);
+  journaliser(existant ? 'document.mise_a_jour' : 'document.ingestion', documentId, meta.titre, acteurId);
 
   return { documentId, nbPassages: passages.length, remplace: Boolean(existant) };
 }
 
-export function supprimerDocument(documentId: string): boolean {
+export function supprimerDocument(documentId: string, acteurId?: string): boolean {
   const db = getDb();
   const info = db.prepare('DELETE FROM documents WHERE id = ?').run(documentId);
-  if (info.changes > 0) journaliser('document.suppression', documentId);
+  if (info.changes > 0) journaliser('document.suppression', documentId, undefined, acteurId);
   return info.changes > 0;
 }

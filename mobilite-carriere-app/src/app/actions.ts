@@ -251,7 +251,7 @@ export async function genererEntretienAction(formData: FormData) {
   // Un entretien rattaché à un dossier ne doit pouvoir l'être qu'au sien.
   if (dossierId) exigerDossier(dossierId, utilisateur.id);
   const trame = genererTrame(type, contexte);
-  enregistrerEntretien(type, trame, dossierId || null);
+  enregistrerEntretien(type, trame, dossierId || null, utilisateur.id);
   revalidatePath('/entretien');
   const parametres = new URLSearchParams({ type, contexte });
   if (dossierId) parametres.set('dossierId', dossierId);
@@ -260,7 +260,7 @@ export async function genererEntretienAction(formData: FormData) {
 
 export async function ingererDocumentAction(formData: FormData) {
   // La base documentaire est commune : sa modification relève de l'administrateur.
-  exigerAdministrateur();
+  const administrateur = exigerAdministrateur();
   const fichier = formData.get('fichier');
   if (!(fichier instanceof File) || fichier.size === 0) {
     redirect('/base-documentaire?erreur=' + encodeURIComponent('Aucun fichier reçu.'));
@@ -290,6 +290,7 @@ export async function ingererDocumentAction(formData: FormData) {
         fichier: (fichier as File).name,
       },
       pages,
+      administrateur.id,
     );
     revalidatePath('/base-documentaire');
     revalidatePath('/');
@@ -307,15 +308,15 @@ export async function ingererDocumentAction(formData: FormData) {
 }
 
 export async function supprimerDocumentAction(formData: FormData) {
-  exigerAdministrateur();
+  const administrateur = exigerAdministrateur();
   const id = texte(formData, 'documentId');
-  if (id) supprimerDocument(id);
+  if (id) supprimerDocument(id, administrateur.id);
   revalidatePath('/base-documentaire');
   revalidatePath('/');
 }
 
 export async function majDispositifAction(formData: FormData) {
-  exigerSession();
+  const utilisateur = exigerSession();
   const id = texte(formData, 'dispositifId');
   if (!id) return;
 
@@ -355,7 +356,7 @@ export async function majDispositifAction(formData: FormData) {
       id,
     );
 
-  journaliser('dispositif.mise_a_jour', id, statut);
+  journaliser('dispositif.mise_a_jour', id, statut, utilisateur.id);
   revalidatePath(`/dispositifs/${id}`);
   revalidatePath('/dispositifs');
 }

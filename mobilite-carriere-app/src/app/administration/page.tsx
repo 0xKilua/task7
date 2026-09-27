@@ -3,6 +3,7 @@ import {
   creerUtilisateurAction,
   reinitialiserMotDePasseAction,
 } from '@/app/auth-actions';
+import { OngletsAdministration } from '@/app/administration/Onglets';
 import { Bouton, Carte, TitrePage } from '@/components/ui';
 import { exigerAdministrateur } from '@/lib/auth';
 import { getDb } from '@/lib/db';
@@ -42,6 +43,7 @@ export default function PageAdministration({
         titre="Administration des comptes"
         chapo="Gestion des accès à l'application. Les accompagnements restent cloisonnés : un administrateur gère les comptes, il n'accède pas aux dossiers des conseillers."
       />
+      <OngletsAdministration actif="/administration" />
 
       {searchParams.succes && (
         <p role="status" className="mb-4 rounded border-l-4 border-emerald-400 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">

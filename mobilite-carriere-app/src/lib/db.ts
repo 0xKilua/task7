@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS dossiers (
   intitule TEXT,
   statut TEXT NOT NULL DEFAULT 'en_cours' CHECK (statut IN ('en_cours', 'en_attente', 'clos')),
   prochain_rdv TEXT,
+  date_cloture TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -168,7 +169,13 @@ CREATE TABLE IF NOT EXISTS journal (
   ts TEXT NOT NULL,
   action TEXT NOT NULL,
   cible TEXT,
-  details TEXT
+  details TEXT,
+  acteur_id TEXT
+);
+
+CREATE TABLE IF NOT EXISTS parametres (
+  cle TEXT PRIMARY KEY,
+  valeur TEXT NOT NULL
 );
 `;
 
@@ -180,7 +187,9 @@ export function getDb(): Database.Database {
   db.exec(SCHEMA);
   migrerDossiers(db);
   migrerSuiviDossiers(db);
+  migrerDateCloture(db);
   migrerRecherches(db);
+  migrerJournal(db);
   // Après migration : la colonne conseiller_id existe forcément, base neuve ou migrée.
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_dossiers_reference ON dossiers(conseiller_id, reference)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_recherches_conseiller ON recherches(conseiller_id, id)');
@@ -230,6 +239,24 @@ function migrerSuiviDossiers(db: Database.Database) {
     );
     db.exec('ALTER TABLE dossiers ADD COLUMN prochain_rdv TEXT');
   })();
+}
+
+// La durée de conservation court à partir de la clôture : un dossier déjà clos reçoit
+// comme date de clôture sa dernière modification, borne la plus prudente disponible.
+function migrerDateCloture(db: Database.Database) {
+  const colonnes = db.prepare('PRAGMA table_info(dossiers)').all() as { name: string }[];
+  if (colonnes.some((c) => c.name === 'date_cloture')) return;
+  db.transaction(() => {
+    db.exec('ALTER TABLE dossiers ADD COLUMN date_cloture TEXT');
+    db.exec("UPDATE dossiers SET date_cloture = updated_at WHERE statut = 'clos'");
+  })();
+}
+
+// Sans auteur, le journal dit ce qui s'est passé mais pas qui l'a fait.
+function migrerJournal(db: Database.Database) {
+  const colonnes = db.prepare('PRAGMA table_info(journal)').all() as { name: string }[];
+  if (colonnes.some((c) => c.name === 'acteur_id')) return;
+  db.exec('ALTER TABLE journal ADD COLUMN acteur_id TEXT');
 }
 
 // Une requête de recherche est saisie en traitant le dossier d'un agent : elle relève du
@@ -302,10 +329,12 @@ export function insererDispositif(db: Database.Database, item: DispositifSeed) {
   );
 }
 
-export function journaliser(action: string, cible?: string, details?: string) {
+// Le journal ne doit contenir aucune donnée sur les agents : identifiants techniques et
+// nature de l'action seulement, jamais une référence de dossier ni un contenu saisi.
+export function journaliser(action: string, cible?: string, details?: string, acteurId?: string) {
   getDb()
-    .prepare('INSERT INTO journal (ts, action, cible, details) VALUES (?, ?, ?, ?)')
-    .run(new Date().toISOString(), action, cible ?? null, details ?? null);
+    .prepare('INSERT INTO journal (ts, action, cible, details, acteur_id) VALUES (?, ?, ?, ?, ?)')
+    .run(new Date().toISOString(), action, cible ?? null, details ?? null, acteurId ?? null);
 }
 
 export function nouvelId(prefixe: string): string {

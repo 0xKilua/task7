@@ -118,7 +118,7 @@ export async function changerMotDePasseAction(formData: FormData) {
 }
 
 export async function creerUtilisateurAction(formData: FormData) {
-  exigerAdministrateur();
+  const administrateur = exigerAdministrateur();
 
   const identifiant = texte(formData, 'identifiant').trim();
   const nom = texte(formData, 'nom').trim();
@@ -135,7 +135,7 @@ export async function creerUtilisateurAction(formData: FormData) {
   if (erreur) redirect('/administration?erreur=' + encodeURIComponent(erreur));
 
   try {
-    creerUtilisateur(identifiant, nom, motDePasse, role, true);
+    creerUtilisateur(identifiant, nom, motDePasse, role, true, administrateur.id);
   } catch (e) {
     const conflit = e instanceof Error && e.message.includes('UNIQUE constraint failed');
     redirect(
@@ -170,13 +170,13 @@ export async function basculerActivationAction(formData: FormData) {
   const nouvelEtat = ligne.actif === 1 ? 0 : 1;
   db.prepare('UPDATE utilisateurs SET actif = ? WHERE id = ?').run(nouvelEtat, cible);
   if (nouvelEtat === 0) deconnecterToutesLesSessions(cible);
-  journaliser(nouvelEtat === 1 ? 'utilisateur.reactivation' : 'utilisateur.desactivation', cible);
+  journaliser(nouvelEtat === 1 ? 'utilisateur.reactivation' : 'utilisateur.desactivation', cible, undefined, administrateur.id);
 
   revalidatePath('/administration');
 }
 
 export async function reinitialiserMotDePasseAction(formData: FormData) {
-  exigerAdministrateur();
+  const administrateur = exigerAdministrateur();
 
   const cible = texte(formData, 'utilisateurId');
   const motDePasse = texte(formData, 'motDePasse');
@@ -187,7 +187,7 @@ export async function reinitialiserMotDePasseAction(formData: FormData) {
     .prepare('UPDATE utilisateurs SET mot_de_passe = ?, doit_changer_mot_de_passe = 1 WHERE id = ?')
     .run(hacherMotDePasse(motDePasse), cible);
   deconnecterToutesLesSessions(cible);
-  journaliser('mot_de_passe.reinitialise', cible);
+  journaliser('mot_de_passe.reinitialise', cible, undefined, administrateur.id);
 
   revalidatePath('/administration');
   redirect(

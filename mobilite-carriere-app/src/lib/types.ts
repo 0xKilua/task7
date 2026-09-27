@@ -71,6 +71,7 @@ export interface Dossier {
   statut: StatutDossier;
   // Heure locale du poste, au format de <input type="datetime-local"> : AAAA-MM-JJTHH:MM.
   prochainRdv: string | null;
+  dateCloture: string | null;
   createdAt: string;
   updatedAt: string;
 }

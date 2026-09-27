@@ -102,6 +102,7 @@ export function creerUtilisateur(
   motDePasse: string,
   role: RoleUtilisateur,
   doitChangerMotDePasse = false,
+  acteurId?: string,
 ): Utilisateur {
   const db = getDb();
   const id = nouvelId('usr');
@@ -112,7 +113,7 @@ export function creerUtilisateur(
      VALUES (?, ?, ?, ?, ?, 1, ?, ?)`,
   ).run(id, identifiant.trim(), nom.trim(), hacherMotDePasse(motDePasse), role, doitChangerMotDePasse ? 1 : 0, maintenant);
 
-  journaliser('utilisateur.creation', id, role);
+  journaliser('utilisateur.creation', id, role, acteurId ?? id);
   return {
     id,
     identifiant: identifiant.trim(),
@@ -199,7 +200,7 @@ export function connecter(identifiant: string, motDePasse: string): ResultatConn
   );
   db.prepare('DELETE FROM sessions WHERE expire_le < ?').run(maintenant.toISOString());
 
-  journaliser('connexion.reussie', ligne.id);
+  journaliser('connexion.reussie', ligne.id, undefined, ligne.id);
   return { ok: true, utilisateur: versUtilisateur(ligne), jeton };
 }
 
@@ -252,5 +253,5 @@ export function changerMotDePasse(utilisateurId: string, nouveau: string) {
   getDb()
     .prepare('UPDATE utilisateurs SET mot_de_passe = ?, doit_changer_mot_de_passe = 0 WHERE id = ?')
     .run(hacherMotDePasse(nouveau), utilisateurId);
-  journaliser('mot_de_passe.change', utilisateurId);
+  journaliser('mot_de_passe.change', utilisateurId, undefined, utilisateurId);
 }

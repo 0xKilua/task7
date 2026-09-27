@@ -147,7 +147,7 @@ export default function PageRestitution({
   const affichee = (cle: CleSection) => disponibles[cle] && demandees.has(cle);
   const aucunContenu = !Object.values(disponibles).some(Boolean);
 
-  journaliser('restitution.edition', dossier.id);
+  journaliser('restitution.edition', dossier.id, undefined, utilisateur.id);
 
   return (
     <>

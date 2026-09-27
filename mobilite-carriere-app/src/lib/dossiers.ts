@@ -67,6 +67,7 @@ function versDossier(l: Ligne): Dossier {
     intitule: l.intitule ?? null,
     statut: estStatut(l.statut) ? l.statut : 'en_cours',
     prochainRdv: l.prochain_rdv ?? null,
+    dateCloture: l.date_cloture ?? null,
     createdAt: l.created_at,
     updatedAt: l.updated_at,
   };
@@ -112,13 +113,14 @@ export function creerDossier(conseillerId: string, reference: string, intitule?:
   db.prepare(
     'INSERT INTO dossiers (id, conseiller_id, reference, intitule, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
   ).run(id, conseillerId, reference, intitule ?? null, now, now);
-  journaliser('dossier.creation', id, reference);
+  journaliser('dossier.creation', id, undefined, conseillerId);
   return {
     id,
     reference,
     intitule: intitule ?? null,
     statut: 'en_cours',
     prochainRdv: null,
+    dateCloture: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -156,7 +158,7 @@ export function supprimerDossier(id: string, conseillerId: string): boolean {
   const info = getDb()
     .prepare('DELETE FROM dossiers WHERE id = ? AND conseiller_id = ?')
     .run(id, conseillerId);
-  if (info.changes > 0) journaliser('dossier.suppression', id);
+  if (info.changes > 0) journaliser('dossier.suppression', id, undefined, conseillerId);
   return info.changes > 0;
 }
 
@@ -173,10 +175,16 @@ export function mettreAJourSuivi(
   }
   // Un accompagnement clos n'a plus de rendez-vous à venir.
   const rdv = statut === 'clos' ? null : prochainRdv;
+  const maintenant = new Date().toISOString();
+  // La date de clôture d'origine est conservée : c'est d'elle que court la durée de conservation.
   getDb()
-    .prepare('UPDATE dossiers SET statut = ?, prochain_rdv = ?, updated_at = ? WHERE id = ? AND conseiller_id = ?')
-    .run(statut, rdv, new Date().toISOString(), dossierId, conseillerId);
-  journaliser('dossier.suivi', dossierId, statut);
+    .prepare(
+      `UPDATE dossiers SET statut = ?, prochain_rdv = ?, updated_at = ?,
+              date_cloture = CASE WHEN ? = 'clos' THEN COALESCE(date_cloture, ?) ELSE NULL END
+        WHERE id = ? AND conseiller_id = ?`,
+    )
+    .run(statut, rdv, maintenant, statut, maintenant, dossierId, conseillerId);
+  journaliser('dossier.suivi', dossierId, statut, conseillerId);
 }
 
 export function ajouterNoteSuivi(
@@ -203,7 +211,7 @@ export function ajouterNoteSuivi(
     )
     .run(id, dossierId, dateEchange, modalite, texte, now);
   toucherDossier(dossierId);
-  journaliser('suivi.note_ajout', id, dossierId);
+  journaliser('suivi.note_ajout', id, dossierId, conseillerId);
   return { id, dossierId, dateEchange, modalite, contenu: texte, createdAt: now };
 }
 
@@ -229,7 +237,7 @@ export function supprimerNoteSuivi(noteId: string, dossierId: string, conseiller
     .run(noteId, dossierId);
   if (info.changes > 0) {
     toucherDossier(dossierId);
-    journaliser('suivi.note_suppression', noteId, dossierId);
+    journaliser('suivi.note_suppression', noteId, dossierId, conseillerId);
   }
   return info.changes > 0;
 }
@@ -321,7 +329,7 @@ export function enregistrerDiagnostic(
     'INSERT INTO diagnostics (id, dossier_id, payload, synthese, created_at) VALUES (?, ?, ?, ?, ?)',
   ).run(id, dossierId, JSON.stringify(payload), synthese, now);
   toucherDossier(dossierId);
-  journaliser('diagnostic.creation', id, dossierId);
+  journaliser('diagnostic.creation', id, dossierId, conseillerId);
 
   return { id, dossierId, payload, synthese, createdAt: now };
 }
@@ -341,7 +349,7 @@ export function enregistrerBilan(
     'INSERT INTO bilans (id, dossier_id, payload, synthese, created_at) VALUES (?, ?, ?, ?, ?)',
   ).run(id, dossierId, JSON.stringify(payload), synthese, now);
   toucherDossier(dossierId);
-  journaliser('bilan.creation', id, dossierId);
+  journaliser('bilan.creation', id, dossierId, conseillerId);
 
   return { id, dossierId, payload, synthese, createdAt: now };
 }
@@ -416,7 +424,7 @@ export function enregistrerPlan(
   }
 
   toucherDossier(dossierId);
-  journaliser(existant ? 'plan.mise_a_jour' : 'plan.creation', id, dossierId);
+  journaliser(existant ? 'plan.mise_a_jour' : 'plan.creation', id, dossierId, conseillerId);
 
   return { id, dossierId, ...plan, createdAt, updatedAt: now };
 }
@@ -457,5 +465,75 @@ export function statistiques(conseillerId: string) {
     // La base documentaire est commune à tous les conseillers.
     documents: get('SELECT COUNT(*) AS n FROM documents'),
     passages: get('SELECT COUNT(*) AS n FROM passages'),
+  };
+}
+
+const RUBRIQUES_PLAN_EXPORT: [keyof PlanAccompagnement, string][] = [
+  ['constats', 'Constats'],
+  ['objectifs', "Objectifs de l'agent"],
+  ['pistes', 'Pistes à explorer'],
+  ['dispositifs', 'Dispositifs potentiellement pertinents'],
+  ['aVerifier', 'Informations restant à vérifier'],
+  ['actions', 'Actions à réaliser'],
+  ['ressources', 'Ressources à consulter'],
+  ['echeances', 'Échéances'],
+  ['prochainesEtapes', 'Prochaines étapes'],
+];
+
+// Toutes les données d'un accompagnement, notes internes comprises, avec des libellés
+// lisibles : c'est ce que l'agent peut obtenir au titre de son droit d'accès.
+export function exporterDossier(dossierId: string, conseillerId: string) {
+  const dossier = obtenirDossier(dossierId, conseillerId);
+  if (!dossier) return null;
+  const db = getDb();
+
+  const versions = (table: 'diagnostics' | 'bilans', champs: { cle: string; libelle: string }[]) =>
+    (
+      db
+        .prepare(`SELECT payload, created_at FROM ${table} WHERE dossier_id = ? ORDER BY created_at`)
+        .all(dossierId) as { payload: string; created_at: string }[]
+    ).map((l) => {
+      const payload = JSON.parse(l.payload) as Record<string, string>;
+      return {
+        date: l.created_at,
+        elements: Object.fromEntries(
+          champs.filter((c) => (payload[c.cle] ?? '').trim()).map((c) => [c.libelle, payload[c.cle].trim()]),
+        ),
+      };
+    });
+
+  const plan = obtenirPlan(dossierId, conseillerId);
+  const trames = db
+    .prepare('SELECT type, trame, created_at FROM entretiens WHERE dossier_id = ? ORDER BY created_at')
+    .all(dossierId) as { type: string; trame: string; created_at: string }[];
+
+  journaliser('dossier.export', dossierId, undefined, conseillerId);
+
+  return {
+    objet: "Export des données d'un accompagnement mobilité-carrière",
+    exporteLe: new Date().toISOString(),
+    accompagnement: {
+      reference: dossier.reference,
+      intitule: dossier.intitule,
+      statut: LIBELLES_STATUT[dossier.statut],
+      prochainRendezVous: dossier.prochainRdv,
+      dateCloture: dossier.dateCloture,
+      creeLe: dossier.createdAt,
+      misAJourLe: dossier.updatedAt,
+    },
+    fichesDeSituation: versions('diagnostics', CHAMPS_DIAGNOSTIC),
+    bilansDeParcours: versions('bilans', ETAPES_BILAN),
+    planAccompagnement: plan
+      ? {
+          misAJourLe: plan.updatedAt,
+          ...Object.fromEntries(RUBRIQUES_PLAN_EXPORT.map(([cle, libelle]) => [libelle, plan[cle]])),
+        }
+      : null,
+    echanges: listerNotesSuivi(dossierId, conseillerId).map((n) => ({
+      date: n.dateEchange,
+      modalite: LIBELLES_MODALITE[n.modalite],
+      compteRendu: n.contenu,
+    })),
+    tramesEntretien: trames.map((t) => ({ date: t.created_at, type: t.type, trame: JSON.parse(t.trame) })),
   };
 }

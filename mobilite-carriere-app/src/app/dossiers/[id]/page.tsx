@@ -84,6 +84,14 @@ export default function PageDossier({
         </div>
         <div className="flex flex-wrap gap-2">
           <LienBouton href={`/dossiers/${dossier.id}/restitution`}>Document de restitution</LienBouton>
+          <a
+            href={`/dossiers/${dossier.id}/export`}
+            download
+            title="Toutes les données de l'accompagnement, notes comprises : à fournir à l'agent qui exerce son droit d'accès"
+            className="inline-flex items-center rounded border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-etat-600"
+          >
+            Exporter les données
+          </a>
           <form action={supprimerDossierAction}>
             <input type="hidden" name="dossierId" value={dossier.id} />
             <Bouton variante="secondaire">Supprimer ce dossier</Bouton>

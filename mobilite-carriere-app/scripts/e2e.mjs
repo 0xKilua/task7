@@ -40,6 +40,9 @@ const ROUTES_PROTEGEES = [
   '/',
   '/dossiers',
   '/dossiers/dos_inexistant/restitution',
+  '/dossiers/dos_inexistant/export',
+  '/administration/donnees',
+  '/administration/journal',
   '/assistant?q=detachement',
   '/recherche?q=detachement',
   '/entretien',
@@ -295,6 +298,42 @@ verifier(
   restitutionPartielle.includes("Plan d'accompagnement") && !restitutionPartielle.includes('Votre situation'),
 );
 
+// --- Données personnelles : export, journal, conservation ------------------
+const reponseExport = await page.request.get(`${urlDossier}/export`);
+const exportJson = reponseExport.ok() ? await reponseExport.json() : null;
+verifier(
+  'Export des données : fichier complet, notes de suivi comprises',
+  (reponseExport.headers()['content-disposition'] ?? '').includes('attachment') &&
+    exportJson?.accompagnement?.reference === reference &&
+    exportJson.echanges.some((e) => e.compteRendu === NOTE_CONSERVEE) &&
+    exportJson.fichesDeSituation.length > 0,
+);
+
+await page.goto(`${BASE}/administration/journal?famille=dossier`, { waitUntil: 'networkidle' });
+const journal = await page.locator('main').innerText();
+verifier(
+  'Journal : actions tracées avec leur auteur, sans référence de dossier',
+  journal.includes('Création d’un accompagnement') &&
+    journal.includes('Export des données d’un accompagnement') &&
+    journal.includes('Administrateur de test') &&
+    !journal.includes(reference),
+);
+
+await page.goto(`${BASE}/administration/donnees`, { waitUntil: 'networkidle' });
+await page.fill('#moisDossiersClos', '24');
+await page.click('button:has-text("Enregistrer la politique")');
+await page.waitForURL(/succes=/, { timeout: 15000 });
+verifier(
+  'Politique de conservation enregistrée',
+  (await page.locator('#moisDossiersClos').inputValue()) === '24',
+);
+await page.click('button:has-text("Appliquer maintenant")');
+await page.waitForURL(/erreur=/, { timeout: 15000 });
+verifier(
+  'Purge refusée sans confirmation explicite',
+  (await page.locator('main').innerText()).includes('suppression est définitive'),
+);
+
 await page.goto(`${BASE}/dossiers`, { waitUntil: 'networkidle' });
 await page.fill('#reference', reference);
 await page.click('button:has-text("Créer le dossier")');
@@ -374,6 +413,15 @@ const corpsRestitution = await page.locator('body').innerText();
 verifier(
   'Un conseiller ne peut pas éditer la restitution du dossier d’un autre',
   !corpsRestitution.includes('Agent en poste administratif') && !corpsRestitution.includes(reference),
+);
+
+const exportAutrui = await page.request.get(`${urlDossier}/export`);
+verifier('Un conseiller ne peut pas exporter le dossier d’un autre', exportAutrui.status() === 404);
+
+await page.goto(`${BASE}/administration/journal`, { waitUntil: 'networkidle' });
+verifier(
+  'Un conseiller n’accède pas au journal des actions',
+  !(await page.locator('body').innerText()).includes('Dernières actions'),
 );
 
 await page.goto(`${BASE}/dossiers`, { waitUntil: 'networkidle' });

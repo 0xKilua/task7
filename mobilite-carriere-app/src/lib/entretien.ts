@@ -162,12 +162,13 @@ export function enregistrerEntretien(
   type: string,
   trame: TrameEntretien,
   dossierId?: string | null,
+  acteurId?: string,
 ): Entretien {
   const id = nouvelId('entr');
   const now = new Date().toISOString();
   getDb()
     .prepare('INSERT INTO entretiens (id, dossier_id, type, trame, created_at) VALUES (?, ?, ?, ?, ?)')
     .run(id, dossierId ?? null, type, JSON.stringify(trame), now);
-  journaliser('entretien.generation', id, type);
+  journaliser('entretien.generation', id, type, acteurId);
   return { id, dossierId: dossierId ?? null, type, trame, createdAt: now };
 }
