@@ -11,8 +11,10 @@ fonction publique de l'État. Implémente les blocs fonctionnels du MVP décrits
 ## Démarrage rapide
 
 > **Sur Windows**, suivre plutôt le guide pas à pas : [DEMARRAGE-WINDOWS.md](./DEMARRAGE-WINDOWS.md)
-> — ou double-cliquer sur `demarrer.bat`, qui vérifie Node, installe les dépendances et démarre le
-> serveur (`demarrer.ps1` fait de même depuis PowerShell).
+> — ou double-cliquer sur `demarrer.bat`, qui vérifie Node, installe les dépendances, démarre le
+> serveur et ouvre automatiquement le navigateur une fois prêt (`demarrer.ps1` fait de même depuis
+> PowerShell, et corrige au passage, de façon durable, le blocage « exécution de scripts
+> désactivée » si Windows l'affiche).
 
 ```bash
 cd mobilite-carriere-app

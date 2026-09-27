@@ -22,6 +22,14 @@ if ($majeur -lt 20 -or $majeur -gt 22) {
     Write-Host "Version testee : Node 20 a 22. La v$majeur peut poser probleme (module natif better-sqlite3)." -ForegroundColor Yellow
 }
 
+# Ce script a pu tourner grace a un contournement valable uniquement pour cette fenetre
+# (Set-ExecutionPolicy -Scope Process). On fixe la politique durablement pour le compte
+# Windows courant afin que npm et les prochains scripts ne soient plus jamais bloques.
+$politique = Get-ExecutionPolicy -Scope CurrentUser
+if ($politique -eq 'Restricted' -or $politique -eq 'Undefined') {
+    Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+}
+
 Write-Host "`nVerification des dependances (rapide si rien n'a change, plus long apres une mise a jour du projet)..." -ForegroundColor Cyan
 npm install
 if ($LASTEXITCODE -ne 0) {
@@ -40,6 +48,30 @@ if (Test-Path '.next') {
     Remove-Item -Recurse -Force '.next'
 }
 
-Write-Host "`nDemarrage du serveur... (Ctrl+C pour arreter)" -ForegroundColor Green
-Write-Host "Ouvrez http://localhost:3000 des que 'Ready' s'affiche ci-dessous.`n"
-npm run dev
+Write-Host "`nDemarrage du serveur dans une nouvelle fenetre..." -ForegroundColor Green
+Start-Process cmd -ArgumentList '/k', 'npm run dev' -WorkingDirectory $PSScriptRoot
+
+Write-Host "Attente du demarrage du serveur..."
+$pret = $false
+for ($i = 0; $i -lt 90; $i++) {
+    try {
+        Invoke-WebRequest -Uri 'http://localhost:3000' -UseBasicParsing -TimeoutSec 1 | Out-Null
+        $pret = $true
+        break
+    } catch {
+        Start-Sleep -Seconds 1
+    }
+}
+
+if ($pret) {
+    Write-Host "Serveur pret : ouverture du navigateur..." -ForegroundColor Green
+    Start-Process 'http://localhost:3000'
+    Write-Host "`nLe site est ouvert : http://localhost:3000"
+    Write-Host "Le serveur tourne dans l'autre fenetre : ne la fermez pas tant que vous utilisez le site."
+} else {
+    Write-Host "`nLe serveur met plus de temps que prevu a demarrer." -ForegroundColor Yellow
+    Write-Host "Verifiez l'autre fenetre : une erreur y est peut-etre affichee."
+    Write-Host "Sinon, ouvrez vous-meme http://localhost:3000 des que 'Ready' y apparait."
+}
+
+Read-Host "`nAppuyez sur Entree pour fermer cette fenetre"

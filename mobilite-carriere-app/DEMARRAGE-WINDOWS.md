@@ -35,16 +35,24 @@ cd task7\mobilite-carriere-app
 ## 3. Lancer l'application
 
 **Le plus simple** — **double-cliquer sur `demarrer.bat`** dans l'explorateur de fichiers. Il
-vérifie Node, installe les dépendances si besoin et démarre le serveur. Un `.bat` n'est pas soumis
-à la politique d'exécution de PowerShell : ce chemin passe toujours.
+vérifie Node, installe les dépendances si besoin, démarre le serveur dans sa propre fenêtre puis
+**ouvre automatiquement le navigateur** sur <http://localhost:3000> dès qu'il est prêt. Un `.bat`
+n'est pas soumis à la politique d'exécution de PowerShell : ce chemin passe toujours. Il corrige
+aussi, en passant, le blocage « l'exécution de scripts est désactivée sur ce système » pour votre
+compte Windows — de façon durable, plus seulement pour la fenêtre en cours — afin que les prochaines
+commandes `npm` lancées directement depuis PowerShell fonctionnent aussi.
 
 **Depuis PowerShell** :
 ```powershell
 .\demarrer.ps1
 ```
+Même comportement (ouverture automatique du navigateur, correction durable de la politique
+d'exécution).
 
-Si Windows bloque (« l'exécution de scripts est désactivée sur ce système »), autoriser les scripts
-pour cette fenêtre uniquement — rien n'est modifié durablement sur le poste :
+Si Windows bloque avant même de pouvoir lancer `demarrer.ps1` (« l'exécution de scripts est
+désactivée sur ce système »), autoriser les scripts pour cette fenêtre le temps de ce premier
+lancement — `demarrer.ps1` corrige ensuite le réglage durablement, ce contournement ne sera plus
+nécessaire ensuite :
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\demarrer.ps1
@@ -101,8 +109,7 @@ Les fiches déjà documentées dans l'installation ne sont pas écrasées.
 | Symptôme | Cause | Solution |
 |---|---|---|
 | `npm install` échoue sur `better-sqlite3` / `node-gyp` | Outils de compilation C++ absents | Relancer l'installateur Node.js en cochant « Tools for Native Modules », ou installer Visual Studio Build Tools (charge de travail « Desktop development with C++ »), puis `npm install` à nouveau |
-| « l'exécution de scripts est désactivée sur ce système » | Politique d'exécution PowerShell | Double-cliquer sur `demarrer.bat`, ou lancer `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` dans la **même** fenêtre avant de relancer le script |
-| Le même message apparaît sur `npm` (`npm.ps1`) | Même cause : PowerShell retient le script `.ps1` de npm | Utiliser l'Invite de commandes (`cmd`) plutôt que PowerShell, ou appliquer la commande ci-dessus |
+| « l'exécution de scripts est désactivée sur ce système » (sur `npm`, `npm.ps1` ou `demarrer.ps1`) | Politique d'exécution PowerShell trop restrictive | Double-cliquer sur `demarrer.bat` (jamais concerné, et corrige la politique durablement au passage) ; ou une fois, dans la fenêtre bloquée : `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` (permanent, contrairement à `-Scope Process` qu'il faudrait répéter à chaque fenêtre) |
 | `Port 3000 is already in use` | Un autre programme occupe le port | `npm run dev -- -p 3001` puis ouvrir <http://localhost:3001> |
 | `node : terme non reconnu` | Node absent du PATH | Fermer et rouvrir PowerShell après l'installation de Node |
 | Le PDF est ingéré mais aucune recherche ne renvoie de résultat | PDF scanné, sans couche texte | Le fichier ne contient que des images : il faut d'abord le passer à l'OCR |
