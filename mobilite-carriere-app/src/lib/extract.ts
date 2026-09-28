@@ -23,7 +23,17 @@ export async function extraireDepuisBuffer(buffer: Buffer, ext: string): Promise
   throw new Error(`Format non pris en charge : ${ext} (attendu : .pdf, .md, .txt)`);
 }
 
+// pdf.js 1.10, qu'embarque pdf-parse, compile les polices en code JavaScript : un PDF piégé
+// pourrait y faire exécuter du code (CVE-2024-4367). L'extraction de texte n'en a pas besoin.
+function desactiverCompilationDesPolices() {
+  // Le module inscrit ses réglages dans l'objet global PDFJS, qu'il consulte ensuite.
+  require_('pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js');
+  const reglages = (globalThis as { PDFJS?: { isEvalSupported?: boolean } }).PDFJS;
+  if (reglages) reglages.isEvalSupported = false;
+}
+
 async function extrairePdf(buffer: Buffer): Promise<PageExtraite[]> {
+  desactiverCompilationDesPolices();
   const pdfParse = require_('pdf-parse/lib/pdf-parse.js') as (
     data: Buffer,
     options?: Record<string, unknown>,

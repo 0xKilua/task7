@@ -15,15 +15,6 @@ export interface DocumentSource {
   nbPassages: number;
 }
 
-export interface Passage {
-  id: number;
-  documentId: string;
-  ordre: number;
-  titreSection: string | null;
-  contenu: string;
-  page: number | null;
-}
-
 export interface Citation {
   passageId: number;
   documentId: string;

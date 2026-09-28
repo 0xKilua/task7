@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { promisify } from 'node:util';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { getDb, journaliser, nouvelId } from './db';
@@ -7,6 +8,8 @@ export const COOKIE_SESSION = 'mcc_session';
 
 const DUREE_SESSION_HEURES = 12;
 const LONGUEUR_MOT_DE_PASSE_MIN = 12;
+const LONGUEUR_MOT_DE_PASSE_MAX = 256;
+const LONGUEUR_IDENTIFIANT_MAX = 100;
 const TENTATIVES_MAX = 5;
 const FENETRE_TENTATIVES_MINUTES = 15;
 
@@ -67,7 +70,16 @@ export function hacherMotDePasse(motDePasse: string): string {
   return `scrypt$${SCRYPT_N}$${SCRYPT_r}$${SCRYPT_p}$${sel.toString('hex')}$${derive.toString('hex')}`;
 }
 
-export function verifierMotDePasse(motDePasse: string, stocke: string): boolean {
+const scrypt = promisify(crypto.scrypt) as (
+  motDePasse: string,
+  sel: Buffer,
+  longueur: number,
+  options: crypto.ScryptOptions,
+) => Promise<Buffer>;
+
+// Calcul hors du fil principal : une rafale de tentatives de connexion ne bloque pas le serveur
+// pour les autres utilisateurs.
+export async function verifierMotDePasse(motDePasse: string, stocke: string): Promise<boolean> {
   const parties = stocke.split('$');
   if (parties.length !== 6 || parties[0] !== 'scrypt') return false;
 
@@ -75,7 +87,7 @@ export function verifierMotDePasse(motDePasse: string, stocke: string): boolean 
   const attendu = Buffer.from(attenduHex, 'hex');
   if (attendu.length === 0) return false;
 
-  const derive = crypto.scryptSync(motDePasse.normalize('NFKC'), Buffer.from(selHex, 'hex'), attendu.length, {
+  const derive = await scrypt(motDePasse.normalize('NFKC'), Buffer.from(selHex, 'hex'), attendu.length, {
     N: Number(n),
     r: Number(r),
     p: Number(p),
@@ -87,6 +99,9 @@ export function verifierMotDePasse(motDePasse: string, stocke: string): boolean 
 export function validerMotDePasse(motDePasse: string): string | null {
   if (motDePasse.length < LONGUEUR_MOT_DE_PASSE_MIN) {
     return `Le mot de passe doit comporter au moins ${LONGUEUR_MOT_DE_PASSE_MIN} caractères.`;
+  }
+  if (motDePasse.length > LONGUEUR_MOT_DE_PASSE_MAX) {
+    return `Le mot de passe ne doit pas dépasser ${LONGUEUR_MOT_DE_PASSE_MAX} caractères.`;
   }
   if (motDePasse.length > 200) return 'Le mot de passe est trop long.';
   return null;
@@ -166,9 +181,13 @@ export type ResultatConnexion =
   | { ok: true; utilisateur: Utilisateur; jeton: string }
   | { ok: false; message: string };
 
-export function connecter(identifiant: string, motDePasse: string): ResultatConnexion {
+export async function connecter(identifiant: string, motDePasse: string): Promise<ResultatConnexion> {
   const db = getDb();
   const saisi = identifiant.trim();
+  // Saisies démesurées écartées avant tout calcul : elles ne correspondent à aucun compte.
+  if (saisi.length > LONGUEUR_IDENTIFIANT_MAX || motDePasse.length > LONGUEUR_MOT_DE_PASSE_MAX) {
+    return { ok: false, message: 'Identifiant ou mot de passe incorrect.' };
+  }
 
   if (tropDeTentatives(saisi)) {
     return {
@@ -185,7 +204,7 @@ export function connecter(identifiant: string, motDePasse: string): ResultatConn
   // réponse révélerait quels identifiants existent.
   const referenceFactice =
     'scrypt$16384$8$1$00000000000000000000000000000000$' + '0'.repeat(128);
-  const valide = verifierMotDePasse(motDePasse, ligne?.mot_de_passe ?? referenceFactice);
+  const valide = await verifierMotDePasse(motDePasse, ligne?.mot_de_passe ?? referenceFactice);
 
   if (!ligne || !valide || ligne.actif !== 1) {
     enregistrerTentative(saisi);
@@ -255,7 +274,8 @@ export async function exigerAdministrateur(): Promise<Utilisateur> {
   return utilisateur;
 }
 
-export function motDePasseValide(utilisateurId: string, motDePasse: string): boolean {
+export async function motDePasseValide(utilisateurId: string, motDePasse: string): Promise<boolean> {
+  if (motDePasse.length > LONGUEUR_MOT_DE_PASSE_MAX) return false;
   const ligne = getDb()
     .prepare('SELECT mot_de_passe FROM utilisateurs WHERE id = ?')
     .get(utilisateurId) as { mot_de_passe: string } | undefined;

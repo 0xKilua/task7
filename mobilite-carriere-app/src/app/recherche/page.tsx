@@ -9,7 +9,13 @@ import {
   PistesParLeSens,
   TitrePage,
 } from '@/components/ui';
-import { baseDocumentaireVide, enregistrerRecherche, pistesParLeSens, rechercherPassages } from '@/lib/search';
+import {
+  LONGUEUR_REQUETE_MAX,
+  baseDocumentaireVide,
+  enregistrerRecherche,
+  pistesParLeSens,
+  rechercherPassages,
+} from '@/lib/search';
 import { exigerSession } from '@/lib/auth';
 import { etatRechercheParSens } from '@/lib/semantique';
 
@@ -41,6 +47,7 @@ export default async function PageRecherche(props: { searchParams: Promise<{ q?:
             id="q"
             name="q"
             type="search"
+            maxLength={LONGUEUR_REQUETE_MAX}
             defaultValue={requete}
             placeholder="Ex. : détachement, compte personnel de formation, bilan de parcours"
             className="min-w-64 flex-1 rounded border border-slate-300 px-3 py-2 text-sm focus:border-etat-600 focus:outline-none focus:ring-1 focus:ring-etat-600"

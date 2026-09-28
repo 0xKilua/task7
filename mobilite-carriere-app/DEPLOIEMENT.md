@@ -12,7 +12,7 @@
 | **`docker build` de l'image** | ✅ vérifié : image construite, puis suite de bout en bout complète (53/53) contre le conteneur de production, sans erreur dans ses journaux |
 | `docker compose` avec Caddy en HTTPS | ✅ vérifié en local (certificat interne de Caddy, redirection HTTP → HTTPS). L'obtention d'un certificat Let's Encrypt pour un vrai domaine n'a pas pu l'être : elle exige un serveur joignable depuis Internet |
 | Commandes d'administration dans le conteneur (`sauvegarder`, `comptes:*`, `dispositifs:importer`) | ✅ vérifié |
-| Build de production (`npm run build`) sous Node 24 | ✅ vérifié |
+| Build de production (`npm run build`, Next.js 16 / Turbopack) sous Node 24 | ✅ vérifié, sans avertissement |
 | Module `better-sqlite3` 13 (binaires précompilés Node-API, sans compilation) sous Node 22 et 24 | ✅ vérifié : suite de bout en bout 32/32 sur chacune |
 | Script de sauvegarde (`npm run sauvegarder`) | ✅ vérifié : sauvegarde à chaud identique à la source, contrôle d'intégrité `ok` |
 | Recherche par le sens dans le conteneur | ✅ vérifiée avec le modèle monté en volume : suite de bout en bout 53/53 contre le conteneur, indexation des 1 231 passages livrés au démarrage, télémétrie d'onnxruntime coupée (traçage système : aucune connexion à un service tiers). Le téléchargement du modèle pendant `docker build` n'a pas pu l'être : Hugging Face est inaccessible depuis l'environnement de test ; son échec, lui, est vérifié (l'image se construit, recherche par les mots) |

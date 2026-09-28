@@ -191,7 +191,7 @@ la session (`exigerSession()` / `exigerAdministrateur()`) et, pour les dossiers,
 
 **Choix techniques** (proposition par défaut, à valider — cf. Phase 0 de la roadmap) :
 
-- **Next.js 14 (App Router) + TypeScript** : rendu serveur, server actions (pas d'API séparée à
+- **Next.js 16 (App Router) + React 19 + TypeScript** : rendu serveur, server actions (pas d'API séparée à
   maintenir pour le MVP), un seul processus à lancer en local.
 - **SQLite + FTS5** (`better-sqlite3`) : aucune dépendance serveur externe, recherche plein texte
   native avec classement BM25 et extraits (`snippet`). Une bascule vers PostgreSQL + pgvector est
@@ -226,8 +226,28 @@ la session (`exigerSession()` / `exigerAdministrateur()`) et, pour les dossiers,
 - Dossiers et recherches cloisonnés par conseiller (`conseiller_id`) : un conseiller ne voit que
   ses propres dossiers, et l'administrateur n'a **pas** d'accès élargi à ceux des autres — un choix
   délibéré, cohérent avec le principe de confidentialité du cahier des charges.
-- Le middleware ne fait que rediriger en l'absence de cookie ; chaque page et chaque action
-  serveur revalident elles-mêmes la session et, pour les dossiers, la propriété.
+- Le filtre d'accès (`src/proxy.ts`) ne fait que rediriger en l'absence de cookie ; chaque page
+  et chaque action serveur revalident elles-mêmes la session et, pour les dossiers, la propriété.
+
+**Sécurité technique** (revue du 28 septembre 2026) :
+
+- Dépendances : Next.js 16.3.6 et React 19.3 — `npm audit` : aucune vulnérabilité. (Next.js 14,
+  plus maintenu, en cumulait 23, dont deux exécutions de code à distance.) Aucun script
+  d'installation exécuté (`.npmrc` : `ignore-scripts=true`).
+- En-têtes HTTP : politique de sécurité du contenu (tout vient de l'application ; ni cadre, ni
+  objet, ni formulaire vers l'extérieur), `X-Frame-Options: DENY`, `nosniff`,
+  `Referrer-Policy: same-origin`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` ;
+  `X-Powered-By` retiré. HSTS posé par Caddy en déploiement. Vérifié : aucune erreur console sur
+  les 15 pages de l'application.
+- Connexion : calcul scrypt hors du fil principal (une rafale de tentatives ne bloque plus le
+  serveur) ; identifiant et mot de passe plafonnés (100 et 256 caractères) avant tout calcul.
+- Questions de recherche et de l'assistant plafonnées à 500 caractères (coût borné).
+- PDF déposés : lus en mémoire, jamais écrits sur disque ; compilation des polices en JavaScript
+  désactivée dans pdf.js (CVE-2024-4367), texte extrait inchangé (vérifié sur le guide DGAFP).
+- Recherche par le sens : télémétrie d'onnxruntime coupée, vérifié par traçage système (aucune
+  connexion à un service tiers) ; modèle vérifié à l'installation, jamais téléchargé à l'usage.
+- Conteneur : utilisateur non root, aucun privilège système (`cap_drop: ALL`,
+  `no-new-privileges`).
 
 ## Tests
 

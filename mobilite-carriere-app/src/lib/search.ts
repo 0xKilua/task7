@@ -25,6 +25,9 @@ function seuilCouverture(nombreNotions: number): number {
 // renvoyer un passage sur le congé de formation au seul motif qu'il contient « congé ».
 const SEUIL_HORS_CORPUS = 0.4;
 const CANDIDATS_MAX = 80;
+// Au-delà, une question ne gagne rien en précision et coûterait en calcul (chaque mot est
+// résolu dans l'index, chaque jeton passe par le modèle).
+export const LONGUEUR_REQUETE_MAX = 500;
 // Recherche par le sens (similarités cosinus, calibrées sur scripts/questions-reference.json,
 // guide seul et base complète) :
 // - en complément de passages trouvés par les mots, un passage proche est retenu dès 0,87 ;
@@ -230,7 +233,8 @@ export interface ResultatMots {
 }
 
 // Passages retenus par les mots, du plus au moins pertinent.
-export function rechercherParLesMots(requete: string): ResultatMots {
+export function rechercherParLesMots(requeteSaisie: string): ResultatMots {
+  const requete = requeteSaisie.slice(0, LONGUEUR_REQUETE_MAX);
   const aucun = (statut: ResultatMots['statut'], inconnus: string[] = [], partInconnue = 0): ResultatMots => ({
     statut,
     lignes: [],
@@ -292,7 +296,8 @@ export function rechercherParLesMots(requete: string): ResultatMots {
 // Recherche hybride : les mots (passages qui emploient les termes de la question) et le sens
 // (passages qui en traitent avec d'autres mots : « s'occuper de ses enfants » → « élever un
 // enfant »). Les deux classements sont fusionnés par rang réciproque.
-export async function rechercherPassages(requete: string, limite = 8): Promise<Citation[]> {
+export async function rechercherPassages(requeteSaisie: string, limite = 8): Promise<Citation[]> {
+  const requete = requeteSaisie.slice(0, LONGUEUR_REQUETE_MAX);
   const mots = rechercherParLesMots(requete);
   if (mots.statut === 'vide') return [];
   let parLesMots = mots.lignes;
@@ -339,7 +344,8 @@ export async function rechercherPassages(requete: string, limite = 8): Promise<C
 // part, comme pistes de lecture à vérifier, jamais comme réponse : « mon mari est muté, puis-je
 // le suivre ? » mène à la disponibilité pour suivre son conjoint, que rien, dans les mots de la
 // question, ne désigne.
-export async function pistesParLeSens(requete: string, limite = 3): Promise<Citation[]> {
+export async function pistesParLeSens(requeteSaisie: string, limite = 3): Promise<Citation[]> {
+  const requete = requeteSaisie.slice(0, LONGUEUR_REQUETE_MAX);
   if (!rechercheParSensActivee() || rechercherParLesMots(requete).statut === 'vide') return [];
   try {
     const proches = (await rechercherParSens(requete, limite * 3)).filter((r) => r.similarite >= SEUIL_PISTES);
@@ -461,7 +467,7 @@ function dedoublonner() {
 export function enregistrerRecherche(conseillerId: string, requete: string, nbResultats: number) {
   getDb()
     .prepare('INSERT INTO recherches (conseiller_id, ts, requete, nb_resultats) VALUES (?, ?, ?, ?)')
-    .run(conseillerId, new Date().toISOString(), requete, nbResultats);
+    .run(conseillerId, new Date().toISOString(), requete.slice(0, LONGUEUR_REQUETE_MAX), nbResultats);
 }
 
 export function listerDocuments(): DocumentSource[] {

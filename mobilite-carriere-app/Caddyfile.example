@@ -6,4 +6,6 @@
 mobilite-carriere.exemple-administration.fr {
     reverse_proxy app:3000
     encode gzip
+    # Une fois le site vu en HTTPS, le navigateur refuse de s'y connecter en clair.
+    header Strict-Transport-Security "max-age=31536000"
 }

@@ -55,7 +55,8 @@ else
 fi
 
 echo "== 4/6 HTTPS pour $DOMAINE"
-printf '%s {\n    reverse_proxy app:3000\n    encode gzip\n}\n' "$DOMAINE" > "$DOSSIER/Caddyfile"
+# HSTS : une fois le site vu en HTTPS, le navigateur refuse de s'y connecter en clair.
+printf '%s {\n    reverse_proxy app:3000\n    encode gzip\n    header Strict-Transport-Security "max-age=31536000"\n}\n' "$DOMAINE" > "$DOSSIER/Caddyfile"
 
 echo "== 5/6 Jeton d'installation"
 touch "$DOSSIER/.env"

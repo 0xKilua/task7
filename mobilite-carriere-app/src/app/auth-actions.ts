@@ -68,7 +68,7 @@ export async function installationAction(formData: FormData) {
     .prepare('UPDATE dossiers SET conseiller_id = ? WHERE conseiller_id IS NULL')
     .run(utilisateur.id);
 
-  const resultat = connecter(identifiant, motDePasse);
+  const resultat = await connecter(identifiant, motDePasse);
   if (resultat.ok) await poserCookieSession(resultat.jeton);
   redirect('/');
 }
@@ -83,7 +83,7 @@ export async function connexionAction(formData: FormData) {
     redirect('/connexion?erreur=' + encodeURIComponent('Identifiant et mot de passe sont requis.'));
   }
 
-  const resultat = connecter(identifiant, motDePasse);
+  const resultat = await connecter(identifiant, motDePasse);
   if (!resultat.ok) redirect('/connexion?erreur=' + encodeURIComponent(resultat.message));
 
   await poserCookieSession(resultat.jeton);
@@ -108,7 +108,7 @@ export async function changerMotDePasseAction(formData: FormData) {
   // changement ferme ensuite les sessions du titulaire légitime.
   // Seul le changement imposé à la première connexion en est dispensé : le mot de passe
   // provisoire est de toute façon connu de l'administrateur qui vient de le fixer.
-  if (!utilisateur.doitChangerMotDePasse && !motDePasseValide(utilisateur.id, actuel)) {
+  if (!utilisateur.doitChangerMotDePasse && !(await motDePasseValide(utilisateur.id, actuel))) {
     redirect('/mon-compte?erreur=' + encodeURIComponent('Le mot de passe actuel est incorrect.'));
   }
 

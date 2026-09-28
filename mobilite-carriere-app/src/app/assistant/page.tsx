@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { repondre } from '@/lib/assistant';
+import { LONGUEUR_REQUETE_MAX } from '@/lib/search';
 import {
   AlerteAVerifier,
   BlocCitation,
@@ -46,6 +47,7 @@ export default async function PageAssistant(props: {
             id="q"
             name="q"
             rows={3}
+            maxLength={LONGUEUR_REQUETE_MAX}
             defaultValue={requete}
             placeholder="Ex. : un agent de catégorie B souhaite une mobilité géographique à échéance d'un an, quelles pistes explorer ?"
             className="w-full rounded border border-slate-300 p-3 text-sm focus:border-etat-600 focus:outline-none focus:ring-1 focus:ring-etat-600"

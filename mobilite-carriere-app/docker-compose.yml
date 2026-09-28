@@ -16,6 +16,12 @@ services:
       - MCC_RECHERCHE_SENS=${MCC_RECHERCHE_SENS:-oui}
     volumes:
       - donnees:/app/data
+    # Le serveur n'a besoin d'aucun privilège système : tous retirés, sans possibilité d'en
+    # regagner (setuid).
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     expose:
       - "3000"
     # Décommenter pour accéder directement à l'application sans passer par Caddy
