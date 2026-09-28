@@ -44,7 +44,7 @@ const K_FUSION = 5;
 const SEUIL_PISTES = 0.83;
 // Entre versants, les similarités d'un même texte ne diffèrent que de quelques millièmes.
 const ECART_AUTRE_VERSANT = 0.01;
-const LONGUEUR_EXTRAIT = 240;
+const LONGUEUR_EXTRAIT = 450;
 // L'outil sert la fonction publique de l'État : à pertinence voisine, la règle de l'État passe
 // avant celles des versants territorial et hospitalier, qui restent affichées.
 const PONDERATION_AUTRE_VERSANT = 0.8;
@@ -214,6 +214,8 @@ export interface LigneResultat {
   page: number | null;
   contenu: string;
   extrait: string;
+  // Passage entier, termes de la question marqués.
+  complet: string;
   score: number;
   titre: string;
   source: string;
@@ -265,7 +267,8 @@ export function rechercherParLesMots(requeteSaisie: string): ResultatMots {
   const lignes = db
     .prepare(
       `SELECT p.id AS passage_id, p.document_id, p.titre_section, p.page, p.contenu,
-              snippet(passages_fts, 0, char(1), char(2), '…', 28) AS extrait,
+              snippet(passages_fts, 0, char(1), char(2), '…', 64) AS extrait,
+              highlight(passages_fts, 0, char(1), char(2)) AS complet,
               bm25(passages_fts) AS score,
               d.titre, d.source, d.url, d.date_publication, d.statut
          FROM passages_fts
@@ -382,6 +385,7 @@ function versCitation(ligne: LigneResultat, score: number, origine: Citation['or
     titreSection: ligne.titre_section,
     page: ligne.page,
     extrait: ligne.extrait,
+    texteComplet: ligne.complet,
     score,
     origine,
   };
@@ -434,8 +438,8 @@ function lirePassages(ids: number[]): LigneResultat[] {
          FROM passages p JOIN documents d ON d.id = p.document_id
         WHERE p.id IN (${ids.map(() => '?').join(', ')})`,
     )
-    .all(...ids) as Omit<LigneResultat, 'extrait'>[];
-  return lignes.map((l) => ({ ...l, extrait: debutDuPassage(l.contenu) }));
+    .all(...ids) as Omit<LigneResultat, 'extrait' | 'complet'>[];
+  return lignes.map((l) => ({ ...l, extrait: debutDuPassage(l.contenu), complet: l.contenu }));
 }
 
 function debutDuPassage(contenu: string): string {

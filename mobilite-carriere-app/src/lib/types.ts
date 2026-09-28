@@ -26,6 +26,8 @@ export interface Citation {
   titreSection: string | null;
   page: number | null;
   extrait: string;
+  // Passage entier (termes de la question marqués), à déplier sous l'extrait.
+  texteComplet?: string;
   score: number;
   // Trouvé par les termes de la question, par son sens seul, ou par les deux.
   origine?: 'mots' | 'sens' | 'mots_et_sens';

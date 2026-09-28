@@ -125,6 +125,16 @@ export function BlocCitation({ citation, index }: { citation: Citation; index: n
           <Surligne texte={citation.extrait} />
         </span>
       </p>
+      {citation.texteComplet && citation.texteComplet.length > citation.extrait.length && (
+        <details className="mt-2 print:hidden">
+          <summary className="cursor-pointer text-xs font-medium text-etat-700 hover:underline">
+            Lire le passage en entier
+          </summary>
+          <p className="mt-2 whitespace-pre-line rounded border border-slate-200 bg-white p-3 text-sm leading-relaxed text-slate-800">
+            <Surligne texte={citation.texteComplet} />
+          </p>
+        </details>
+      )}
       <p className="mt-2 text-xs text-slate-600">
         <span className="font-medium">{citation.documentTitre}</span>
         {citation.titreSection && <> — section « {citation.titreSection} »</>}
