@@ -5,12 +5,11 @@ import { exigerSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export default function PageEntretien({
-  searchParams,
-}: {
-  searchParams: { type?: string; contexte?: string; dossierId?: string };
+export default async function PageEntretien(props: {
+  searchParams: Promise<{ type?: string; contexte?: string; dossierId?: string }>;
 }) {
-  exigerSession();
+  const searchParams = await props.searchParams;
+  await exigerSession();
   const type = searchParams.type ?? '';
   const contexte = searchParams.contexte ?? '';
   const dossierId = searchParams.dossierId ?? '';

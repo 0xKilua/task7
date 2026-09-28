@@ -23,8 +23,8 @@ const NAVIGATION = [
   { href: '/projet', libelle: 'Projet' },
 ];
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const utilisateur = sessionCourante();
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const utilisateur = await sessionCourante();
 
   return (
     <html lang="fr">

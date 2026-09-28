@@ -26,8 +26,8 @@ function texte(formData: FormData, cle: string): string {
   return typeof valeur === 'string' ? valeur : '';
 }
 
-function poserCookieSession(jeton: string) {
-  cookies().set(COOKIE_SESSION, jeton, {
+async function poserCookieSession(jeton: string) {
+  (await cookies()).set(COOKIE_SESSION, jeton, {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
@@ -69,7 +69,7 @@ export async function installationAction(formData: FormData) {
     .run(utilisateur.id);
 
   const resultat = connecter(identifiant, motDePasse);
-  if (resultat.ok) poserCookieSession(resultat.jeton);
+  if (resultat.ok) await poserCookieSession(resultat.jeton);
   redirect('/');
 }
 
@@ -86,19 +86,19 @@ export async function connexionAction(formData: FormData) {
   const resultat = connecter(identifiant, motDePasse);
   if (!resultat.ok) redirect('/connexion?erreur=' + encodeURIComponent(resultat.message));
 
-  poserCookieSession(resultat.jeton);
+  await poserCookieSession(resultat.jeton);
   redirect(resultat.utilisateur.doitChangerMotDePasse ? '/mon-compte?initial=1' : '/');
 }
 
 export async function deconnexionAction() {
-  const jeton = cookies().get(COOKIE_SESSION)?.value;
+  const jeton = (await cookies()).get(COOKIE_SESSION)?.value;
   if (jeton) deconnecter(jeton);
-  cookies().delete(COOKIE_SESSION);
+  (await cookies()).delete(COOKIE_SESSION);
   redirect('/connexion');
 }
 
 export async function changerMotDePasseAction(formData: FormData) {
-  const utilisateur = exigerSession();
+  const utilisateur = await exigerSession();
   const actuel = texte(formData, 'motDePasseActuel');
   const nouveau = texte(formData, 'motDePasse');
   const confirmation = texte(formData, 'confirmation');
@@ -118,12 +118,12 @@ export async function changerMotDePasseAction(formData: FormData) {
   changerMotDePasse(utilisateur.id, nouveau);
   // Un changement de mot de passe doit invalider les sessions ouvertes ailleurs.
   deconnecterToutesLesSessions(utilisateur.id);
-  cookies().delete(COOKIE_SESSION);
+  (await cookies()).delete(COOKIE_SESSION);
   redirect('/connexion?succes=' + encodeURIComponent('Mot de passe modifié. Reconnectez-vous.'));
 }
 
 export async function creerUtilisateurAction(formData: FormData) {
-  const administrateur = exigerAdministrateur();
+  const administrateur = await exigerAdministrateur();
 
   const identifiant = texte(formData, 'identifiant').trim();
   const nom = texte(formData, 'nom').trim();
@@ -159,7 +159,7 @@ export async function creerUtilisateurAction(formData: FormData) {
 }
 
 export async function basculerActivationAction(formData: FormData) {
-  const administrateur = exigerAdministrateur();
+  const administrateur = await exigerAdministrateur();
   const cible = texte(formData, 'utilisateurId');
 
   if (cible === administrateur.id) {
@@ -181,7 +181,7 @@ export async function basculerActivationAction(formData: FormData) {
 }
 
 export async function reinitialiserMotDePasseAction(formData: FormData) {
-  const administrateur = exigerAdministrateur();
+  const administrateur = await exigerAdministrateur();
 
   const cible = texte(formData, 'utilisateurId');
   const motDePasse = texte(formData, 'motDePasse');

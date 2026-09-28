@@ -5,12 +5,11 @@ import { exigerSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export default function PageDispositifs({
-  searchParams,
-}: {
-  searchParams: { categorie?: string; q?: string };
+export default async function PageDispositifs(props: {
+  searchParams: Promise<{ categorie?: string; q?: string }>;
 }) {
-  exigerSession();
+  const searchParams = await props.searchParams;
+  await exigerSession();
   const categories = listerCategories();
   const categorie = searchParams.categorie ?? '';
   const recherche = searchParams.q ?? '';

@@ -49,14 +49,13 @@ const SECTIONS_PLAN = [
   { cle: 'prochainesEtapes', libelle: 'Prochaines étapes' },
 ] as const;
 
-export default function PageDossier({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { erreur?: string };
+export default async function PageDossier(props: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ erreur?: string }>;
 }) {
-  const utilisateur = exigerSession();
+  const params = await props.params;
+  const searchParams = await props.searchParams;
+  const utilisateur = await exigerSession();
   const dossier = obtenirDossier(params.id, utilisateur.id);
   if (!dossier) notFound();
 

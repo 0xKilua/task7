@@ -28,8 +28,9 @@ const CHAMPS_EDITABLES = [
   { cle: 'ressources', libelle: 'Ressources officielles' },
 ] as const;
 
-export default async function PageDispositif({ params }: { params: { id: string } }) {
-  exigerSession();
+export default async function PageDispositif(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  await exigerSession();
   const dispositif = obtenirDispositif(params.id);
   if (!dispositif) notFound();
 

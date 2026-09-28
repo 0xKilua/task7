@@ -4,12 +4,11 @@ import { exigerSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export default function PageMonCompte({
-  searchParams,
-}: {
-  searchParams: { erreur?: string; initial?: string };
+export default async function PageMonCompte(props: {
+  searchParams: Promise<{ erreur?: string; initial?: string }>;
 }) {
-  const utilisateur = exigerSession();
+  const searchParams = await props.searchParams;
+  const utilisateur = await exigerSession();
 
   return (
     <div className="mx-auto max-w-2xl">

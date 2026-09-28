@@ -7,8 +7,9 @@ import { formaterHorodatage } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default function PageDonnees({ searchParams }: { searchParams: { erreur?: string; succes?: string } }) {
-  exigerAdministrateur();
+export default async function PageDonnees(props: { searchParams: Promise<{ erreur?: string; succes?: string }> }) {
+  const searchParams = await props.searchParams;
+  await exigerAdministrateur();
   const politique = lirePolitique();
   const apercu = apercuPurge(politique);
   const purge = dernierePurge();

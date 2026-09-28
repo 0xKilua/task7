@@ -3,8 +3,9 @@ import { exporterDossier } from '@/lib/dossiers';
 
 export const dynamic = 'force-dynamic';
 
-export function GET(_requete: Request, { params }: { params: { id: string } }) {
-  const utilisateur = exigerSession();
+export async function GET(_requete: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  const utilisateur = await exigerSession();
   const donnees = exporterDossier(params.id, utilisateur.id);
   if (!donnees) return new Response('Accompagnement introuvable.', { status: 404 });
 

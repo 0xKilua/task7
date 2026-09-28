@@ -8,12 +8,11 @@ import { LIBELLES_STATUT, type StatutDossier } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-export default function PageDossiers({
-  searchParams,
-}: {
-  searchParams: { erreur?: string; statut?: string };
+export default async function PageDossiers(props: {
+  searchParams: Promise<{ erreur?: string; statut?: string }>;
 }) {
-  const utilisateur = exigerSession();
+  const searchParams = await props.searchParams;
+  const utilisateur = await exigerSession();
   const filtre = searchParams.statut && estStatut(searchParams.statut) ? searchParams.statut : undefined;
   const dossiers = listerDossiers(utilisateur.id, 200, filtre);
   const maintenant = maintenantLocal();

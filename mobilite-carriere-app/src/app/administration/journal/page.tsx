@@ -7,8 +7,9 @@ import { FAMILLES, listerJournal } from '@/lib/journal';
 
 export const dynamic = 'force-dynamic';
 
-export default function PageJournal({ searchParams }: { searchParams: { famille?: string } }) {
-  exigerAdministrateur();
+export default async function PageJournal(props: { searchParams: Promise<{ famille?: string }> }) {
+  const searchParams = await props.searchParams;
+  await exigerAdministrateur();
   const famille = FAMILLES.some((f) => f.valeur === searchParams.famille) ? searchParams.famille : undefined;
   const entrees = listerJournal(famille);
 

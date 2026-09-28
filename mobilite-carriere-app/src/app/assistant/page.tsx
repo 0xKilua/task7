@@ -22,12 +22,11 @@ const EXEMPLES = [
   'Quels éléments faut-il analyser avant d’envisager une mobilité ?',
 ];
 
-export default async function PageAssistant({
-  searchParams,
-}: {
-  searchParams: { q?: string };
+export default async function PageAssistant(props: {
+  searchParams: Promise<{ q?: string }>;
 }) {
-  const utilisateur = exigerSession();
+  const searchParams = await props.searchParams;
+  const utilisateur = await exigerSession();
   const requete = (searchParams.q ?? '').trim();
   const reponse = requete.length > 0 ? await repondre(utilisateur.id, requete) : null;
 

@@ -236,21 +236,21 @@ export function utilisateurDuJeton(jeton: string): Utilisateur | null {
   return ligne ? versUtilisateur(ligne) : null;
 }
 
-export function sessionCourante(): Utilisateur | null {
-  const jeton = cookies().get(COOKIE_SESSION)?.value;
+export async function sessionCourante(): Promise<Utilisateur | null> {
+  const jeton = (await cookies()).get(COOKIE_SESSION)?.value;
   return jeton ? utilisateurDuJeton(jeton) : null;
 }
 
 // Le middleware ne peut pas interroger la base : toute page et toute action serveur
 // doivent donc revalider la session elles-mêmes.
-export function exigerSession(): Utilisateur {
-  const utilisateur = sessionCourante();
+export async function exigerSession(): Promise<Utilisateur> {
+  const utilisateur = await sessionCourante();
   if (!utilisateur) redirect('/connexion');
   return utilisateur;
 }
 
-export function exigerAdministrateur(): Utilisateur {
-  const utilisateur = exigerSession();
+export async function exigerAdministrateur(): Promise<Utilisateur> {
+  const utilisateur = await exigerSession();
   if (utilisateur.role !== 'administrateur') notFound();
   return utilisateur;
 }

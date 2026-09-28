@@ -44,7 +44,7 @@ function lignes(formData: FormData, cle: string): string[] {
 }
 
 export async function creerDossierAction(formData: FormData) {
-  const utilisateur = exigerSession();
+  const utilisateur = await exigerSession();
   const reference = texte(formData, 'reference');
   if (reference.length === 0) return;
   const intitule = texte(formData, 'intitule');
@@ -71,7 +71,7 @@ export async function creerDossierAction(formData: FormData) {
 }
 
 export async function supprimerDossierAction(formData: FormData) {
-  const utilisateur = exigerSession();
+  const utilisateur = await exigerSession();
   const id = texte(formData, 'dossierId');
   if (id) supprimerDossier(id, utilisateur.id);
   revalidatePath('/dossiers');
@@ -96,7 +96,7 @@ function ecrireSuivi(dossierId: string, ecriture: () => void) {
 }
 
 export async function mettreAJourSuiviAction(formData: FormData) {
-  const utilisateur = exigerSession();
+  const utilisateur = await exigerSession();
   const dossierId = texte(formData, 'dossierId');
   if (!dossierId) return;
   const rdv = texte(formData, 'prochainRdv');
@@ -106,7 +106,7 @@ export async function mettreAJourSuiviAction(formData: FormData) {
 }
 
 export async function ajouterNoteSuiviAction(formData: FormData) {
-  const utilisateur = exigerSession();
+  const utilisateur = await exigerSession();
   const dossierId = texte(formData, 'dossierId');
   if (!dossierId) return;
   ecrireSuivi(dossierId, () =>
@@ -121,7 +121,7 @@ export async function ajouterNoteSuiviAction(formData: FormData) {
 }
 
 export async function supprimerNoteSuiviAction(formData: FormData) {
-  const utilisateur = exigerSession();
+  const utilisateur = await exigerSession();
   const dossierId = texte(formData, 'dossierId');
   const noteId = texte(formData, 'noteId');
   if (!dossierId || !noteId) return;
@@ -131,7 +131,7 @@ export async function supprimerNoteSuiviAction(formData: FormData) {
 }
 
 export async function enregistrerDiagnosticAction(formData: FormData) {
-  const utilisateur = exigerSession();
+  const utilisateur = await exigerSession();
   const dossierId = texte(formData, 'dossierId');
   if (!dossierId) return;
   const payload: Record<string, string> = {};
@@ -142,7 +142,7 @@ export async function enregistrerDiagnosticAction(formData: FormData) {
 }
 
 export async function enregistrerBilanAction(formData: FormData) {
-  const utilisateur = exigerSession();
+  const utilisateur = await exigerSession();
   const dossierId = texte(formData, 'dossierId');
   if (!dossierId) return;
   const payload: Record<string, string> = {};
@@ -153,7 +153,7 @@ export async function enregistrerBilanAction(formData: FormData) {
 }
 
 export async function genererPlanAction(formData: FormData) {
-  const utilisateur = exigerSession();
+  const utilisateur = await exigerSession();
   const dossierId = texte(formData, 'dossierId');
   if (!dossierId) return;
 
@@ -225,7 +225,7 @@ export async function genererPlanAction(formData: FormData) {
 }
 
 export async function enregistrerPlanAction(formData: FormData) {
-  const utilisateur = exigerSession();
+  const utilisateur = await exigerSession();
   const dossierId = texte(formData, 'dossierId');
   if (!dossierId) return;
 
@@ -245,7 +245,7 @@ export async function enregistrerPlanAction(formData: FormData) {
 }
 
 export async function genererEntretienAction(formData: FormData) {
-  const utilisateur = exigerSession();
+  const utilisateur = await exigerSession();
   const type = texte(formData, 'type') || 'premiere_demande';
   const contexte = texte(formData, 'contexte');
   const dossierId = texte(formData, 'dossierId');
@@ -261,7 +261,7 @@ export async function genererEntretienAction(formData: FormData) {
 
 export async function ingererDocumentAction(formData: FormData) {
   // La base documentaire est commune : sa modification relève de l'administrateur.
-  const administrateur = exigerAdministrateur();
+  const administrateur = await exigerAdministrateur();
   const fichier = formData.get('fichier');
   if (!(fichier instanceof File) || fichier.size === 0) {
     redirect('/base-documentaire?erreur=' + encodeURIComponent('Aucun fichier reçu.'));
@@ -311,7 +311,7 @@ export async function ingererDocumentAction(formData: FormData) {
 }
 
 export async function supprimerDocumentAction(formData: FormData) {
-  const administrateur = exigerAdministrateur();
+  const administrateur = await exigerAdministrateur();
   const id = texte(formData, 'documentId');
   if (id) supprimerDocument(id, administrateur.id);
   revalidatePath('/base-documentaire');
@@ -319,7 +319,7 @@ export async function supprimerDocumentAction(formData: FormData) {
 }
 
 export async function majDispositifAction(formData: FormData) {
-  const utilisateur = exigerSession();
+  const utilisateur = await exigerSession();
   const id = texte(formData, 'dispositifId');
   if (!id) return;
 

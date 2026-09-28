@@ -7,12 +7,11 @@ import { etatRechercheParSens } from '@/lib/semantique';
 
 export const dynamic = 'force-dynamic';
 
-export default function PageBaseDocumentaire({
-  searchParams,
-}: {
-  searchParams: { succes?: string; erreur?: string };
+export default async function PageBaseDocumentaire(props: {
+  searchParams: Promise<{ succes?: string; erreur?: string }>;
 }) {
-  const utilisateur = exigerSession();
+  const searchParams = await props.searchParams;
+  const utilisateur = await exigerSession();
   const estAdministrateur = utilisateur.role === 'administrateur';
   const documents = listerDocuments();
 

@@ -16,8 +16,8 @@ import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-export default function TableauDeBord() {
-  const utilisateur = exigerSession();
+export default async function TableauDeBord() {
+  const utilisateur = await exigerSession();
   const stats = statistiques(utilisateur.id);
   const dossiers = listerDossiers(utilisateur.id, 6);
   const rendezVous = rendezVousAVenir(utilisateur.id, 5);

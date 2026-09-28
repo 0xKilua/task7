@@ -3,9 +3,9 @@ import { NextResponse, type NextRequest } from 'next/server';
 const COOKIE_SESSION = 'mcc_session';
 const CHEMINS_PUBLICS = ['/connexion', '/installation'];
 
-// Premier filtre seulement : le middleware s'exécute sans accès à la base et ne peut donc
-// pas valider le jeton. Chaque page et chaque action serveur revalide la session.
-export function middleware(request: NextRequest) {
+// Premier filtre seulement : il ne vérifie que la présence du cookie de session. Chaque page
+// et chaque action serveur revalide la session en base.
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (CHEMINS_PUBLICS.some((chemin) => pathname === chemin || pathname.startsWith(`${chemin}/`))) {

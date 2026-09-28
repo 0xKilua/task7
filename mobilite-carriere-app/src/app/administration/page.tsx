@@ -21,12 +21,11 @@ interface LigneCompte {
   nb_dossiers: number;
 }
 
-export default function PageAdministration({
-  searchParams,
-}: {
-  searchParams: { erreur?: string; succes?: string };
+export default async function PageAdministration(props: {
+  searchParams: Promise<{ erreur?: string; succes?: string }>;
 }) {
-  const administrateur = exigerAdministrateur();
+  const searchParams = await props.searchParams;
+  const administrateur = await exigerAdministrateur();
 
   const comptes = getDb()
     .prepare(

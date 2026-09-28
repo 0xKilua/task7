@@ -317,9 +317,10 @@ export function lireSourcesLivrees(): { dossier: string; sources: SourceLivree[]
 function synchroniserSources(db: Database.Database) {
   const { dossier, sources } = lireSourcesLivrees();
   for (const s of sources) {
-    const chemin = path.join(dossier, s.fichier);
+    // Fichiers livrés lus à l'exécution : rien à tracer pour la compilation.
+    const chemin = path.join(/*turbopackIgnore: true*/ dossier, s.fichier);
     try {
-      const contenu = fs.readFileSync(chemin);
+      const contenu = fs.readFileSync(/*turbopackIgnore: true*/ chemin);
       const cle = `source.${s.fichier}.empreinte`;
       const version = `${empreinte(contenu)}:${VERSION_DECOUPAGE}`;
       if (lireParametre(db, cle) === version) continue;

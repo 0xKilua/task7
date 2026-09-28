@@ -21,8 +21,9 @@ import { MESSAGE_A_VERIFIER, type Dispositif, type PlanAccompagnement } from '@/
 export const dynamic = 'force-dynamic';
 
 // Le titre de la page devient le nom de fichier proposé à l'enregistrement en PDF.
-export function generateMetadata({ params }: { params: { id: string } }): Metadata {
-  const utilisateur = sessionCourante();
+export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const params = await props.params;
+  const utilisateur = await sessionCourante();
   const dossier = utilisateur ? obtenirDossier(params.id, utilisateur.id) : null;
   return { title: dossier ? `Restitution ${dossier.reference}` : 'Document de restitution' };
 }
@@ -98,14 +99,13 @@ function Rubrique({ titre, children }: { titre: string; children: React.ReactNod
   );
 }
 
-export default function PageRestitution({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { choix?: string; sections?: string | string[] };
+export default async function PageRestitution(props: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ choix?: string; sections?: string | string[] }>;
 }) {
-  const utilisateur = exigerSession();
+  const params = await props.params;
+  const searchParams = await props.searchParams;
+  const utilisateur = await exigerSession();
   const dossier = exigerDossier(params.id, utilisateur.id);
   const diagnostic = dernierDiagnostic(dossier.id, utilisateur.id);
   const bilan = dernierBilan(dossier.id, utilisateur.id);

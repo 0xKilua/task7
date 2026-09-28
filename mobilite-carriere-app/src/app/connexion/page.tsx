@@ -4,13 +4,12 @@ import { aucunUtilisateur, sessionCourante } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export default function PageConnexion({
-  searchParams,
-}: {
-  searchParams: { erreur?: string; succes?: string };
+export default async function PageConnexion(props: {
+  searchParams: Promise<{ erreur?: string; succes?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   if (aucunUtilisateur()) redirect('/installation');
-  if (sessionCourante()) redirect('/');
+  if (await sessionCourante()) redirect('/');
 
   return (
     <div className="mx-auto max-w-md py-10">

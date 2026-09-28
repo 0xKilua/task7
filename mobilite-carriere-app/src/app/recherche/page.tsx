@@ -15,8 +15,9 @@ import { etatRechercheParSens } from '@/lib/semantique';
 
 export const dynamic = 'force-dynamic';
 
-export default async function PageRecherche({ searchParams }: { searchParams: { q?: string } }) {
-  const utilisateur = exigerSession();
+export default async function PageRecherche(props: { searchParams: Promise<{ q?: string }> }) {
+  const searchParams = await props.searchParams;
+  const utilisateur = await exigerSession();
   const requete = (searchParams.q ?? '').trim();
   const resultats = requete.length > 0 ? await rechercherPassages(requete, 20) : [];
   if (requete.length > 0) enregistrerRecherche(utilisateur.id, requete, resultats.length);

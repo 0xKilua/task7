@@ -19,7 +19,7 @@ export function dossierModele(): string {
 
 export function modeleInstalle(): boolean {
   const dossier = dossierModele();
-  return FICHIERS.every((f) => fs.existsSync(path.join(dossier, f)));
+  return FICHIERS.every((f) => fs.existsSync(/*turbopackIgnore: true*/ path.join(/*turbopackIgnore: true*/ dossier, f)));
 }
 
 // Désactivable (MCC_RECHERCHE_SENS=non) : serveur de moins de 2 Go de mémoire, ou mesure de
@@ -95,7 +95,12 @@ async function chargerMoteur(): Promise<Moteur> {
     const ort = ortModule.default ?? ortModule;
     const { Tokenizer } = await import('@huggingface/tokenizers');
     const dossier = dossierModele();
-    const lireJson = (f: string) => JSON.parse(fs.readFileSync(path.join(dossier, f), 'utf8')) as Record<string, unknown>;
+    // Modèle lu à l'exécution, hors de la compilation.
+    const lireJson = (f: string) =>
+      JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ path.join(/*turbopackIgnore: true*/ dossier, f), 'utf8')) as Record<
+        string,
+        unknown
+      >;
     const configuration = lireJson('tokenizer_config.json');
     const tokenizer = new Tokenizer(lireJson('tokenizer.json'), configuration);
     const session = await ort.InferenceSession.create(path.join(dossier, 'onnx/model_quantized.onnx'), {

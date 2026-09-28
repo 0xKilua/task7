@@ -13,7 +13,7 @@ function mois(formData: FormData, cle: string): number | null | 'invalide' {
 }
 
 export async function enregistrerPolitiqueAction(formData: FormData) {
-  const administrateur = exigerAdministrateur();
+  const administrateur = await exigerAdministrateur();
   const moisDossiersClos = mois(formData, 'moisDossiersClos');
   const moisJournal = mois(formData, 'moisJournal');
   if (moisDossiersClos === 'invalide' || moisJournal === 'invalide') {
@@ -28,7 +28,7 @@ export async function enregistrerPolitiqueAction(formData: FormData) {
 }
 
 export async function appliquerPurgeAction(formData: FormData) {
-  const administrateur = exigerAdministrateur();
+  const administrateur = await exigerAdministrateur();
   if (formData.get('confirmation') !== 'oui') {
     redirect(
       '/administration/donnees?erreur=' +

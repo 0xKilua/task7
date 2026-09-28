@@ -14,8 +14,9 @@ const DOCUMENTS = [
 
 const RACINE_DOCS = path.join(process.cwd(), '..', 'docs', 'conseiller-mobilite-carriere');
 
-export default function PageProjet({ searchParams }: { searchParams: { doc?: string } }) {
-  exigerSession();
+export default async function PageProjet(props: { searchParams: Promise<{ doc?: string }> }) {
+  const searchParams = await props.searchParams;
+  await exigerSession();
   const selection = DOCUMENTS.find((d) => d.cle === searchParams.doc) ?? DOCUMENTS[0];
   const chemin = path.join(RACINE_DOCS, selection.fichier);
   const existe = fs.existsSync(chemin);

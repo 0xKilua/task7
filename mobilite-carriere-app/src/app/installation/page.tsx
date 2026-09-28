@@ -4,7 +4,8 @@ import { aucunUtilisateur, jetonInstallationRequis } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export default function PageInstallation({ searchParams }: { searchParams: { erreur?: string } }) {
+export default async function PageInstallation(props: { searchParams: Promise<{ erreur?: string }> }) {
+  const searchParams = await props.searchParams;
   if (!aucunUtilisateur()) redirect('/connexion');
 
   return (
