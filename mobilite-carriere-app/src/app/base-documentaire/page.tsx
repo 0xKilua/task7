@@ -1,8 +1,9 @@
 import { ingererDocumentAction, supprimerDocumentAction } from '@/app/actions';
-import { AlerteAVerifier, Bouton, Carte, EtatVide, TitrePage } from '@/components/ui';
+import { AlerteAVerifier, Bouton, Carte, EtatVide, MentionRechercheParSens, TitrePage } from '@/components/ui';
 import { exigerSession } from '@/lib/auth';
 import { mentionDate } from '@/lib/format';
 import { listerDocuments } from '@/lib/search';
+import { etatRechercheParSens } from '@/lib/semantique';
 
 export const dynamic = 'force-dynamic';
 
@@ -127,6 +128,9 @@ export default function PageBaseDocumentaire({
         )}
 
         <Carte titre={`Documents ingérés (${documents.length})`}>
+          <div className="mb-3">
+            <MentionRechercheParSens etat={etatRechercheParSens()} administrateur={estAdministrateur} />
+          </div>
           {documents.length === 0 ? (
             <>
               <EtatVide titre="Base documentaire vide" />

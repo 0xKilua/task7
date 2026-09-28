@@ -79,6 +79,13 @@ CREATE VIRTUAL TABLE IF NOT EXISTS passages_fts USING fts5(
 -- Vocabulaire indexé : la recherche y choisit les formes d'un mot (pluriel, féminin).
 CREATE VIRTUAL TABLE IF NOT EXISTS passages_vocab USING fts5vocab(passages_fts, 'row');
 
+-- Vecteurs de la recherche par le sens (float32), recalculés si le modèle change.
+CREATE TABLE IF NOT EXISTS passages_vecteurs (
+  passage_id INTEGER PRIMARY KEY REFERENCES passages(id) ON DELETE CASCADE,
+  modele TEXT NOT NULL,
+  vecteur BLOB NOT NULL
+);
+
 CREATE TRIGGER IF NOT EXISTS passages_ai AFTER INSERT ON passages BEGIN
   INSERT INTO passages_fts(rowid, contenu, titre_section)
   VALUES (new.id, new.contenu, new.titre_section);

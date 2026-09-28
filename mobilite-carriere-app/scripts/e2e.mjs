@@ -350,6 +350,26 @@ verifier(
 );
 await page.screenshot({ path: `${SORTIE}/03-assistant.png`, fullPage: true });
 
+// Recherche par le sens : vérifiée seulement si le modèle est installé sur le serveur testé,
+// une fois l'indexation de démarrage terminée.
+const questionReformulee = 'mon mari est muté à l’autre bout de la France, puis-je le suivre ?';
+let texteRecherche = '';
+for (let essai = 0; essai < 60; essai++) {
+  await page.goto(`${BASE}/recherche?q=${encodeURIComponent(questionReformulee)}`, { waitUntil: 'networkidle' });
+  texteRecherche = await page.locator('main').innerText();
+  if (!texteRecherche.includes('en préparation')) break;
+  await page.waitForTimeout(3000);
+}
+if (texteRecherche.includes('par les mots et par le sens')) {
+  verifier(
+    'Recherche par le sens : une question sans les mots du texte mène au bon passage, signalé comme piste',
+    texteRecherche.includes('Pistes de lecture') && texteRecherche.includes('Suivre son époux ou partenaire de Pacs'),
+  );
+  await page.screenshot({ path: `${SORTIE}/07-recherche-sens.png`, fullPage: true });
+} else {
+  console.log('(recherche par le sens non installée sur ce serveur : vérification ignorée)');
+}
+
 await page.goto(`${BASE}/entretien?type=projet_mobilite`, { waitUntil: 'networkidle' });
 verifier(
   'Trame d’entretien générée',

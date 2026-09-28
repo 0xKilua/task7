@@ -36,6 +36,8 @@ export interface Citation {
   page: number | null;
   extrait: string;
   score: number;
+  // Trouvé par les termes de la question, par son sens seul, ou par les deux.
+  origine?: 'mots' | 'sens' | 'mots_et_sens';
 }
 
 export type StatutVerification = 'verifie_source' | 'non_verifie';
@@ -153,4 +155,6 @@ export interface ReponseAssistant {
   aVerifier: string[];
   prochainesEtapes: string[];
   citations: Citation[];
+  // Sans passage sourcé : passages proches par le sens, à lire avant tout usage.
+  pistesDeLecture: Citation[];
 }

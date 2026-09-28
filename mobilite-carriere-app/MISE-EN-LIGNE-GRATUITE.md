@@ -19,7 +19,8 @@ Compter une heure la première fois.
    - **Image** : Canonical **Ubuntu 24.04** (ou 22.04) ;
    - **Shape** : onglet *Ampere* → **VM.Standard.A1.Flex**, 2 OCPU et 12 Go. Si la capacité
      manque, prendre **VM.Standard.E2.1.Micro** (AMD, 1 Go : le script ajoute la mémoire
-     d'échange nécessaire) ;
+     d'échange nécessaire et, faute de mémoire suffisante, désactive la recherche par le sens —
+     la recherche par les mots reste complète) ;
    - **SSH keys** : *Generate a key pair for me*, puis **télécharger la clé privée**, proposée
      une seule fois ;
    - **Create**, puis noter l'**adresse IP publique** de l'instance.

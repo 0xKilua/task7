@@ -64,6 +64,14 @@ if ! grep -q '^MCC_JETON_INSTALLATION=' "$DOSSIER/.env"; then
   echo "MCC_JETON_INSTALLATION=$(openssl rand -hex 24)" >> "$DOSSIER/.env"
 fi
 JETON="$(grep '^MCC_JETON_INSTALLATION=' "$DOSSIER/.env" | cut -d= -f2)"
+# Moins de 2 Go de mémoire : la recherche par le sens (~0,7 Go) ralentirait tout le serveur.
+if ! grep -q '^MCC_RECHERCHE_SENS=' "$DOSSIER/.env"; then
+  if [ "$(awk '/MemTotal/ {print $2}' /proc/meminfo)" -lt 2000000 ]; then
+    echo "MCC_RECHERCHE_SENS=non" >> "$DOSSIER/.env"
+  else
+    echo "MCC_RECHERCHE_SENS=oui" >> "$DOSSIER/.env"
+  fi
+fi
 
 echo "== 6/6 Construction et démarrage (plusieurs minutes la première fois)"
 cd "$DOSSIER"

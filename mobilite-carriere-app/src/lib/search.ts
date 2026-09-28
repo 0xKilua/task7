@@ -1,5 +1,12 @@
 import type Database from 'better-sqlite3';
 import { getDb } from './db';
+import {
+  lancerIndexation,
+  rechercheParSensActivee,
+  rechercherParSens,
+  similariteEntreQuestions,
+  type ResultatSens,
+} from './semantique';
 import { SIGLES } from './sigles';
 import type { Citation, DocumentSource } from './types';
 
@@ -18,6 +25,23 @@ function seuilCouverture(nombreNotions: number): number {
 // renvoyer un passage sur le congé de formation au seul motif qu'il contient « congé ».
 const SEUIL_HORS_CORPUS = 0.4;
 const CANDIDATS_MAX = 80;
+// Recherche par le sens (similarités cosinus, calibrées sur scripts/questions-reference.json,
+// guide seul et base complète) :
+// - en complément de passages trouvés par les mots, un passage proche est retenu dès 0,87 ;
+// - seul, le sens doit être net (0,88 : aucune des questions hors sujet de référence ne
+//   l'atteint) et ne pas reposer sur des mots absents de la base qui portent le sujet.
+const CANDIDATS_SENS = 30;
+const SEUIL_SENS_COMPLEMENT = 0.87;
+const SEUIL_SENS_SEUL = 0.88;
+const SEUIL_SANS_MOTS_INCONNUS = 0.92;
+const POIDS_SENS = 0.75;
+const K_FUSION = 5;
+// Pistes de lecture, proposées à part quand aucun passage ne répond : le sens y suffit, sans
+// garantie de réponse — elles sont affichées comme telles.
+const SEUIL_PISTES = 0.83;
+// Entre versants, les similarités d'un même texte ne diffèrent que de quelques millièmes.
+const ECART_AUTRE_VERSANT = 0.01;
+const LONGUEUR_EXTRAIT = 240;
 // L'outil sert la fonction publique de l'État : à pertinence voisine, la règle de l'État passe
 // avant celles des versants territorial et hospitalier, qui restent affichées.
 const PONDERATION_AUTRE_VERSANT = 0.8;
@@ -34,6 +58,7 @@ const MOTS_VIDES = new Set([
   // elles pèseraient autant qu'un terme rare.
   'veut', 'veux', 'voudrait', 'voudraient', 'voulez', 'souhaite', 'souhaitent', 'souhaiterait',
   'souhaitez', 'souhaiter', 'aimerait', 'aimerais', 'dois', 'doit', 'doivent', 'faut', 'savoir',
+  'combien', 'puis', 'peux', 'suis', 'voudrais', 'pourrait', 'pourrais',
   'autre', 'autres', 'avant', 'apres', 'quand', 'alors', 'ainsi', 'aussi', 'tres', 'bien', 'deja',
   'encore', 'comme', 'chez', 'entre', 'votre', 'notre', 'vos', 'nos', 'cela', 'ceci', 'celui',
   'celle', 'etc',
@@ -179,7 +204,7 @@ function resoudreNotion(db: Database.Database, notion: Notion): { notion: Notion
   return { notion, n: 0 };
 }
 
-interface LigneResultat {
+export interface LigneResultat {
   passage_id: number;
   document_id: string;
   titre_section: string | null;
@@ -194,13 +219,30 @@ interface LigneResultat {
   statut: string;
 }
 
-export function rechercherPassages(requete: string, limite = 8): Citation[] {
+export interface ResultatMots {
+  // « vide » : question faite de mots-outils seuls, ou base vide. « hors_corpus » : une part
+  // décisive de la question porte sur des mots absents de la base.
+  statut: 'vide' | 'hors_corpus' | 'ok';
+  lignes: LigneResultat[];
+  inconnus: string[];
+  // Part de l'information de la question portée par des mots absents de la base.
+  partInconnue: number;
+}
+
+// Passages retenus par les mots, du plus au moins pertinent.
+export function rechercherParLesMots(requete: string): ResultatMots {
+  const aucun = (statut: ResultatMots['statut'], inconnus: string[] = [], partInconnue = 0): ResultatMots => ({
+    statut,
+    lignes: [],
+    inconnus,
+    partInconnue,
+  });
   const notions = analyserRequete(requete);
-  if (notions.length === 0) return [];
+  if (notions.length === 0) return aucun('vide');
 
   const db = getDb();
   const total = (db.prepare('SELECT COUNT(*) AS n FROM passages').get() as { n: number }).n;
-  if (total === 0) return [];
+  if (total === 0) return aucun('vide');
   // Poids d'une notion selon sa rareté (idf de BM25) : un mot présent partout n'apporte
   // presque rien, un mot absent de la base pèse le plus lourd.
   const resolues = notions.map((notion) => {
@@ -209,7 +251,9 @@ export function rechercherPassages(requete: string, limite = 8): Citation[] {
   });
   const poidsTotal = resolues.reduce((somme, r) => somme + r.poids, 0);
   const poidsInconnu = resolues.filter((r) => r.n === 0).reduce((somme, r) => somme + r.poids, 0);
-  if (poidsInconnu / poidsTotal >= SEUIL_HORS_CORPUS) return [];
+  const inconnus = resolues.filter((r) => r.n === 0 && r.notion.mot).map((r) => r.notion.mot as string);
+  const partInconnue = poidsInconnu / poidsTotal;
+  if (partInconnue >= SEUIL_HORS_CORPUS) return aucun('hors_corpus', inconnus, partInconnue);
 
   const connues = resolues.filter((r) => r.n > 0);
   const poidsConnu = connues.reduce((somme, r) => somme + r.poids, 0);
@@ -229,7 +273,7 @@ export function rechercherPassages(requete: string, limite = 8): Citation[] {
     )
     .all(connues.map((r) => `(${r.notion.fts})`).join(' OR '), CANDIDATS_MAX) as LigneResultat[];
 
-  return lignes
+  const retenues = lignes
     .map((ligne) => {
       const brut = `${ligne.titre_section ?? ''}\n${ligne.contenu}`;
       const texte = { normalise: normaliser(brut), sansAccents: sansAccents(brut) };
@@ -241,21 +285,158 @@ export function rechercherPassages(requete: string, limite = 8): Citation[] {
     // d'introduction qui mentionne tous les sujets en une ligne.
     .filter((r) => r.couverture >= seuilCouverture(connues.length))
     .sort((a, b) => scoreClassement(a.ligne) - scoreClassement(b.ligne))
+    .map((r) => r.ligne);
+  return { statut: 'ok', lignes: retenues, inconnus, partInconnue };
+}
+
+// Recherche hybride : les mots (passages qui emploient les termes de la question) et le sens
+// (passages qui en traitent avec d'autres mots : « s'occuper de ses enfants » → « élever un
+// enfant »). Les deux classements sont fusionnés par rang réciproque.
+export async function rechercherPassages(requete: string, limite = 8): Promise<Citation[]> {
+  const mots = rechercherParLesMots(requete);
+  if (mots.statut === 'vide') return [];
+  let parLesMots = mots.lignes;
+  let parLeSens: ResultatSens[] = [];
+  if (rechercheParSensActivee()) {
+    // Des mots absents de la base qui portent le sujet de la question (« accident » dans
+    // « déclarer un accident sur le trajet ») : les passages trouvés sur les autres mots
+    // (« trajet ») seraient hors sujet.
+    if (mots.inconnus.length > 0 && !(await sensConserveSans(requete, mots.inconnus))) return [];
+    parLeSens = await rechercherParLeSens(requete, mots);
+  } else if (mots.statut === 'hors_corpus') {
+    parLesMots = [];
+  }
+  if (parLesMots.length === 0 && parLeSens.length === 0) return [];
+
+  const rangMots = new Map(parLesMots.map((l, i) => [l.passage_id, i + 1]));
+  const rangSens = new Map(parLeSens.map((r, i) => [r.passageId, i + 1]));
+  const lignes = [
+    ...parLesMots,
+    ...lirePassages(parLeSens.map((r) => r.passageId).filter((id) => !rangMots.has(id))),
+  ];
+  const score = (l: LigneResultat) => {
+    const rm = rangMots.get(l.passage_id);
+    const rs = rangSens.get(l.passage_id);
+    const versant = AUTRE_VERSANT.test(l.titre_section ?? '') ? PONDERATION_AUTRE_VERSANT : 1;
+    return (rm ? 1 / (K_FUSION + rm) : 0) + (rs ? (POIDS_SENS * versant) / (K_FUSION + rs) : 0);
+  };
+
+  return lignes
+    .map((ligne) => ({ ligne, fusion: score(ligne) }))
+    .sort((a, b) => b.fusion - a.fusion)
     .filter(dedoublonner())
     .slice(0, limite)
-    .map(({ ligne }) => ({
-      passageId: ligne.passage_id,
-      documentId: ligne.document_id,
-      documentTitre: ligne.titre,
-      source: ligne.source,
-      url: ligne.url,
-      datePublication: ligne.date_publication,
-      statut: ligne.statut === 'officiel' ? 'officiel' : 'a_verifier',
-      titreSection: ligne.titre_section,
-      page: ligne.page,
-      extrait: ligne.extrait,
-      score: ligne.score,
-    }));
+    .map(({ ligne, fusion }) =>
+      versCitation(
+        ligne,
+        fusion,
+        rangMots.has(ligne.passage_id) ? (rangSens.has(ligne.passage_id) ? 'mots_et_sens' : 'mots') : 'sens',
+      ),
+    );
+}
+
+// Quand aucun passage ne répond à la question, les plus proches par le sens sont proposés à
+// part, comme pistes de lecture à vérifier, jamais comme réponse : « mon mari est muté, puis-je
+// le suivre ? » mène à la disponibilité pour suivre son conjoint, que rien, dans les mots de la
+// question, ne désigne.
+export async function pistesParLeSens(requete: string, limite = 3): Promise<Citation[]> {
+  if (!rechercheParSensActivee() || rechercherParLesMots(requete).statut === 'vide') return [];
+  try {
+    const proches = (await rechercherParSens(requete, limite * 3)).filter((r) => r.similarite >= SEUIL_PISTES);
+    const parId = new Map(lirePassages(proches.map((r) => r.passageId)).map((l) => [l.passage_id, l]));
+    return proches
+      .flatMap((r) => {
+        const ligne = parId.get(r.passageId);
+        return ligne ? [{ ligne, similarite: r.similarite }] : [];
+      })
+      // À sens voisin, la règle de l'État d'abord (même préférence que pour les résultats).
+      .sort((a, b) => scoreSensVersant(b) - scoreSensVersant(a))
+      .filter(dedoublonner())
+      .slice(0, limite)
+      .map(({ ligne, similarite }) => versCitation(ligne, similarite, 'sens'));
+  } catch (erreur) {
+    console.error('Recherche par le sens indisponible :', erreur instanceof Error ? erreur.message : erreur);
+    return [];
+  }
+}
+
+function scoreSensVersant({ ligne, similarite }: { ligne: LigneResultat; similarite: number }): number {
+  return AUTRE_VERSANT.test(ligne.titre_section ?? '') ? similarite - ECART_AUTRE_VERSANT : similarite;
+}
+
+function versCitation(ligne: LigneResultat, score: number, origine: Citation['origine']): Citation {
+  return {
+    passageId: ligne.passage_id,
+    documentId: ligne.document_id,
+    documentTitre: ligne.titre,
+    source: ligne.source,
+    url: ligne.url,
+    datePublication: ligne.date_publication,
+    statut: ligne.statut === 'officiel' ? 'officiel' : 'a_verifier',
+    titreSection: ligne.titre_section,
+    page: ligne.page,
+    extrait: ligne.extrait,
+    score,
+    origine,
+  };
+}
+
+async function rechercherParLeSens(requete: string, mots: ResultatMots): Promise<ResultatSens[]> {
+  void lancerIndexation();
+  try {
+    const candidats = await rechercherParSens(requete, CANDIDATS_SENS);
+    // En complément des mots, un passage proche suffit ; seul, ou face à des mots absents de la
+    // base, le sens doit être net.
+    const seuil = mots.lignes.length > 0 && mots.inconnus.length === 0 ? SEUIL_SENS_COMPLEMENT : SEUIL_SENS_SEUL;
+    return candidats.filter((r) => r.similarite >= seuil);
+  } catch (erreur) {
+    // Modèle illisible ou moteur indisponible : la recherche par les mots suffit.
+    console.error('Recherche par le sens indisponible :', erreur instanceof Error ? erreur.message : erreur);
+    return [];
+  }
+}
+
+// La question privée de ses mots absents de la base garde-t-elle son sens ? « Congé de
+// maternité » sans « maternité » n'est plus la même question ; « mon projet a-t-il des chances
+// d'aboutir ? » sans « aboutir », si. Moteur indisponible : on s'en tient aux mots.
+async function sensConserveSans(requete: string, inconnus: string[]): Promise<boolean> {
+  const reste = sansMots(requete, inconnus);
+  if (reste.length === 0) return false;
+  try {
+    return (await similariteEntreQuestions(requete, reste)) >= SEUIL_SANS_MOTS_INCONNUS;
+  } catch {
+    return true;
+  }
+}
+
+function sansMots(requete: string, mots: string[]): string {
+  return requete
+    .split(/(\p{L}[\p{L}\p{N}-]*)/u)
+    .filter((morceau) => !mots.some((m) => normaliser(morceau).startsWith(m)))
+    .join('')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Passages trouvés par le seul sens : aucun terme à surligner, l'extrait est leur début.
+function lirePassages(ids: number[]): LigneResultat[] {
+  if (ids.length === 0) return [];
+  const lignes = getDb()
+    .prepare(
+      `SELECT p.id AS passage_id, p.document_id, p.titre_section, p.page, p.contenu, 0 AS score,
+              d.titre, d.source, d.url, d.date_publication, d.statut
+         FROM passages p JOIN documents d ON d.id = p.document_id
+        WHERE p.id IN (${ids.map(() => '?').join(', ')})`,
+    )
+    .all(...ids) as Omit<LigneResultat, 'extrait'>[];
+  return lignes.map((l) => ({ ...l, extrait: debutDuPassage(l.contenu) }));
+}
+
+function debutDuPassage(contenu: string): string {
+  const texte = contenu.replace(/\s+/g, ' ').trim();
+  if (texte.length <= LONGUEUR_EXTRAIT) return texte;
+  const coupe = texte.slice(0, LONGUEUR_EXTRAIT);
+  return `${coupe.slice(0, Math.max(coupe.lastIndexOf(' '), LONGUEUR_EXTRAIT / 2))}…`;
 }
 
 // Score bm25 : négatif, d'autant plus bas que le passage est pertinent.

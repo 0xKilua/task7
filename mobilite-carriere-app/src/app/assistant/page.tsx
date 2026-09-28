@@ -7,6 +7,7 @@ import {
   Carte,
   EtatVide,
   EtiquetteIA,
+  PistesParLeSens,
   TitrePage,
 } from '@/components/ui';
 import { exigerSession } from '@/lib/auth';
@@ -21,14 +22,14 @@ const EXEMPLES = [
   'Quels éléments faut-il analyser avant d’envisager une mobilité ?',
 ];
 
-export default function PageAssistant({
+export default async function PageAssistant({
   searchParams,
 }: {
   searchParams: { q?: string };
 }) {
   const utilisateur = exigerSession();
   const requete = (searchParams.q ?? '').trim();
-  const reponse = requete.length > 0 ? repondre(utilisateur.id, requete) : null;
+  const reponse = requete.length > 0 ? await repondre(utilisateur.id, requete) : null;
 
   return (
     <>
@@ -99,6 +100,7 @@ export default function PageAssistant({
                   Aucune analyse n&apos;est produite en l&apos;absence de source : l&apos;application
                   ne formule pas d&apos;information réglementaire non vérifiable.
                 </p>
+                <PistesParLeSens pistes={reponse.pistesDeLecture} />
               </>
             )}
           </Carte>

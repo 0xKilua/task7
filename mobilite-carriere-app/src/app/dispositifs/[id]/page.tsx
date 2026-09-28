@@ -28,12 +28,12 @@ const CHAMPS_EDITABLES = [
   { cle: 'ressources', libelle: 'Ressources officielles' },
 ] as const;
 
-export default function PageDispositif({ params }: { params: { id: string } }) {
+export default async function PageDispositif({ params }: { params: { id: string } }) {
   exigerSession();
   const dispositif = obtenirDispositif(params.id);
   if (!dispositif) notFound();
 
-  const passages = rechercherPassages(dispositif.nom, 4);
+  const passages = await rechercherPassages(dispositif.nom, 4);
 
   return (
     <>

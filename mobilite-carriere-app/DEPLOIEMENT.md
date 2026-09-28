@@ -9,12 +9,13 @@
 
 | Élément | Statut |
 |---|---|
-| **`docker build` de l'image** | ✅ vérifié : image construite, puis suite de bout en bout complète (52/52) contre le conteneur de production, sans erreur dans ses journaux |
+| **`docker build` de l'image** | ✅ vérifié : image construite, puis suite de bout en bout complète (53/53) contre le conteneur de production, sans erreur dans ses journaux |
 | `docker compose` avec Caddy en HTTPS | ✅ vérifié en local (certificat interne de Caddy, redirection HTTP → HTTPS). L'obtention d'un certificat Let's Encrypt pour un vrai domaine n'a pas pu l'être : elle exige un serveur joignable depuis Internet |
 | Commandes d'administration dans le conteneur (`sauvegarder`, `comptes:*`, `dispositifs:importer`) | ✅ vérifié |
 | Build de production (`npm run build`) sous Node 24 | ✅ vérifié |
 | Module `better-sqlite3` 13 (binaires précompilés Node-API, sans compilation) sous Node 22 et 24 | ✅ vérifié : suite de bout en bout 32/32 sur chacune |
 | Script de sauvegarde (`npm run sauvegarder`) | ✅ vérifié : sauvegarde à chaud identique à la source, contrôle d'intégrité `ok` |
+| Recherche par le sens dans le conteneur | ✅ vérifiée avec le modèle monté en volume : suite de bout en bout 53/53 contre le conteneur, indexation des 1 231 passages livrés au démarrage, télémétrie d'onnxruntime coupée (traçage système : aucune connexion à un service tiers). Le téléchargement du modèle pendant `docker build` n'a pas pu l'être : Hugging Face est inaccessible depuis l'environnement de test ; son échec, lui, est vérifié (l'image se construit, recherche par les mots) |
 
 **Serveur neuf, exposé à Internet :** le script `installer-serveur.sh` fait tout (Docker, pare-feu,
 HTTPS, jeton d'installation) — voir [MISE-EN-LIGNE-GRATUITE.md](./MISE-EN-LIGNE-GRATUITE.md).
@@ -28,6 +29,16 @@ docker build -t mobilite-carriere-app .
 L'image installe les dépendances (`better-sqlite3` fournit son binaire précompilé : aucun outil
 de compilation n'est nécessaire) puis construit l'application. Le résultat tourne sous un utilisateur non
 root et attend ses données dans `/app/data`.
+
+**Recherche par le sens.** La construction télécharge aussi le modèle (`multilingual-e5-small`,
+~135 Mo, depuis Hugging Face), placé dans `/app/modeles`, hors du volume de données. Sans accès à
+Hugging Face, l'image se construit quand même et la recherche se fait par les mots seulement ;
+pour ajouter le modèle ensuite, soit reconstruire l'image avec un accès réseau, soit l'installer
+sur une autre machine (`npm run semantique:installer`) et monter le dossier obtenu :
+`-v /chemin/modeles:/app/modeles:ro`. Mémoire : ~0,7 Go de plus au pic. Sur un serveur de moins
+de 2 Go, `MCC_RECHERCHE_SENS=non` (dans `.env`, réglé d'office par `installer-serveur.sh`) la
+désactive. La télémétrie qu'onnxruntime embarque est coupée (`ORT_DISABLE_TELEMETRY=1`) : vérifié,
+aucune connexion sortante.
 
 ## 2. Lancer avec reverse proxy HTTPS (exemple autonome)
 

@@ -2,50 +2,546 @@
   "document": "Guide DGAFP « Agir pour son projet de mobilité professionnelle », édition 2026",
   "note": "Pages attendues relevées dans le texte extrait du guide (numérotation de l'application). Une question est réussie si l'un des premiers résultats provient d'une de ces pages. Les questions hors corpus portent sur des sujets absents du guide : elles ne doivent renvoyer aucun passage.",
   "questions": [
-    {"question": "CMC", "pages": [37, 38, 39, 40, 41]},
-    {"question": "rôle du conseiller mobilité-carrière", "pages": [37, 38, 39, 40, 41]},
-    {"question": "aires de mobilité", "pages": [13, 39]},
-    {"question": "compte personnel de formation", "pages": [97, 98]},
-    {"question": "CPF", "pages": [97, 98]},
-    {"question": "écart de compétences et formation", "pages": [97]},
-    {"question": "position normale d'activité", "pages": [91, 155, 159]},
-    {"question": "PNA", "pages": [91, 155, 159]},
-    {"question": "détachement", "pages": [25, 155, 156, 160]},
-    {"question": "intégration directe", "pages": [25, 155, 156, 160]},
-    {"question": "mise à disposition", "pages": [22, 75, 155, 159]},
-    {"question": "droit au départ en mobilité", "pages": [155, 156]},
-    {"question": "changer de versant de la fonction publique", "pages": [155, 156, 160]},
-    {"question": "rémunération en cas de mobilité", "pages": [155, 157, 158, 159, 160]},
-    {"question": "délai de préavis", "pages": [156, 159]},
-    {"question": "bilan de compétences", "pages": [73, 106, 107]},
-    {"question": "valeurs professionnelles", "pages": [68, 69, 70, 72, 73]},
-    {"question": "RMFP", "pages": [75, 76, 106, 107]},
-    {"question": "répertoire des métiers de la fonction publique", "pages": [75, 76, 106, 107]},
-    {"question": "fiche de poste", "pages": [20, 75, 77, 136, 141]},
-    {"question": "rédiger une lettre de motivation", "pages": [129, 130, 131, 134, 135, 136, 137, 139, 140]},
-    {"question": "curriculum vitae", "pages": [20, 129, 130, 131, 132, 133, 134, 137]},
-    {"question": "préparer un entretien de recrutement", "pages": [95, 106, 107, 125, 131, 140, 141, 144, 150]},
-    {"question": "développer son réseau professionnel", "pages": [115, 116, 117, 118]},
-    {"question": "forums de la mobilité", "pages": [87]},
-    {"question": "PFRH", "pages": [87]},
-    {"question": "mobilité européenne", "pages": [10]},
-    {"question": "BOETH", "pages": [37, 38, 157]},
-    {"question": "travailleurs handicapés", "pages": [6, 37, 38, 157]},
-    {"question": "télétravail", "pages": [82, 128, 157]},
-    {"question": "congé parental", "pages": [155]},
-    {"question": "mon agent souhaite partir en détachement dans une autre administration, quelles démarches ?", "pages": [25, 155, 156, 159, 160]},
-    {"question": "comment accompagner un agent qui veut se reconvertir", "pages": [37, 38, 39, 40, 41]},
-    {"question": "quelles pistes de mobilité géographique explorer", "pages": [84, 85, 86]},
-    {"question": "un agent en situation de handicap peut-il garder son équipement de poste ?", "pages": [157]},
-    {"question": "préparer sa candidature et son CV pour un poste", "pages": [129, 130, 131, 132, 133, 134, 137, 140]},
-    {"question": "que faire si l'administration d'accueil ne renouvelle pas le détachement", "pages": [25, 155, 156, 159, 160]},
-    {"question": "comment trouver des offres d'emploi public", "pages": [93, 120, 121, 122]}
+    {
+      "question": "CMC",
+      "pages": [
+        37,
+        38,
+        39,
+        40,
+        41
+      ]
+    },
+    {
+      "question": "rôle du conseiller mobilité-carrière",
+      "pages": [
+        37,
+        38,
+        39,
+        40,
+        41
+      ]
+    },
+    {
+      "question": "aires de mobilité",
+      "pages": [
+        13,
+        39
+      ]
+    },
+    {
+      "question": "compte personnel de formation",
+      "pages": [
+        97,
+        98
+      ]
+    },
+    {
+      "question": "CPF",
+      "pages": [
+        97,
+        98
+      ]
+    },
+    {
+      "question": "écart de compétences et formation",
+      "pages": [
+        97
+      ]
+    },
+    {
+      "question": "position normale d'activité",
+      "pages": [
+        91,
+        155,
+        159
+      ]
+    },
+    {
+      "question": "PNA",
+      "pages": [
+        91,
+        155,
+        159
+      ]
+    },
+    {
+      "question": "détachement",
+      "pages": [
+        25,
+        155,
+        156,
+        160
+      ]
+    },
+    {
+      "question": "intégration directe",
+      "pages": [
+        25,
+        155,
+        156,
+        160
+      ]
+    },
+    {
+      "question": "mise à disposition",
+      "pages": [
+        22,
+        75,
+        155,
+        159
+      ]
+    },
+    {
+      "question": "droit au départ en mobilité",
+      "pages": [
+        155,
+        156
+      ]
+    },
+    {
+      "question": "changer de versant de la fonction publique",
+      "pages": [
+        155,
+        156,
+        160
+      ]
+    },
+    {
+      "question": "rémunération en cas de mobilité",
+      "pages": [
+        155,
+        157,
+        158,
+        159,
+        160
+      ]
+    },
+    {
+      "question": "délai de préavis",
+      "pages": [
+        156,
+        159
+      ]
+    },
+    {
+      "question": "bilan de compétences",
+      "pages": [
+        73,
+        106,
+        107
+      ]
+    },
+    {
+      "question": "valeurs professionnelles",
+      "pages": [
+        68,
+        69,
+        70,
+        72,
+        73
+      ]
+    },
+    {
+      "question": "RMFP",
+      "pages": [
+        75,
+        76,
+        106,
+        107
+      ]
+    },
+    {
+      "question": "répertoire des métiers de la fonction publique",
+      "pages": [
+        75,
+        76,
+        106,
+        107
+      ]
+    },
+    {
+      "question": "fiche de poste",
+      "pages": [
+        20,
+        75,
+        77,
+        136,
+        141
+      ]
+    },
+    {
+      "question": "rédiger une lettre de motivation",
+      "pages": [
+        129,
+        130,
+        131,
+        134,
+        135,
+        136,
+        137,
+        139,
+        140
+      ]
+    },
+    {
+      "question": "curriculum vitae",
+      "pages": [
+        20,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        137
+      ]
+    },
+    {
+      "question": "préparer un entretien de recrutement",
+      "pages": [
+        95,
+        106,
+        107,
+        125,
+        131,
+        140,
+        141,
+        144,
+        150
+      ]
+    },
+    {
+      "question": "développer son réseau professionnel",
+      "pages": [
+        115,
+        116,
+        117,
+        118
+      ]
+    },
+    {
+      "question": "forums de la mobilité",
+      "pages": [
+        87
+      ]
+    },
+    {
+      "question": "PFRH",
+      "pages": [
+        87
+      ]
+    },
+    {
+      "question": "mobilité européenne",
+      "pages": [
+        10
+      ]
+    },
+    {
+      "question": "BOETH",
+      "pages": [
+        37,
+        38,
+        157
+      ]
+    },
+    {
+      "question": "travailleurs handicapés",
+      "pages": [
+        6,
+        37,
+        38,
+        157
+      ]
+    },
+    {
+      "question": "télétravail",
+      "pages": [
+        82,
+        128,
+        157
+      ]
+    },
+    {
+      "question": "congé parental",
+      "pages": [
+        155
+      ]
+    },
+    {
+      "question": "mon agent souhaite partir en détachement dans une autre administration, quelles démarches ?",
+      "pages": [
+        25,
+        155,
+        156,
+        159,
+        160
+      ]
+    },
+    {
+      "question": "comment accompagner un agent qui veut se reconvertir",
+      "pages": [
+        37,
+        38,
+        39,
+        40,
+        41
+      ]
+    },
+    {
+      "question": "quelles pistes de mobilité géographique explorer",
+      "pages": [
+        84,
+        85,
+        86
+      ]
+    },
+    {
+      "question": "un agent en situation de handicap peut-il garder son équipement de poste ?",
+      "pages": [
+        157
+      ]
+    },
+    {
+      "question": "préparer sa candidature et son CV pour un poste",
+      "pages": [
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        137,
+        140
+      ]
+    },
+    {
+      "question": "que faire si l'administration d'accueil ne renouvelle pas le détachement",
+      "pages": [
+        25,
+        155,
+        156,
+        159,
+        160
+      ]
+    },
+    {
+      "question": "comment trouver des offres d'emploi public",
+      "pages": [
+        93,
+        120,
+        121,
+        122
+      ]
+    }
   ],
   "horsCorpus": [
     "rupture conventionnelle",
     "indemnité de départ volontaire",
     "temps partiel thérapeutique",
     "congé de maternité",
-    "médecine du travail"
+    "médecine du travail",
+    "accident de service",
+    "prime de naissance",
+    "grève et retenue sur salaire",
+    "congé de maladie ordinaire",
+    "accident de trajet",
+    "jour de carence",
+    "prime de fin d'année",
+    "droit de grève",
+    "harcèlement moral au travail",
+    "tickets restaurant",
+    "congés bonifiés outre-mer",
+    "arrêt de travail pour enfant malade",
+    "indemnité kilométrique",
+    "médaille du travail",
+    "logement de fonction",
+    "protection fonctionnelle",
+    "allocation chômage",
+    "frais de déménagement",
+    "visite médicale d'embauche",
+    "comment contester une sanction ?",
+    "quels sont mes droits si je suis victime de harcèlement ?",
+    "combien de jours de congés annuels ai-je ?",
+    "puis-je être payé pendant une grève ?"
+  ],
+  "reformulations": [
+    {
+      "question": "j'aimerais être aidé par un professionnel pour réfléchir à la suite de ma carrière",
+      "pages": [
+        37,
+        38,
+        39,
+        40,
+        41
+      ]
+    },
+    {
+      "question": "combien de temps mon administration peut-elle me retenir avant mon départ ?",
+      "pages": [
+        156,
+        159
+      ]
+    },
+    {
+      "question": "comment savoir si mon projet a des chances d'aboutir ?",
+      "pages": [
+        31,
+        91,
+        92,
+        93,
+        94
+      ]
+    },
+    {
+      "question": "que mettre dans le courrier qui accompagne ma candidature ?",
+      "pages": [
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140
+      ]
+    },
+    {
+      "question": "comment me préparer aux questions posées par le recruteur ?",
+      "pages": [
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150
+      ]
+    },
+    {
+      "question": "où consulter les annonces de postes dans les administrations ?",
+      "pages": [
+        9,
+        92,
+        93,
+        120,
+        121,
+        122,
+        123
+      ]
+    },
+    {
+      "question": "rencontrer des personnes qui exercent le métier qui m'intéresse",
+      "pages": [
+        95,
+        96,
+        97,
+        98,
+        99,
+        115,
+        116,
+        117,
+        118
+      ]
+    },
+    {
+      "question": "mon matériel adapté à mon handicap me suivra-t-il dans mon nouveau service ?",
+      "pages": [
+        157
+      ]
+    },
+    {
+      "question": "ce qui me donne envie de me lever le matin pour aller travailler",
+      "pages": [
+        68,
+        69,
+        70,
+        71,
+        72,
+        73
+      ]
+    },
+    {
+      "question": "retracer les emplois que j'ai occupés depuis le début de ma carrière",
+      "pages": [
+        57,
+        58,
+        59,
+        60,
+        61,
+        74,
+        75
+      ]
+    },
+    {
+      "question": "travailler quelques années dans une institution de l'Union",
+      "pages": [
+        10
+      ]
+    },
+    {
+      "question": "quitter l'État pour travailler dans une commune ou un hôpital",
+      "pages": [
+        155,
+        156,
+        158,
+        159,
+        160
+      ]
+    },
+    {
+      "question": "je voudrais vivre plus près de mon conjoint",
+      "pages": [
+        24
+      ]
+    },
+    {
+      "question": "vais-je gagner autant dans mon futur poste ?",
+      "pages": [
+        157,
+        158,
+        159,
+        160
+      ]
+    },
+    {
+      "question": "il y a peu d'offres dans ma région pour le métier que je vise",
+      "pages": [
+        93,
+        94
+      ]
+    },
+    {
+      "question": "organiser dans le temps les étapes de mon changement de poste",
+      "pages": [
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108
+      ]
+    },
+    {
+      "question": "mon projet ne tient pas la route, que faire ?",
+      "pages": [
+        91,
+        94
+      ]
+    }
+  ],
+  "horsCorpusLimites": [
+    "mon agent est en arrêt maladie depuis trois mois, que faire ?",
+    "comment déclarer un accident sur le trajet du travail ?"
   ]
 }

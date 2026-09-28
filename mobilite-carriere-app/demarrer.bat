@@ -55,6 +55,18 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM Recherche par le sens : modele telecharge une seule fois (environ 135 Mo).
+REM Sans connexion, le site fonctionne quand meme (recherche par les mots).
+if not exist "modeles\multilingual-e5-small\onnx\model_quantized.onnx" (
+    echo.
+    echo Installation du modele de recherche par le sens ^(une seule fois, environ 135 Mo^)...
+    call npm run semantique:installer
+    if errorlevel 1 (
+        echo Modele non installe : la recherche se fera par les mots seulement.
+        echo Relancez ce fichier plus tard pour reessayer.
+    )
+)
+
 REM Un cache de build laisse par une version precedente peut provoquer des
 REM erreurs "Failed to fetch" une fois le code mis a jour : on repart propre.
 if exist ".next" (

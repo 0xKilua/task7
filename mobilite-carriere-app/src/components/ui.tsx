@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { LIBELLES_STATUT, MESSAGE_A_VERIFIER, type Citation, type StatutDossier } from '@/lib/types';
 import { mentionDate } from '@/lib/format';
+import type { EtatRechercheParSens } from '@/lib/semantique';
 
 const COULEURS_STATUT: Record<StatutDossier, string> = {
   en_cours: 'border-etat-200 bg-etat-50 text-etat-800',
@@ -112,6 +113,14 @@ export function BlocCitation({ citation, index }: { citation: Citation; index: n
     <li className="rounded border border-slate-200 bg-slate-50 p-3">
       <p className="text-sm text-slate-800">
         <span className="mr-1 font-semibold text-etat-700">[{index}]</span>
+        {citation.origine === 'sens' && (
+          <span
+            className="mr-1 rounded bg-violet-100 px-1.5 py-0.5 text-xs font-medium text-violet-800"
+            title="Aucun mot de la question n'y figure : passage proposé pour la proximité de son sens, à lire avant de s'y appuyer."
+          >
+            trouvé par le sens
+          </span>
+        )}
         <span className="italic">
           <Surligne texte={citation.extrait} />
         </span>
@@ -187,6 +196,55 @@ export function EtatVide({ titre, children }: { titre: string; children?: React.
     <div className="rounded border border-dashed border-slate-300 bg-white p-6 text-center">
       <p className="font-medium text-slate-700">{titre}</p>
       {children && <div className="mt-2 text-sm text-slate-600">{children}</div>}
+    </div>
+  );
+}
+
+const LIBELLES_SENS: Record<EtatRechercheParSens['statut'], string> = {
+  active: 'Recherche par les mots et par le sens (modèle installé sur le serveur : aucune donnée transmise).',
+  indexation: 'Recherche par le sens en préparation',
+  desactivee: 'Recherche par les mots seulement : recherche par le sens désactivée sur ce serveur.',
+  non_installe: "Recherche par les mots seulement : le modèle de recherche par le sens n'est pas installé.",
+  erreur: 'Recherche par le sens indisponible (modèle illisible) : recherche par les mots seulement.',
+};
+
+export function MentionRechercheParSens({
+  etat,
+  administrateur = false,
+}: {
+  etat: EtatRechercheParSens;
+  administrateur?: boolean;
+}) {
+  return (
+    <p className="text-xs text-slate-500">
+      {LIBELLES_SENS[etat.statut]}
+      {etat.statut === 'indexation' &&
+        ` : ${etat.indexes} passages sur ${etat.total} indexés. Les autres restent trouvés par les mots.`}
+      {administrateur && etat.statut === 'non_installe' && (
+        <>
+          {' '}
+          Installation : <code>npm run semantique:installer</code> (une fois, environ 135 Mo).
+        </>
+      )}
+      {administrateur && etat.statut === 'erreur' && etat.erreur && <> Détail : {etat.erreur}</>}
+    </p>
+  );
+}
+
+export function PistesParLeSens({ pistes }: { pistes: Citation[] }) {
+  if (pistes.length === 0) return null;
+  return (
+    <div className="mt-4">
+      <h3 className="text-sm font-semibold text-slate-800">Pistes de lecture, proches par le sens</h3>
+      <p className="mt-1 text-xs text-slate-600">
+        Aucun terme de la question n&apos;y figure : ces passages en sont seulement proches par le sens.
+        Ils ne constituent pas une réponse et sont à lire avant tout usage auprès d&apos;un agent.
+      </p>
+      <ul className="mt-3 space-y-3">
+        {pistes.map((citation, index) => (
+          <BlocCitation key={citation.passageId} citation={citation} index={index + 1} />
+        ))}
+      </ul>
     </div>
   );
 }

@@ -13,3 +13,6 @@ data/app.db-shm
 data/documents/*
 !data/documents/.gitkeep
 !data/documents/README.md
+
+# Modèle de la recherche par le sens (~135 Mo), installé par npm run semantique:installer
+modeles/

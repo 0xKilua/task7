@@ -26,6 +26,7 @@ import {
 import { enregistrerEntretien, genererTrame } from '@/lib/entretien';
 import { extraireDepuisBuffer } from '@/lib/extract';
 import { ingererDocument, supprimerDocument } from '@/lib/ingest';
+import { lancerIndexation } from '@/lib/semantique';
 import { MESSAGE_A_VERIFIER } from '@/lib/types';
 
 const FORMATS_ACCEPTES = new Set(['.pdf', '.md', '.txt']);
@@ -292,6 +293,8 @@ export async function ingererDocumentAction(formData: FormData) {
       pages,
       administrateur.id,
     );
+    // Vecteurs des nouveaux passages calculés en tâche de fond : la page répond sans attendre.
+    void lancerIndexation();
     revalidatePath('/base-documentaire');
     revalidatePath('/');
     redirect(

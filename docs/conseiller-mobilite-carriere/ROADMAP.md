@@ -23,7 +23,7 @@ Un **prototype local exécutable** est disponible dans [`mobilite-carriere-app/`
 | Lot Phase 3 | État | Réserve |
 |---|---|---|
 | Lot 0 — Socle technique | Fait | Authentification, rôles, cloisonnement des dossiers par conseiller, migrations automatiques, revue de sécurité |
-| Lot 1 — Base documentaire & RAG | Fait (lexical) | Guide DGAFP, Code du travail (6e partie) et 11 fiches service-public.fr, textes livrés installés et mis à jour au démarrage ; sigles, formes d'un mot sans ses dérivés, rejet des sujets hors corpus, réparation des mots coupés ; pertinence mesurée (38/38 dans les 3 premiers sur le guide seul, 33/38 avec les textes livrés, qui répondent souvent eux-mêmes) ; recherche **sémantique à ajouter** |
+| Lot 1 — Base documentaire & RAG | Fait (hybride) | Guide DGAFP, Code du travail (6e partie) et 11 fiches service-public.fr, textes livrés installés et mis à jour au démarrage ; recherche par les mots (sigles, formes d'un mot, rejet des sujets hors corpus) **et par le sens** (modèle local multilingual-e5-small, aucune donnée transmise, pistes de lecture signalées comme telles) ; pertinence mesurée sur 38 questions, 17 reformulations et 28 sujets hors corpus (guide seul : 38/38 dans les 3 premiers, reformulations 7 → 9/17 dans les 3 premiers, aucun faux résultat hors corpus) |
 | Lot 2 — Assistant | Fait (sans LLM) | Restitution ancrée sur les passages retrouvés, trame complète, questions de clarification |
 | Lot 3 — Fiche de situation | Fait | 14 champs + synthèse structurée |
 | Lot 4 — Bilan de parcours | Fait | 12 étapes + synthèse |

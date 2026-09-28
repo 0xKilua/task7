@@ -36,7 +36,9 @@ cd task7\mobilite-carriere-app
 **Le plus simple** — **double-cliquer sur `demarrer.bat`** dans l'explorateur de fichiers. Il
 vérifie Node, installe les dépendances si besoin, démarre le serveur dans sa propre fenêtre puis
 **ouvre automatiquement le navigateur** sur <http://localhost:3000> dès qu'il est prêt. Un `.bat`
-n'est pas soumis à la politique d'exécution de PowerShell : ce chemin passe toujours. Il corrige
+n'est pas soumis à la politique d'exécution de PowerShell : ce chemin passe toujours. Au premier
+lancement, il installe aussi le modèle de la **recherche par le sens** (environ 135 Mo, une seule
+fois) ; sans connexion, le site démarre quand même et cherche par les mots seulement. Il corrige
 aussi, en passant, le blocage « l'exécution de scripts est désactivée sur ce système » pour votre
 compte Windows — de façon durable, plus seulement pour la fenêtre en cours — afin que les prochaines
 commandes `npm` lancées directement depuis PowerShell fonctionnent aussi.
@@ -108,6 +110,8 @@ modifiée dans votre installation n'est jamais écrasée.
 | La fenêtre du serveur s'arrête sur `Assertion failed: (env) != nullptr` | Ancienne version de `better-sqlite3` (11.x) sous Node 24 | Fermer les fenêtres serveur, `git pull`, puis relancer `demarrer.bat` : il installe la version 13, qui n'est pas concernée |
 | `npm install` échoue avec `EPERM` | Une fenêtre serveur tourne encore et verrouille des fichiers | Fermer toutes les fenêtres serveur, puis relancer `demarrer.bat` |
 | « l'exécution de scripts est désactivée sur ce système » (sur `npm`, `npm.ps1` ou `demarrer.ps1`) | Politique d'exécution PowerShell trop restrictive | Double-cliquer sur `demarrer.bat` (jamais concerné, et corrige la politique durablement au passage) ; ou une fois, dans la fenêtre bloquée : `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` (permanent, contrairement à `-Scope Process` qu'il faudrait répéter à chaque fenêtre) |
+| « Modèle non installé : fetch failed » au démarrage | Pas d'accès à Hugging Face (connexion, proxy d'entreprise) | Sans conséquence : la recherche se fait par les mots. Relancer `demarrer.bat` une fois connecté, ou installer le modèle ailleurs puis `npm run semantique:installer -- --depuis <dossier>` |
+| « Modèle non installé » avec une erreur de module ou de DLL | Bibliothèque Microsoft Visual C++ absente (nécessaire au moteur du modèle) | Installer le « Microsoft Visual C++ Redistributable » x64 depuis le site de Microsoft, puis relancer `demarrer.bat` |
 | `Port 3000 is already in use` | Un autre programme occupe le port | `npm run dev -- -p 3001` puis ouvrir <http://localhost:3001> |
 | `node : terme non reconnu` | Node absent du PATH | Fermer et rouvrir PowerShell après l'installation de Node |
 | Le PDF est ingéré mais aucune recherche ne renvoie de résultat | PDF scanné, sans couche texte | Le fichier ne contient que des images : il faut d'abord le passer à l'OCR |

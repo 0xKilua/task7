@@ -76,6 +76,42 @@ L'ingestion répare les mots coupés par la mise en page des PDF (« p arfois »
 introuvables. Les documents ingérés avec une version antérieure sont réparés automatiquement,
 une seule fois, au démarrage suivant : pas besoin de les ré-ingérer.
 
+## Recherche par le sens
+
+La recherche combine deux méthodes, dont les classements sont fusionnés :
+
+- **par les mots** (SQLite FTS5, BM25) : passages qui emploient les termes de la question, sigles
+  et formes d'un mot compris ;
+- **par le sens** : un modèle d'embeddings multilingue (`multilingual-e5-small`, quantifié en
+  int8, ~135 Mo) tourne **sur le serveur même** — aucune donnée ne quitte la machine, aucun appel
+  réseau à l'usage. Il rapproche une question de passages qui en traitent avec d'autres mots
+  (« comment savoir si mon projet a des chances d'aboutir ? » → « Mon projet est-il faisable ? »).
+
+Garde-fous, mesurés sur le jeu de référence (`scripts/questions-reference.json`) :
+
+- le sens complète les mots dès qu'un passage est très proche (similarité ≥ 0,87) ; seul, il doit
+  être net (≥ 0,88) ;
+- une question dont les mots absents de la base portent le sujet (« congé de **maternité** ») ne
+  reçoit aucune réponse par le sens : sa formulation privée de ces mots ne veut plus rien dire ;
+- les passages « fourre-tout » (schémas, listes de verbes, sommaires), qui ressemblent un peu à
+  toute question, sont pénalisés par rapport aux autres passages de leur document ;
+- quand rien ne répond, les passages les plus proches par le sens sont proposés **à part**, comme
+  *pistes de lecture*, avec la mention qu'ils ne constituent pas une réponse. Chaque passage
+  trouvé par le seul sens porte l'étiquette « trouvé par le sens ».
+
+**Installation du modèle** (une fois ; `demarrer.bat` et l'image Docker le font d'eux-mêmes) :
+
+```bash
+npm run semantique:installer                         # téléchargement depuis Hugging Face
+npm run semantique:installer -- --depuis <dossier>   # installation hors ligne
+```
+
+Le modèle est vérifié (chargement et calcul d'un vecteur) avant d'être mis en place, et ses
+empreintes SHA-256 sont notées dans `modeles/multilingual-e5-small/installation.json`. Au
+démarrage, le serveur calcule en tâche de fond les vecteurs des passages qui n'en ont pas
+(~25 s pour les 1 231 passages livrés) ; l'état est affiché sur les pages Recherche et Base
+documentaire. Sans modèle, l'application fonctionne comme avant, par les mots seulement.
+
 ## Catalogue de dispositifs
 
 Le catalogue distingue deux niveaux de fiabilité, visibles dans l'interface (badge vert / badge
@@ -105,7 +141,7 @@ livrée, dont elle conserve l'empreinte.
 |---|---|---|
 | `/` | Tableau de bord | Indicateurs, dossiers récents, bilans, recherches, ressources |
 | `/assistant` | Assistant mobilité-carrière | Trame Situation → Analyse sourcée → Pistes → Points à vérifier → Prochaines étapes → Sources |
-| `/recherche` | Recherche documentaire | Recherche plein texte dans les passages, avec citations |
+| `/recherche` | Recherche documentaire | Recherche par les mots et par le sens dans les passages, avec citations ; pistes de lecture signalées comme telles |
 | `/dispositifs` | Exploration des dispositifs | Catalogue filtrable + fiche détaillée + édition sourcée |
 | `/dossiers` | Accompagnements | Statut (en cours / en attente / clos), prochain rendez-vous, historique des échanges ; diagnostic en 14 champs, bilan en 12 étapes, synthèses, plan éditable ; export des données (droit d'accès) |
 | `/dossiers/[id]/restitution` | Document de restitution | Synthèse imprimable ou en PDF à remettre à l'agent, sources citées, notes internes exclues |
@@ -124,6 +160,7 @@ livrée, dont elle conserve l'empreinte.
 ```
 mobilite-carriere-app/
 ├── contenus/                   Contenus livrés : catalogue de dispositifs, textes officiels
+├── modeles/                    Modèle de la recherche par le sens (non versionné, ~135 Mo)
 ├── data/
 │   ├── app.db                  SQLite (non versionné)
 │   └── documents/              Documents sources déposés (non versionnés)
@@ -138,7 +175,8 @@ mobilite-carriere-app/
         ├── auth.ts             Comptes, mots de passe (scrypt), sessions, contrôle d'accès
         ├── extract.ts          Extraction de texte (PDF / Markdown / texte)
         ├── ingest.ts           Découpage en passages + indexation
-        ├── search.ts           Recherche FTS5 + citations
+        ├── search.ts           Recherche par les mots (FTS5), fusion avec le sens, citations
+        ├── semantique.ts       Modèle d'embeddings local, vecteurs, indexation en tâche de fond
         ├── assistant.ts        Réponse ancrée sur les passages retrouvés
         ├── dispositifs.ts      Catalogue
         ├── dossiers.ts         Dossiers, diagnostics, bilans, plans (cloisonnés par conseiller)
@@ -159,6 +197,9 @@ la session (`exigerSession()` / `exigerAdministrateur()`) et, pour les dossiers,
   native avec classement BM25 et extraits (`snippet`). Une bascule vers PostgreSQL + pgvector est
   possible sans changer la structure du code (l'accès aux données est isolé dans `src/lib`).
 - **Tailwind CSS** : interface sobre, lisible, responsive.
+- **Recherche par le sens locale** (`onnxruntime-node` + `@huggingface/tokenizers`, modèle
+  `multilingual-e5-small`) : vecteurs stockés dans SQLite, calcul sur le processeur du serveur,
+  sans service tiers.
 - **Aucun appel à un LLM externe** dans cette version : l'assistant restitue les passages
   réellement retrouvés. Ce choix garantit qu'aucune règle ne peut être inventée et rend
   l'application utilisable sans clé d'API ni transfert de données vers un tiers. L'ajout d'une
@@ -196,19 +237,32 @@ npm run dev                           # dans un terminal
 PLAYWRIGHT_MODULE=<chemin playwright> node scripts/e2e.mjs   # dans un autre
 ```
 
-**Pertinence de la recherche** — jeu de 38 questions de référence sur le guide DGAFP et de 5
-sujets qu'il ne traite pas (`scripts/questions-reference.json`) :
+**Pertinence de la recherche** — 38 questions de référence sur le guide DGAFP, 17 reformulations
+en langage courant et 28 sujets qu'il ne traite pas (`scripts/questions-reference.json`), mots
+seuls et mots + sens mesurés côte à côte :
 
 ```bash
 npm run recherche:evaluer -- --fichier chemin/vers/GuideMobPro_2026.pdf
 ```
 
-Résultat actuel : bonne page dans les 3 premiers résultats pour 38/38 questions (33 en première
-position), aucun faux résultat sur les 5 sujets hors corpus. L'évaluation porte sur le guide
-seul ; `--corpus-complet` y ajoute les textes livrés, pour mesurer leur concurrence (33/38 : les
-fiches service-public.fr répondent elles-mêmes, par exemple, aux questions sur le détachement).
+Résultats actuels (guide seul) :
 
-Le scénario de bout en bout (52 vérifications) couvre aussi le suivi, la restitution, l'export,
+| | mots seuls | mots + sens |
+|---|---|---|
+| questions — bonne page en 1re position | 33/38 | 34/38 |
+| questions — dans les 3 premiers | 38/38 | 38/38 |
+| reformulations — bonne page en 1re position | 4/17 | 6/17 |
+| reformulations — dans les 3 premiers | 7/17 | 9/17 |
+| sujets hors corpus sans faux résultat | 28/28 | 28/28 |
+
+`--corpus-complet` y ajoute les textes livrés (reformulations dans les 5 premiers : 6 → 8/17 ;
+les fiches service-public.fr répondent souvent elles-mêmes, par exemple sur le détachement).
+Limite connue, mesurée à part : une question hors sujet dont seul un mot, absent de la base,
+porte le sujet (« mon agent est en arrêt **maladie** depuis trois mois ») peut recevoir un passage
+qui correspond au reste de la phrase (« délai de trois mois »), par les mots comme par le sens.
+
+Le scénario de bout en bout (53 vérifications) couvre aussi la recherche par le sens (quand le
+modèle est installé), le suivi, la restitution, l'export,
 le journal, la conservation et le cloisonnement de chacun. Il couvre : création de dossier, diagnostic et synthèse, bilan et
 synthèse, génération puis édition et persistance du plan, non-écrasement des saisies lors d'une
 nouvelle proposition, référence de dossier en doublon, trame d'entretien, catalogue de
@@ -233,7 +287,9 @@ ni outils C++ ne sont nécessaires, sous Windows comme sous Linux.
 
 ## Limites connues / suite
 
-- Recherche **lexicale** (FTS5) uniquement : la recherche sémantique (embeddings) reste à ajouter.
+- Recherche par le sens assurée par un petit modèle (118 M paramètres) : utile sur les
+  reformulations, sans comprendre finement une question ; ses propositions restent des extraits
+  cités, à lire, jamais une réponse rédigée.
 - Authentification par identifiant + mot de passe et cloisonnement des dossiers par conseiller
   sont implémentés (voir « Garde-fous implémentés »), mais aucune validation DPO/RSSI n'a été
   faite : à obtenir avant tout usage réel avec des données d'agents.

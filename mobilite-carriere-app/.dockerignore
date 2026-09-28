@@ -12,3 +12,4 @@ data/documents/*
 scripts/e2e.mjs
 .env
 Caddyfile
+modeles

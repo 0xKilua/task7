@@ -11,6 +11,9 @@ services:
       - NODE_ENV=production
       # Défini dans le fichier .env par installer-serveur.sh : exigé pour créer le premier compte.
       - MCC_JETON_INSTALLATION=${MCC_JETON_INSTALLATION:-}
+      # « non » sur un serveur de moins de 2 Go (installer-serveur.sh le règle) : recherche par
+      # les mots seulement, sans charger le modèle de la recherche par le sens (~0,7 Go).
+      - MCC_RECHERCHE_SENS=${MCC_RECHERCHE_SENS:-oui}
     volumes:
       - donnees:/app/data
     expose:

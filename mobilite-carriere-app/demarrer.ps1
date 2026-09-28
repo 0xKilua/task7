@@ -60,6 +60,16 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# Recherche par le sens : modele telecharge une seule fois (environ 135 Mo). Sans connexion,
+# le site fonctionne quand meme (recherche par les mots).
+if (-not (Test-Path 'modeles\multilingual-e5-small\onnx\model_quantized.onnx')) {
+    Write-Host "`nInstallation du modele de recherche par le sens (une seule fois, environ 135 Mo)..."
+    npm run semantique:installer
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Modele non installe : la recherche se fera par les mots seulement. Relancez ce script plus tard pour reessayer." -ForegroundColor Yellow
+    }
+}
+
 # Un cache de build laisse par une version precedente peut provoquer des erreurs
 # "Failed to fetch" une fois le code mis a jour : on repart propre.
 if (Test-Path '.next') {

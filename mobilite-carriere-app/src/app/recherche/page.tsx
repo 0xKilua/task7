@@ -5,25 +5,30 @@ import {
   Bouton,
   Carte,
   EtatVide,
+  MentionRechercheParSens,
+  PistesParLeSens,
   TitrePage,
 } from '@/components/ui';
-import { baseDocumentaireVide, enregistrerRecherche, rechercherPassages } from '@/lib/search';
+import { baseDocumentaireVide, enregistrerRecherche, pistesParLeSens, rechercherPassages } from '@/lib/search';
 import { exigerSession } from '@/lib/auth';
+import { etatRechercheParSens } from '@/lib/semantique';
 
 export const dynamic = 'force-dynamic';
 
-export default function PageRecherche({ searchParams }: { searchParams: { q?: string } }) {
+export default async function PageRecherche({ searchParams }: { searchParams: { q?: string } }) {
   const utilisateur = exigerSession();
   const requete = (searchParams.q ?? '').trim();
-  const resultats = requete.length > 0 ? rechercherPassages(requete, 20) : [];
+  const resultats = requete.length > 0 ? await rechercherPassages(requete, 20) : [];
   if (requete.length > 0) enregistrerRecherche(utilisateur.id, requete, resultats.length);
   const vide = baseDocumentaireVide();
+  const sens = etatRechercheParSens();
+  const pistes = requete.length > 0 && resultats.length === 0 ? await pistesParLeSens(requete) : [];
 
   return (
     <>
       <TitrePage
         titre="Recherche documentaire"
-        chapo="Recherche plein texte dans les passages des documents officiels ingérés. Chaque résultat indique son document, sa section et sa date."
+        chapo="Recherche dans les passages des documents officiels ingérés, par les mots de la question et par leur sens. Chaque résultat indique son document, sa section et sa date."
       />
 
       <Carte>
@@ -41,6 +46,9 @@ export default function PageRecherche({ searchParams }: { searchParams: { q?: st
           />
           <Bouton>Rechercher</Bouton>
         </form>
+        <div className="mt-2">
+          <MentionRechercheParSens etat={sens} administrateur={utilisateur.role === 'administrateur'} />
+        </div>
       </Carte>
 
       {vide && (
@@ -62,7 +70,10 @@ export default function PageRecherche({ searchParams }: { searchParams: { q?: st
           </p>
 
           {resultats.length === 0 ? (
-            <AlerteAVerifier texte="Aucun passage suffisamment pertinent n'a été trouvé dans les documents ingérés. Information à vérifier auprès de la source institutionnelle compétente ou du conseiller mobilité-carrière." />
+            <>
+              <AlerteAVerifier texte="Aucun passage suffisamment pertinent n'a été trouvé dans les documents ingérés. Information à vérifier auprès de la source institutionnelle compétente ou du conseiller mobilité-carrière." />
+              <PistesParLeSens pistes={pistes} />
+            </>
           ) : (
             <ul className="space-y-3">
               {resultats.map((citation, index) => (

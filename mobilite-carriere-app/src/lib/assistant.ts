@@ -1,5 +1,5 @@
 import { dispositifsPertinents } from './dispositifs';
-import { baseDocumentaireVide, enregistrerRecherche, normaliser, rechercherPassages } from './search';
+import { baseDocumentaireVide, enregistrerRecherche, normaliser, pistesParLeSens, rechercherPassages } from './search';
 import { MESSAGE_A_VERIFIER, type ReponseAssistant } from './types';
 
 const QUESTIONS_CLARIFICATION: { motsCles: string[]; question: string }[] = [
@@ -28,8 +28,8 @@ function selectionnerQuestions(requete: string, limite = 4): string[] {
   return manquantes.slice(0, limite).map((q) => q.question);
 }
 
-export function repondre(conseillerId: string, requete: string): ReponseAssistant {
-  const citations = rechercherPassages(requete, 6);
+export async function repondre(conseillerId: string, requete: string): Promise<ReponseAssistant> {
+  const citations = await rechercherPassages(requete, 6);
   enregistrerRecherche(conseillerId, requete, citations.length);
 
   const pistes = dispositifsPertinents(requete);
@@ -63,6 +63,7 @@ export function repondre(conseillerId: string, requete: string): ReponseAssistan
       aVerifier,
       prochainesEtapes: PROCHAINES_ETAPES_TYPES,
       citations: [],
+      pistesDeLecture: await pistesParLeSens(requete),
     };
   }
 
@@ -79,5 +80,6 @@ export function repondre(conseillerId: string, requete: string): ReponseAssistan
     aVerifier,
     prochainesEtapes: PROCHAINES_ETAPES_TYPES,
     citations,
+    pistesDeLecture: [],
   };
 }
