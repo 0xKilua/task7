@@ -81,17 +81,16 @@ une seule fois, au démarrage suivant : pas besoin de les ré-ingérer.
 Le catalogue distingue deux niveaux de fiabilité, visibles dans l'interface (badge vert / badge
 ambre) :
 
-- **26 fiches vérifiées sur source** (`statutVerification: "verifie_source"`) : 18 depuis le
-  guide DGAFP « Agir pour son projet de mobilité professionnelle », édition 2026, lu page par
-  page ; 2 (conseil en évolution professionnelle, VAE) depuis les articles du Code du travail en
-  vigueur au 1er septembre 2026 ; 6 (disponibilité, congé de formation professionnelle, période
-  de professionnalisation, formation statutaire et continue, entretien professionnel, congé de
-  transition professionnelle) depuis les fiches service-public.fr livrées, lues directement,
-  chaque fiche renvoyant à sa fiche officielle et aux articles du code général de la fonction
-  publique qu'elle cite.
-- **2 fiches** (mobilité géographique, kiosque des référentiels métiers) restent volontairement
-  peu renseignées : le guide les traite différemment (un critère plutôt qu'un dispositif ; une
-  page à consulter directement dans le guide plutôt qu'à dupliquer ici).
+- **Les 28 fiches sont vérifiées sur source** (`statutVerification: "verifie_source"`) : 20 depuis
+  le guide DGAFP « Agir pour son projet de mobilité professionnelle », édition 2026, lu page par
+  page (dont la mobilité géographique, critère du projet plutôt que dispositif, et le kiosque des
+  référentiels métiers RIME, RMFP, ROME…) ; 2 (conseil en évolution professionnelle, VAE) depuis
+  les articles du Code du travail en vigueur au 1er septembre 2026 ; 6 (disponibilité, congé de
+  formation professionnelle, période de professionnalisation, formation statutaire et continue,
+  entretien professionnel, congé de transition professionnelle) depuis les fiches service-public.fr
+  livrées. Chaque fiche cite ses pages ou sa fiche officielle ; ce que les sources ne détaillent pas
+  (par exemple la liste des priorités légales de mutation) porte la mention « Information à
+  vérifier… ».
 
 Le catalogue livré (`contenus/dispositifs.seed.json`) est appliqué automatiquement au démarrage
 de chaque nouvelle version : fiches ajoutées, corrigées ou nouvellement vérifiées arrivent sans

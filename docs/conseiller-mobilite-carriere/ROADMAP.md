@@ -27,7 +27,7 @@ Un **prototype local exécutable** est disponible dans [`mobilite-carriere-app/`
 | Lot 2 — Assistant | Fait (sans LLM) | Restitution ancrée sur les passages retrouvés, trame complète, questions de clarification |
 | Lot 3 — Fiche de situation | Fait | 14 champs + synthèse structurée |
 | Lot 4 — Bilan de parcours | Fait | 12 étapes + synthèse |
-| Lot 5 — Dispositifs | Fait | 26 fiches sur 28 vérifiées sur source (guide DGAFP, Code du travail, fiches service-public.fr) ; catalogue mis à jour au démarrage sans écraser les fiches modifiées localement |
+| Lot 5 — Dispositifs | Fait | 28 fiches sur 28 vérifiées sur source (guide DGAFP, Code du travail, fiches service-public.fr) ; catalogue mis à jour au démarrage sans écraser les fiches modifiées localement |
 | Lot 6 — Préparation d'entretien | Fait | 7 types de trames, questions ouvertes |
 | Lot 7 — Plan d'accompagnement | Fait | Génération, édition libre, document de restitution imprimable pour l'agent |
 | Lot 8 — Tableau de bord | Fait | Prochains rendez-vous, dossiers à relancer, indicateurs, recherches, ressources |
