@@ -1,8 +1,12 @@
+// En développement (demarrer.bat lance « next dev »), React a besoin d'eval pour ses outils de
+// débogage : sans lui, chaque page affiche une pastille d'erreur. Jamais en production.
+const DEVELOPPEMENT = process.env.NODE_ENV !== 'production';
+
 // Politique de sécurité du contenu : tout vient de l'application elle-même. Les scripts et
 // styles en ligne restent permis, Next.js en insère pour l'hydratation et le rendu.
 const POLITIQUE_CONTENU = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${DEVELOPPEMENT ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
