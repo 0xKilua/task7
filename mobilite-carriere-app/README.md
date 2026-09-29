@@ -137,6 +137,10 @@ livrée, dont elle conserve l'empreinte.
 
 ## Fonctionnalités
 
+Toutes les pages s'utilisent aussi sur téléphone : rubriques repliées derrière un bouton « Menu »,
+en-tête réduit, champs de saisie sans zoom automatique sur iPhone, tableaux de la documentation
+présentés en fiches.
+
 | Page | Bloc MVP | Contenu |
 |---|---|---|
 | `/` | Tableau de bord | Indicateurs, dossiers récents, bilans, recherches, ressources |
@@ -281,12 +285,14 @@ Limite connue, mesurée à part : une question hors sujet dont seul un mot, abse
 porte le sujet (« mon agent est en arrêt **maladie** depuis trois mois ») peut recevoir un passage
 qui correspond au reste de la phrase (« délai de trois mois »), par les mots comme par le sens.
 
-Le scénario de bout en bout (53 vérifications) couvre aussi la recherche par le sens (quand le
-modèle est installé), le suivi, la restitution, l'export,
+Le scénario de bout en bout (57 vérifications) couvre aussi la recherche par le sens (quand le
+modèle est installé), l'usage sur téléphone (menu replié, création d'un accompagnement, passage
+déplié, aucune des 12 pages principales plus large qu'un écran de 360 px), le suivi, la
+restitution, l'export,
 le journal, la conservation et le cloisonnement de chacun. Il couvre : création de dossier, diagnostic et synthèse, bilan et
 synthèse, génération puis édition et persistance du plan, non-écrasement des saisies lors d'une
 nouvelle proposition, référence de dossier en doublon, trame d'entretien, catalogue de
-dispositifs, affichage de la trame de l'assistant, rendu mobile et absence d'erreur JavaScript.
+dispositifs, affichage de la trame de l'assistant et absence d'erreur JavaScript.
 
 La taille maximale d'un document déposé par l'interface est fixée par
 `experimental.serverActions.bodySizeLimit` dans `next.config.mjs` (50 Mo).

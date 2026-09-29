@@ -180,7 +180,7 @@ function JournalRecent() {
   if (lignes.length === 0) return <p className="text-sm text-slate-600">Aucune action enregistrée.</p>;
 
   return (
-    <ul className="space-y-1 text-xs text-slate-600">
+    <ul className="space-y-1 break-words text-xs text-slate-600">
       {lignes.map((ligne, index) => (
         <li key={index}>
           <span className="text-slate-500">{new Date(ligne.ts).toLocaleString('fr-FR')}</span>{' '}

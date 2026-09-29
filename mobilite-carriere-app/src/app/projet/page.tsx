@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Link from 'next/link';
-import { marked } from 'marked';
+import { Marked, type Tokens } from 'marked';
 import { Carte, EtatVide, TitrePage } from '@/components/ui';
 import { exigerSession } from '@/lib/auth';
 
@@ -14,13 +14,40 @@ const DOCUMENTS = [
 
 const RACINE_DOCS = path.join(process.cwd(), '..', 'docs', 'conseiller-mobilite-carriere');
 
+// Tableaux : chaque cellule porte l'intitulé de sa colonne. Sur téléphone, chaque ligne s'affiche
+// en fiche, valeurs précédées de leur intitulé (voir globals.css) ; sur écran large, tableau
+// classique, dans un cadre qui défile s'il est trop large.
+const rendu = new Marked({
+  renderer: {
+    table(tableau: Tokens.Table) {
+      const alignement = (a: Tokens.TableCell['align']) => (a ? ` align="${a}"` : '');
+      const entetes = tableau.header.map((cellule) => this.parser.parseInline(cellule.tokens));
+      // Texte déjà échappé par marked : sans balises, il peut servir de valeur d'attribut.
+      const intitules = entetes.map((html) => html.replace(/<[^>]*>/g, ''));
+      const tete = tableau.header.map((c, i) => `<th${alignement(c.align)}>${entetes[i]}</th>`).join('');
+      const lignes = tableau.rows
+        .map(
+          (ligne) =>
+            `<tr>${ligne
+              .map(
+                (c, i) =>
+                  `<td data-colonne="${intitules[i] ?? ''}"${alignement(c.align)}>${this.parser.parseInline(c.tokens)}</td>`,
+              )
+              .join('')}</tr>`,
+        )
+        .join('');
+      return `<div class="tableau-defilant"><table><thead><tr>${tete}</tr></thead><tbody>${lignes}</tbody></table></div>\n`;
+    },
+  },
+});
+
 export default async function PageProjet(props: { searchParams: Promise<{ doc?: string }> }) {
   const searchParams = await props.searchParams;
   await exigerSession();
   const selection = DOCUMENTS.find((d) => d.cle === searchParams.doc) ?? DOCUMENTS[0];
   const chemin = path.join(RACINE_DOCS, selection.fichier);
   const existe = fs.existsSync(chemin);
-  const html = existe ? marked.parse(fs.readFileSync(chemin, 'utf8'), { async: false }) : '';
+  const html = existe ? rendu.parse(fs.readFileSync(chemin, 'utf8'), { async: false }) : '';
 
   return (
     <>

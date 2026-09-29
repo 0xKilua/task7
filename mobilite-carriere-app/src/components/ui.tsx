@@ -38,7 +38,7 @@ export function Carte({
   action?: React.ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       {titre && (
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-base font-semibold text-slate-800">{titre}</h2>
@@ -108,10 +108,11 @@ function Surligne({ texte }: { texte: string }) {
   );
 }
 
+// Les mots très longs (adresses web, références) sont coupés plutôt que de déborder sur téléphone.
 export function BlocCitation({ citation, index }: { citation: Citation; index: number }) {
   return (
-    <li className="rounded border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm text-slate-800">
+    <li className="break-words rounded border border-slate-200 bg-slate-50 p-3">
+      <p className="text-sm leading-relaxed text-slate-800">
         <span className="mr-1 font-semibold text-etat-700">[{index}]</span>
         {citation.origine === 'sens' && (
           <span
@@ -126,31 +127,48 @@ export function BlocCitation({ citation, index }: { citation: Citation; index: n
         </span>
       </p>
       {citation.texteComplet && citation.texteComplet.length > citation.extrait.length && (
-        <details className="mt-2 print:hidden">
-          <summary className="cursor-pointer text-xs font-medium text-etat-700 hover:underline">
-            Lire le passage en entier
+        <details className="group mt-1 print:hidden">
+          {/* Zone de toucher confortable sur téléphone ; libellé inversé une fois déplié. */}
+          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 py-2 text-sm font-medium text-etat-700 hover:underline [&::-webkit-details-marker]:hidden">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 20 20"
+              className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M7.5 5l5 5-5 5" />
+            </svg>
+            <span className="group-open:hidden">Lire le passage en entier</span>
+            <span className="hidden group-open:inline">Replier le passage</span>
           </summary>
-          <p className="mt-2 whitespace-pre-line rounded border border-slate-200 bg-white p-3 text-sm leading-relaxed text-slate-800">
+          <p className="mb-1 whitespace-pre-line rounded border border-slate-200 bg-white p-3 text-sm leading-relaxed text-slate-800">
             <Surligne texte={citation.texteComplet} />
           </p>
         </details>
       )}
-      <p className="mt-2 text-xs text-slate-600">
-        <span className="font-medium">{citation.documentTitre}</span>
-        {citation.titreSection && <> — section « {citation.titreSection} »</>}
-        {citation.page !== null && <> — page {citation.page}</>}
-        {' · '}
-        Source : {citation.source}
-        {citation.datePublication && <> · {mentionDate(citation.datePublication, 'Document daté de')}</>}
-        {citation.url && (
-          <>
-            {' · '}
-            <a className="text-etat-600 underline" href={citation.url} target="_blank" rel="noreferrer">
-              consulter la source
-            </a>
-          </>
-        )}
-      </p>
+      <div className="mt-2 space-y-0.5 text-xs leading-relaxed text-slate-600">
+        <p>
+          <span className="font-medium text-slate-700">{citation.documentTitre}</span>
+          {citation.page !== null && <> — page {citation.page}</>}
+        </p>
+        {citation.titreSection && <p>Section « {citation.titreSection} »</p>}
+        <p>
+          Source : {citation.source}
+          {citation.datePublication && <> · {mentionDate(citation.datePublication, 'Document daté de')}</>}
+          {citation.url && (
+            <>
+              {' · '}
+              <a className="text-etat-600 underline" href={citation.url} target="_blank" rel="noreferrer">
+                consulter la source
+              </a>
+            </>
+          )}
+        </p>
+      </div>
     </li>
   );
 }

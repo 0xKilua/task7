@@ -39,7 +39,8 @@ export default async function PageRecherche(props: { searchParams: Promise<{ q?:
       />
 
       <Carte>
-        <form method="get" className="flex flex-wrap gap-2">
+        {/* Champ et bouton sur une même ligne, y compris sur téléphone. */}
+        <form method="get" className="flex gap-2">
           <label htmlFor="q" className="sr-only">
             Termes recherchés
           </label>
@@ -50,7 +51,7 @@ export default async function PageRecherche(props: { searchParams: Promise<{ q?:
             maxLength={LONGUEUR_REQUETE_MAX}
             defaultValue={requete}
             placeholder="Ex. : détachement, compte personnel de formation, bilan de parcours"
-            className="min-w-64 flex-1 rounded border border-slate-300 px-3 py-2 text-sm focus:border-etat-600 focus:outline-none focus:ring-1 focus:ring-etat-600"
+            className="min-w-0 flex-1 rounded border border-slate-300 px-3 py-2 text-sm focus:border-etat-600 focus:outline-none focus:ring-1 focus:ring-etat-600"
           />
           <Bouton>Rechercher</Bouton>
         </form>

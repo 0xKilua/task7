@@ -73,7 +73,8 @@ export default async function TableauDeBord() {
         </div>
       )}
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Deux indicateurs par ligne dès le téléphone : les raccourcis restent près du haut. */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Indicateur
           libelle="Accompagnements"
           valeur={stats.dossiers}
@@ -287,7 +288,7 @@ function Indicateur({
   return (
     <Link
       href={href}
-      className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm hover:border-etat-200"
+      className="break-words rounded-lg border border-slate-200 bg-white p-3 shadow-sm hover:border-etat-200 sm:p-4"
     >
       <p className="text-xs uppercase tracking-wide text-slate-500">{libelle}</p>
       <p className="mt-1 text-2xl font-semibold text-etat-800">{valeur}</p>

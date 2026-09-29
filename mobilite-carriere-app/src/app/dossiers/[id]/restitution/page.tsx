@@ -177,14 +177,14 @@ export default async function PageRestitution(props: {
               {!disponibles[section.cle] && <span className="text-xs text-slate-400">(vide)</span>}
             </label>
           ))}
-          <button type="submit" className="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50">
+          <button type="submit" className="rounded border border-slate-300 px-3 py-2 text-xs hover:bg-slate-50">
             Mettre à jour l&apos;aperçu
           </button>
         </form>
         <BoutonImprimer />
       </div>
 
-      <article className="mx-auto max-w-3xl rounded-lg border border-slate-200 bg-white p-8 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+      <article className="mx-auto max-w-3xl break-words rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
         <header className="border-b-2 border-etat-700 pb-4">
           <p className="text-xs uppercase tracking-wide text-slate-500">
             Fonction publique de l&apos;État — Accompagnement mobilité-carrière

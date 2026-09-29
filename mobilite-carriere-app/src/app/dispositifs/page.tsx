@@ -28,8 +28,10 @@ export default async function PageDispositifs(props: {
       />
 
       <Carte>
+        {/* Sur téléphone, chaque champ occupe toute la largeur : une catégorie au nom long
+            élargirait sinon la liste déroulante au-delà de l'écran. */}
         <form method="get" className="flex flex-wrap items-end gap-3">
-          <div>
+          <div className="w-full sm:w-auto">
             <label htmlFor="q" className="block text-xs font-medium text-slate-600">
               Rechercher
             </label>
@@ -39,10 +41,10 @@ export default async function PageDispositifs(props: {
               type="search"
               defaultValue={recherche}
               placeholder="Nom du dispositif"
-              className="mt-1 rounded border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm"
             />
           </div>
-          <div>
+          <div className="w-full sm:w-auto">
             <label htmlFor="categorie" className="block text-xs font-medium text-slate-600">
               Catégorie
             </label>
@@ -50,7 +52,7 @@ export default async function PageDispositifs(props: {
               id="categorie"
               name="categorie"
               defaultValue={categorie}
-              className="mt-1 rounded border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
             >
               <option value="">Toutes</option>
               {categories.map((c) => (

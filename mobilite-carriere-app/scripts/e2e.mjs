@@ -90,7 +90,10 @@ if (page.url().includes('/installation')) {
   throw new Error('Base non vierge : lancez les tests sur une base de test.');
 }
 
-verifier('Tableau de bord accessible une fois connecté', await page.getByText('Tableau de bord').first().isVisible());
+verifier(
+  'Tableau de bord accessible une fois connecté',
+  await page.getByRole('heading', { name: 'Tableau de bord' }).isVisible(),
+);
 await page.screenshot({ path: `${SORTIE}/01-tableau-de-bord.png`, fullPage: true });
 
 // --- Mot de passe actuel exigé pour tout changement volontaire -----------
@@ -462,11 +465,65 @@ verifier(
   (await page.locator('main').innerText()).includes('seul un administrateur'),
 );
 
-// --- Robustesse -----------------------------------------------------------
-await page.setViewportSize({ width: 390, height: 844 });
+// --- Téléphone (360 px, le plus étroit courant) ---------------------------
+const LARGEUR_TELEPHONE = 360;
+await page.setViewportSize({ width: LARGEUR_TELEPHONE, height: 740 });
+
+await page.goto(`${BASE}/dossiers`, { waitUntil: 'networkidle' });
+await page.fill('#reference', `MOB-${suffixe}`);
+await page.click('button:has-text("Créer le dossier")');
+await page.waitForURL(/\/dossiers\/dos_/, { timeout: 15000 });
+const cheminDossierMobile = new URL(page.url()).pathname;
+
 await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
-const largeurDocument = await page.evaluate(() => document.documentElement.scrollWidth);
-verifier(`Responsive mobile sans débordement (${largeurDocument}px)`, largeurDocument <= 400);
+const menu = page.locator('header details');
+const lienMenu = menu.getByRole('link', { name: 'Recherche documentaire' });
+verifier(
+  'Téléphone : rubriques repliées derrière le bouton « Menu »',
+  (await menu.locator('summary').isVisible()) && !(await lienMenu.isVisible()),
+);
+const hautTitre = await page.evaluate(() =>
+  Math.round(document.querySelector('main h1').getBoundingClientRect().top),
+);
+verifier(`Téléphone : la page commence en haut de l’écran (titre à ${hautTitre} px)`, hautTitre < 150);
+await menu.locator('summary').click();
+await lienMenu.click();
+await page.waitForURL(/\/recherche/, { timeout: 15000 });
+verifier('Téléphone : le menu mène à la rubrique puis se referme', !(await lienMenu.isVisible()));
+
+await page.goto(`${BASE}/recherche?q=detachement`, { waitUntil: 'networkidle' });
+await page.locator('main summary', { hasText: 'Lire le passage en entier' }).first().click();
+verifier(
+  'Téléphone : passage entier déplié sous le résultat',
+  await page.locator('main details[open] > p').first().isVisible(),
+);
+
+const debordements = [];
+for (const route of [
+  '/',
+  '/recherche?q=detachement',
+  '/assistant?q=quelles+pistes+de+mobilite+geographique+explorer',
+  '/dispositifs',
+  '/dispositifs/disp_detachement',
+  '/dossiers',
+  cheminDossierMobile,
+  `${cheminDossierMobile}/restitution`,
+  '/entretien?type=projet_mobilite',
+  '/base-documentaire',
+  '/projet?doc=roadmap',
+  '/mon-compte',
+]) {
+  await page.goto(`${BASE}${route}`, { waitUntil: 'networkidle' });
+  // Passages dépliés : le texte entier ne doit pas élargir la page non plus.
+  for (const deplier of await page.locator('main summary:visible').all()) await deplier.click();
+  const largeur = await page.evaluate(() => document.documentElement.scrollWidth);
+  if (largeur > LARGEUR_TELEPHONE) debordements.push(`${route} (${largeur} px)`);
+}
+verifier(
+  `Téléphone : aucune page ne déborde en largeur${debordements.length ? ' — ' + debordements.join(', ') : ''}`,
+  debordements.length === 0,
+);
+await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
 await page.screenshot({ path: `${SORTIE}/06-mobile.png`, fullPage: true });
 
 verifier('Aucune erreur JavaScript', erreursConsole.length === 0);

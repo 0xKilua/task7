@@ -141,7 +141,7 @@ export default async function PageBaseDocumentaire(props: {
             <ul className="divide-y divide-slate-100">
               {documents.map((doc) => (
                 <li key={doc.id} className="flex items-start justify-between gap-3 py-3">
-                  <div>
+                  <div className="min-w-0 break-words">
                     <p className="text-sm font-medium text-slate-800">{doc.titre}</p>
                     <p className="text-xs text-slate-600">
                       {doc.source}

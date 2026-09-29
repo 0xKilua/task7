@@ -10,6 +10,17 @@ body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
 
+/* Téléphone : champs de saisie en 16 px au moins. En dessous, Safari (iPhone) agrandit toute la
+   page dès qu'on touche un champ. « !important » : les classes de taille des champs l'emportent
+   sinon. */
+@media (max-width: 639px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 @media print {
   @page {
     margin: 16mm 14mm;
@@ -37,8 +48,16 @@ body {
 .prose-doc ol {
   @apply list-decimal pl-6 mb-3 space-y-1;
 }
+/* Mots très longs (adresses web, noms de fichiers) coupés plutôt que de déborder sur téléphone. */
+.prose-doc {
+  overflow-wrap: break-word;
+}
+/* Tableau plus large que l'écran : il défile dans son cadre, la page ne déborde pas. */
+.prose-doc .tableau-defilant {
+  @apply overflow-x-auto mb-4;
+}
 .prose-doc table {
-  @apply w-full text-sm border border-slate-200 mb-4;
+  @apply w-full text-sm border border-slate-200;
 }
 .prose-doc th {
   @apply bg-slate-100 text-left px-3 py-2 border border-slate-200 font-semibold;
@@ -63,4 +82,34 @@ body {
 }
 .prose-doc hr {
   @apply my-6 border-slate-200;
+}
+
+/* Téléphone : chaque ligne de tableau devient une fiche, chaque valeur précédée de l'intitulé de
+   sa colonne (attribut data-colonne posé au rendu de la page Projet). */
+@media (max-width: 639px) {
+  .prose-doc table,
+  .prose-doc tbody,
+  .prose-doc tr,
+  .prose-doc td {
+    display: block;
+  }
+  .prose-doc table {
+    @apply border-0;
+  }
+  .prose-doc thead {
+    @apply sr-only;
+  }
+  .prose-doc tr {
+    @apply mb-3 rounded border border-slate-200;
+  }
+  .prose-doc td {
+    @apply border-0 border-t border-slate-100 px-3 py-2;
+  }
+  .prose-doc td:first-child {
+    @apply border-t-0 bg-slate-50 font-medium;
+  }
+  .prose-doc td[data-colonne]::before {
+    content: attr(data-colonne);
+    @apply block text-xs font-semibold uppercase tracking-wide text-slate-500;
+  }
 }

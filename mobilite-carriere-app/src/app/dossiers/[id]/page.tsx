@@ -271,7 +271,7 @@ export default async function PageDossier(props: {
 
         {diagnostic && (
           <Carte titre="Synthèse de situation" action={<EtiquetteIA>Mise en forme des éléments saisis</EtiquetteIA>}>
-            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800">
+            <pre className="whitespace-pre-wrap break-words font-sans text-sm text-slate-800">
               {diagnostic.synthese}
             </pre>
             <p className="mt-3 text-xs text-slate-500">
@@ -309,7 +309,7 @@ export default async function PageDossier(props: {
 
         {bilan && (
           <Carte titre="Synthèse de bilan" action={<EtiquetteIA>Mise en forme des éléments saisis</EtiquetteIA>}>
-            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800">
+            <pre className="whitespace-pre-wrap break-words font-sans text-sm text-slate-800">
               {bilan.synthese}
             </pre>
             <p className="mt-3 text-xs text-slate-500">
